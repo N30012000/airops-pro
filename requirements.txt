@@ -5,5 +5,3 @@ plotly>=5.14.0
 requests>=2.31.0
 python-dotenv>=1.0.0
 pytz>=2023.3
-openpyxl>=3.10.0
-reportlab>=4.0.0
