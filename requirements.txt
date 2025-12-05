@@ -1,7 +1,9 @@
-streamlit>=1.28.0
-pandas>=2.0.0
-numpy>=1.24.0
-plotly>=5.14.0
-requests>=2.31.0
-python-dotenv>=1.0.0
-pytz>=2023.3
+streamlit
+pandas
+plotly
+google-generativeai
+groq
+supabase
+openpyxl
+reportlab
+requests
