@@ -408,7 +408,7 @@ class GeminiAI:
             import google.generativeai as genai
             
             genai.configure(api_key=config.GEMINI_API_KEY)
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             # Combine system prompt with user message
             full_prompt = f"{system_prompt}\n\nUser: {message}" if system_prompt else message
@@ -448,7 +448,7 @@ Be concise but thorough. Use bullet points for clarity."""
             
             import google.generativeai as genai
             genai.configure(api_key=config.GEMINI_API_KEY)
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             response = model.generate_content(full_prompt)
             return response.text
