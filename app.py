@@ -2734,8 +2734,16 @@ def main():
             </div>
         """, unsafe_allow_html=True)
         
-        # Weather Widget - FREE (No API key needed!) - Default to Sialkot
-        weather_data = ExternalDataService.fetch_weather("Sialkot")
+        # Weather City Selector
+        weather_city = st.selectbox(
+            "🌍 Weather Location",
+            ["Sialkot", "Karachi", "Lahore", "Islamabad", "Peshawar", "Quetta", "Dubai", "Jeddah"],
+            index=0,
+            key="weather_city_selector"
+        )
+        
+        # Weather Widget - FREE (No API key needed!)
+        weather_data = ExternalDataService.fetch_weather(weather_city)
         if weather_data:
             temp = weather_data['main']['temp']
             description = weather_data['weather'][0]['description'].title()
@@ -2762,7 +2770,7 @@ def main():
                             padding:1.5rem;border-radius:12px;margin-bottom:1rem;text-align:center;
                             box-shadow:0 4px 15px rgba(74,144,226,0.2);">
                     <div style="color:white;font-size:0.85rem;font-weight:600;margin-bottom:0.3rem;opacity:0.9;">
-                        🌍 SIALKOT WEATHER
+                        🌍 {weather_city.upper()} WEATHER
                     </div>
                     <div style="color:white;font-size:3rem;margin:0.5rem 0;">
                         {icon}
@@ -2794,7 +2802,7 @@ def main():
                             padding:1.5rem;border-radius:12px;margin-bottom:1rem;text-align:center;
                             box-shadow:0 4px 15px rgba(149,165,166,0.2);">
                     <div style="color:white;font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;">
-                        🌍 WEATHER
+                        🌍 {weather_city.upper()} WEATHER
                     </div>
                     <div style="color:white;font-size:0.9rem;opacity:0.8;">
                         Unable to fetch weather data.<br>Check your internet connection.
