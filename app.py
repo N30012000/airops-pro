@@ -408,7 +408,7 @@ class GeminiAI:
             import requests
             
             # Use REST API directly - more reliable than the library
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={config.GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={config.GEMINI_API_KEY}"
             
             # Combine system prompt with user message
             full_prompt = f"{system_prompt}\n\nUser: {message}" if system_prompt else message
@@ -462,7 +462,7 @@ Be concise but thorough. Use bullet points for clarity."""
             full_prompt = f"{system_prompt}\n\nData:\n{data_summary}\n\nQuestion: {question}"
             
             # Use REST API directly
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={config.GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={config.GEMINI_API_KEY}"
             
             payload = {
                 "contents": [{
