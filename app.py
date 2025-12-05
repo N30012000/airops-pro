@@ -392,29 +392,42 @@ def get_database():
 db = get_database()
 
 # ============================================================================
-# GEMINI AI HELPER
+# GEMINI AI HELPER - USING REST API (MORE RELIABLE)
 # ============================================================================
 
 class GeminiAI:
-    """Gemini AI integration for chat and analysis"""
+    """Gemini AI integration for chat and analysis using REST API"""
     
     @staticmethod
     def chat(message: str, system_prompt: str = "") -> str:
-        """Send message to Gemini and get response"""
+        """Send message to Gemini and get response using REST API"""
         if not config.GEMINI_API_KEY:
             return "❌ Gemini API key not configured. Please add GEMINI_API_KEY to your secrets."
         
         try:
-            import google.generativeai as genai
+            import requests
             
-            genai.configure(api_key=config.GEMINI_API_KEY)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            # Use REST API directly - more reliable than the library
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={config.GEMINI_API_KEY}"
             
             # Combine system prompt with user message
             full_prompt = f"{system_prompt}\n\nUser: {message}" if system_prompt else message
             
-            response = model.generate_content(full_prompt)
-            return response.text
+            payload = {
+                "contents": [{
+                    "parts": [{"text": full_prompt}]
+                }]
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                error_msg = response.json().get("error", {}).get("message", response.text)
+                return f"❌ Gemini API error: {error_msg}"
             
         except Exception as e:
             logger.error(f"Gemini API error: {e}")
@@ -427,6 +440,8 @@ class GeminiAI:
             return "❌ Gemini API key not configured."
         
         try:
+            import requests
+            
             # Prepare data summary
             data_summary = f"""
 Dataset Information:
@@ -446,12 +461,24 @@ Be concise but thorough. Use bullet points for clarity."""
             
             full_prompt = f"{system_prompt}\n\nData:\n{data_summary}\n\nQuestion: {question}"
             
-            import google.generativeai as genai
-            genai.configure(api_key=config.GEMINI_API_KEY)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            # Use REST API directly
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={config.GEMINI_API_KEY}"
             
-            response = model.generate_content(full_prompt)
-            return response.text
+            payload = {
+                "contents": [{
+                    "parts": [{"text": full_prompt}]
+                }]
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                error_msg = response.json().get("error", {}).get("message", response.text)
+                return f"❌ Gemini API error: {error_msg}"
             
         except Exception as e:
             logger.error(f"Gemini analysis error: {e}")
