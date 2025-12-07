@@ -5042,9 +5042,7 @@ def main():
         render_settings()
 
 
-if __name__ == "__main__":
-    main()
-
+# Original main() removed - using main_v3() instead
 
 # ==============================================================================
 # NEW ENTERPRISE FEATURES - VERSION 3.0
