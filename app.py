@@ -635,33 +635,23 @@ class Database:
 
 
 db = Database()
-# ══════════════════════════════════════════════════════════════════════════════
-# CUSTOM CSS STYLING
-# ══════════════════════════════════════════════════════════════════════════════
+
+# ==============================================================================
+# LIGHT THEME CSS - PROFESSIONAL ENTERPRISE DESIGN
+# ==============================================================================
 
 def apply_custom_css():
+    """Apply professional light theme CSS"""
     st.markdown("""
     <style>
-    /* ═══════════════════════════════════════════════════════════════════════
-       AIR SIAL CORPORATE SAFETY - ENTERPRISE STYLING
-       ═══════════════════════════════════════════════════════════════════════ */
+    /* ===========================================================================
+       LIGHT THEME - AIR SIAL CORPORATE SAFETY v3.0
+       =========================================================================== */
     
     /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PROFESSIONAL LIGHT THEME CSS
-# ══════════════════════════════════════════════════════════════════════════════
-
-def apply_custom_css():
-    """Apply professional light theme CSS with enterprise styling"""
-    st.markdown("""
-    <style>
-    /* ══════════════════════════════════════════════════════════════════════════
-       LIGHT THEME - PROFESSIONAL ENTERPRISE DESIGN
-       Air Sial Corporate Safety Management System v3.0
-       ══════════════════════════════════════════════════════════════════════════ */
     
+    /* Root Variables */
     :root {
         --primary-blue: #1E40AF;
         --primary-blue-light: #3B82F6;
@@ -684,7 +674,7 @@ def apply_custom_css():
     
     /* Main App Background */
     .stApp {
-        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
     }
     
     /* Hide Streamlit Branding */
@@ -692,35 +682,31 @@ def apply_custom_css():
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Sidebar - Light Gray Professional */
+    /* Sidebar - Light Gray */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #F1F5F9 0%, #E2E8F0 100%);
-        border-right: 1px solid var(--border-color);
+        border-right: 1px solid #E2E8F0;
     }
     
     section[data-testid="stSidebar"] .stMarkdown {
-        color: var(--text-primary);
+        color: #1E293B;
     }
     
     section[data-testid="stSidebar"] .stRadio label {
-        color: var(--text-secondary) !important;
+        color: #334155 !important;
         font-weight: 500;
-    }
-    
-    section[data-testid="stSidebar"] .stRadio label:hover {
-        color: var(--primary-blue) !important;
     }
     
     /* Header Styling */
     .main-header {
-        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+        background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
         padding: 1.5rem 2rem;
         border-radius: 12px;
         margin-bottom: 1.5rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     
     .main-header h1, .header-title {
@@ -737,8 +723,8 @@ def apply_custom_css():
     }
     
     .header-logo {
-        height: 60px;
-        width: auto;
+        font-size: 2.5rem;
+        margin-right: 1rem;
     }
     
     .header-time {
@@ -756,11 +742,11 @@ def apply_custom_css():
     }
     
     .kpi-card {
-        background: var(--bg-card);
+        background: #FFFFFF;
         border-radius: 12px;
         padding: 1.25rem;
         text-align: center;
-        border: 1px solid var(--border-color);
+        border: 1px solid #E2E8F0;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         position: relative;
@@ -770,7 +756,7 @@ def apply_custom_css():
     .kpi-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border-color: var(--primary-blue);
+        border-color: #3B82F6;
     }
     
     .kpi-card::before {
@@ -780,28 +766,23 @@ def apply_custom_css():
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, var(--primary-blue), var(--primary-blue-light));
+        background: linear-gradient(90deg, #1E40AF, #3B82F6);
     }
     
     .kpi-value {
         font-size: 2.25rem;
         font-weight: 700;
-        color: var(--primary-blue);
+        color: #1E40AF;
         line-height: 1;
         margin: 0.5rem 0;
     }
     
     .kpi-label {
-        color: var(--text-muted);
+        color: #64748B;
         font-size: 0.8rem;
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-    }
-    
-    .kpi-icon {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
     }
     
     /* Risk Badges */
@@ -812,14 +793,12 @@ def apply_custom_css():
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
     .risk-extreme {
         background: #FEE2E2;
         color: #DC2626;
         border: 1px solid #FECACA;
-        animation: pulse-extreme 2s infinite;
     }
     
     .risk-high {
@@ -838,11 +817,6 @@ def apply_custom_css():
         background: #DCFCE7;
         color: #16A34A;
         border: 1px solid #BBF7D0;
-    }
-    
-    @keyframes pulse-extreme {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-        50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
     }
     
     /* SLA Indicators */
@@ -881,8 +855,8 @@ def apply_custom_css():
     
     /* Report Cards */
     .report-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
         border-radius: 10px;
         padding: 1.25rem;
         margin-bottom: 1rem;
@@ -890,21 +864,14 @@ def apply_custom_css():
     }
     
     .report-card:hover {
-        border-color: var(--primary-blue);
+        border-color: #3B82F6;
         box-shadow: 0 4px 15px rgba(30, 64, 175, 0.1);
-    }
-    
-    .report-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
     }
     
     .report-number {
         font-family: 'Courier New', monospace;
         font-weight: 600;
-        color: var(--primary-blue);
+        color: #1E40AF;
     }
     
     /* Category Badges */
@@ -927,8 +894,8 @@ def apply_custom_css():
     
     /* Form Styling */
     .form-section {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
@@ -936,7 +903,7 @@ def apply_custom_css():
     }
     
     .form-section-title {
-        color: var(--primary-blue);
+        color: #1E40AF;
         font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 1rem;
@@ -947,20 +914,20 @@ def apply_custom_css():
         gap: 0.5rem;
     }
     
-    /* Streamlit Component Overrides for Light Theme */
+    /* Input Fields - Light Theme */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
     .stSelectbox > div > div > div,
     .stMultiSelect > div > div > div {
-        background-color: var(--bg-card) !important;
-        border: 1px solid var(--border-color) !important;
-        color: var(--text-primary) !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        color: #1E293B !important;
         border-radius: 8px !important;
     }
     
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: var(--primary-blue) !important;
+        border-color: #3B82F6 !important;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
     }
     
@@ -973,13 +940,13 @@ def apply_custom_css():
     .stNumberInput label,
     .stCheckbox label,
     .stRadio label {
-        color: var(--text-secondary) !important;
+        color: #334155 !important;
         font-weight: 500 !important;
     }
     
     /* Button Styling */
     .stButton > button {
-        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-light) 100%);
+        background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
         color: #FFFFFF;
         border: none;
         border-radius: 8px;
@@ -989,50 +956,44 @@ def apply_custom_css():
     }
     
     .stButton > button:hover {
-        background: linear-gradient(135deg, var(--primary-blue-dark) 0%, var(--primary-blue) 100%);
+        background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
         box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
         transform: translateY(-2px);
-    }
-    
-    .stButton > button[kind="secondary"] {
-        background: transparent;
-        border: 2px solid var(--primary-blue);
-        color: var(--primary-blue);
     }
     
     /* Tab Styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 0;
-        background: var(--bg-secondary);
+        background: #F1F5F9;
         border-radius: 10px;
         padding: 0.25rem;
     }
     
     .stTabs [data-baseweb="tab"] {
         background: transparent;
-        color: var(--text-muted);
+        color: #64748B;
         border-radius: 8px;
         padding: 0.75rem 1.25rem;
         font-weight: 500;
     }
     
     .stTabs [aria-selected="true"] {
-        background: var(--bg-card);
-        color: var(--primary-blue);
+        background: #FFFFFF;
+        color: #1E40AF;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     
     /* Expander Styling */
     .streamlit-expanderHeader {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
         border-radius: 8px;
-        color: var(--text-primary);
+        color: #1E293B;
     }
     
     .streamlit-expanderContent {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
         border-top: none;
     }
     
@@ -1040,11 +1001,11 @@ def apply_custom_css():
     [data-testid="stMetricValue"] {
         font-size: 2rem;
         font-weight: 700;
-        color: var(--primary-blue);
+        color: #1E40AF;
     }
     
     [data-testid="stMetricLabel"] {
-        color: var(--text-muted);
+        color: #64748B;
     }
     
     /* Alert Boxes */
@@ -1080,14 +1041,14 @@ def apply_custom_css():
     .cpa-table {
         width: 100%;
         border-collapse: collapse;
-        background: var(--bg-card);
+        background: #FFFFFF;
         border-radius: 10px;
         overflow: hidden;
-        border: 1px solid var(--border-color);
+        border: 1px solid #E2E8F0;
     }
     
     .cpa-table th {
-        background: var(--primary-blue);
+        background: #1E40AF;
         color: #FFFFFF;
         padding: 0.75rem 1rem;
         text-align: left;
@@ -1096,17 +1057,17 @@ def apply_custom_css():
     
     .cpa-table td {
         padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--border-color);
-        color: var(--text-secondary);
+        border-bottom: 1px solid #E2E8F0;
+        color: #334155;
     }
     
     .cpa-table tr:hover {
-        background: var(--bg-secondary);
+        background: #F8FAFC;
     }
     
     /* Prediction Card */
     .prediction-card {
-        background: linear-gradient(135deg, var(--primary-blue) 0%, #7C3AED 100%);
+        background: linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 12px;
@@ -1120,8 +1081,8 @@ def apply_custom_css():
     
     /* Query Box */
     .query-box {
-        background: var(--bg-secondary);
-        border: 2px dashed var(--border-color);
+        background: #F8FAFC;
+        border: 2px dashed #CBD5E1;
         border-radius: 12px;
         padding: 2rem;
         text-align: center;
@@ -1137,26 +1098,49 @@ def apply_custom_css():
     }
     
     /* Data Table */
-    .data-table {
-        background: var(--bg-card);
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid var(--border-color);
+    .dataframe {
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 8px !important;
     }
     
-    .data-table th {
-        background: var(--bg-secondary);
-        color: var(--text-secondary);
+    .dataframe th {
+        background: #F8FAFC !important;
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+    
+    .dataframe td {
+        color: #475569 !important;
+        border-color: #E2E8F0 !important;
+    }
+    
+    /* OCR Scanner Box */
+    .ocr-scanner {
+        background: #F8FAFC;
+        border: 2px dashed #CBD5E1;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .ocr-scanner:hover {
+        border-color: #3B82F6;
+        background: #EFF6FF;
+    }
+    
+    /* Risk Matrix Cell */
+    .risk-matrix-cell {
+        width: 60px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: 600;
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border-bottom: 2px solid var(--border-color);
-    }
-    
-    .data-table td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--bg-secondary);
-        color: var(--text-secondary);
+        font-size: 0.75rem;
+        border-radius: 4px;
     }
     
     /* Scrollbar */
@@ -1166,16 +1150,22 @@ def apply_custom_css():
     }
     
     ::-webkit-scrollbar-track {
-        background: var(--bg-secondary);
+        background: #F1F5F9;
     }
     
     ::-webkit-scrollbar-thumb {
-        background: var(--text-light);
+        background: #94A3B8;
         border-radius: 4px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-        background: var(--text-muted);
+        background: #64748B;
+    }
+    
+    /* Print Styles */
+    @media print {
+        .no-print { display: none !important; }
+        .stApp { background: white !important; }
     }
     
     </style>
@@ -5056,55 +5046,37 @@ if __name__ == "__main__":
     main()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # NEW ENTERPRISE FEATURES - VERSION 3.0
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # LOGO LOADING FUNCTION
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 def load_logo_base64():
-    """Load logo.png and convert to base64 for embedding in HTML"""
-    import os
-    import base64
-    
-    # Check multiple possible locations for the logo
-    logo_paths = [
-        "logo.png",
-        "./logo.png",
-        "/home/claude/logo.png",
-        "assets/logo.png",
-        "./assets/logo.png",
-        "static/logo.png",
-        "./static/logo.png"
-    ]
+    """Load logo.png and convert to base64 for embedding"""
+    logo_paths = ["logo.png", "./logo.png", "assets/logo.png", "static/logo.png"]
     
     for path in logo_paths:
         if os.path.exists(path):
             try:
                 with open(path, "rb") as f:
-                    logo_data = f.read()
-                    return base64.b64encode(logo_data).decode()
-            except Exception as e:
+                    return base64.b64encode(f.read()).decode()
+            except:
                 continue
-    
-    # Return None if no logo found - will fall back to emoji
     return None
 
 
 def render_header_with_logo():
-    """Render the main application header with logo support"""
+    """Render header with logo support"""
     current_time = get_pakistan_time()
     
-    # Try to load logo
     logo_base64 = load_logo_base64()
-    
     if logo_base64:
-        logo_html = f'<img src="data:image/png;base64,{logo_base64}" class="header-logo" style="height: 60px; width: auto; margin-right: 15px;" alt="Air Sial Logo">'
+        logo_html = f'<img src="data:image/png;base64,{logo_base64}" style="height: 60px; width: auto; margin-right: 15px;" alt="Logo">'
     else:
-        # Fallback to emoji if no logo found
-        logo_html = '<span class="header-logo" style="font-size: 2.5rem; margin-right: 15px;">🛡️✈️</span>'
+        logo_html = '<span style="font-size: 2.5rem; margin-right: 15px;">🛡️✈️</span>'
     
     st.markdown(f"""
     <div class="main-header">
@@ -5112,11 +5084,11 @@ def render_header_with_logo():
             {logo_html}
             <div>
                 <h1 class="header-title">{Config.APP_NAME}</h1>
-                <p class="header-subtitle">{Config.APP_SUBTITLE} v3.0 | {Config.COMPANY_ICAO} | AOC: {Config.AOC_NUMBER}</p>
+                <p class="header-subtitle">{Config.APP_SUBTITLE} v3.0 | {Config.COMPANY_ICAO}</p>
             </div>
         </div>
         <div class="header-time">
-            <div>🇵🇰 Pakistan Standard Time</div>
+            <div>Pakistan Standard Time</div>
             <div style="font-size: 1.3rem;">{current_time.strftime("%H:%M:%S")}</div>
             <div style="font-size: 0.85rem; opacity: 0.8;">{current_time.strftime("%A, %d %B %Y")}</div>
         </div>
@@ -5124,123 +5096,75 @@ def render_header_with_logo():
     """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # PREDICTIVE RISK MONITOR
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 def render_predictive_risk_monitor():
-    """
-    Predictive Risk Monitor with 30-day incident forecasting
-    Uses simulated ML predictions for demonstration
-    """
+    """Predictive Risk Monitor with 30-day forecast"""
     import numpy as np
-    import pandas as pd
-    import plotly.graph_objects as go
-    from datetime import date, timedelta
     
     st.markdown("## 📈 Predictive Risk Monitor")
-    st.markdown("*AI-Powered Incident Forecasting & Risk Prediction*")
+    st.markdown("*AI-Powered Incident Forecasting*")
     
     st.markdown("""
     <div class="alert-box alert-info">
         <span style="font-size: 1.5rem;">🤖</span>
         <div>
             <strong>Machine Learning Predictions</strong><br>
-            <small>Forecasts based on historical incident data, weather patterns, traffic volume, and seasonal trends.</small>
+            <small>Forecasts based on historical data, weather, traffic volume, and seasonal trends.</small>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Generate forecast data for next 30 days
-    np.random.seed(42)  # For reproducible demo
+    # Generate forecast data
+    np.random.seed(42)
     dates = pd.date_range(start=date.today(), periods=30, freq='D')
     
-    # Create realistic prediction patterns
     base_risk = 12
-    trend = np.linspace(0, 4, 30)  # Slight upward trend
-    seasonal = 5 * np.sin(np.linspace(0, 2*np.pi, 30))  # Seasonal pattern
-    weekly = 3 * np.sin(np.linspace(0, 4*np.pi, 30))  # Weekly pattern
+    trend = np.linspace(0, 4, 30)
+    seasonal = 5 * np.sin(np.linspace(0, 2*np.pi, 30))
     noise = np.random.normal(0, 2.5, 30)
+    predicted = np.maximum(0, base_risk + trend + seasonal + noise)
     
-    predicted_incidents = np.maximum(0, base_risk + trend + seasonal + weekly + noise)
-    
-    # Confidence intervals
-    confidence_95_lower = predicted_incidents - 6
-    confidence_95_upper = predicted_incidents + 6
-    confidence_80_lower = predicted_incidents - 4
-    confidence_80_upper = predicted_incidents + 4
-    
-    # Create forecast dataframe
     forecast_df = pd.DataFrame({
         'Date': dates,
-        'Predicted': predicted_incidents,
-        'CI_95_Lower': np.maximum(0, confidence_95_lower),
-        'CI_95_Upper': confidence_95_upper,
-        'CI_80_Lower': np.maximum(0, confidence_80_lower),
-        'CI_80_Upper': confidence_80_upper
+        'Predicted': predicted,
+        'Lower': np.maximum(0, predicted - 5),
+        'Upper': predicted + 5
     })
     
-    # Identify high-risk days (above threshold)
     HIGH_RISK_THRESHOLD = 18
     high_risk_days = forecast_df[forecast_df['Predicted'] > HIGH_RISK_THRESHOLD]
     
-    # Layout
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Main forecast chart
         fig = go.Figure()
         
-        # 95% Confidence interval
+        # Confidence interval
         fig.add_trace(go.Scatter(
             x=pd.concat([forecast_df['Date'], forecast_df['Date'][::-1]]),
-            y=pd.concat([forecast_df['CI_95_Upper'], forecast_df['CI_95_Lower'][::-1]]),
-            fill='toself',
-            fillcolor='rgba(59, 130, 246, 0.1)',
-            line=dict(color='rgba(255,255,255,0)'),
-            name='95% Confidence',
-            showlegend=True
-        ))
-        
-        # 80% Confidence interval
-        fig.add_trace(go.Scatter(
-            x=pd.concat([forecast_df['Date'], forecast_df['Date'][::-1]]),
-            y=pd.concat([forecast_df['CI_80_Upper'], forecast_df['CI_80_Lower'][::-1]]),
+            y=pd.concat([forecast_df['Upper'], forecast_df['Lower'][::-1]]),
             fill='toself',
             fillcolor='rgba(59, 130, 246, 0.2)',
             line=dict(color='rgba(255,255,255,0)'),
-            name='80% Confidence',
-            showlegend=True
+            name='95% Confidence'
         ))
         
-        # Main prediction line
+        # Prediction line
         fig.add_trace(go.Scatter(
             x=forecast_df['Date'],
             y=forecast_df['Predicted'],
             mode='lines+markers',
             name='Predicted Incidents',
             line=dict(color='#1E40AF', width=3),
-            marker=dict(size=6, color='#1E40AF')
+            marker=dict(size=6)
         ))
         
-        # High risk threshold line
-        fig.add_hline(
-            y=HIGH_RISK_THRESHOLD,
-            line_dash="dash",
-            line_color="#DC2626",
-            annotation_text="High Risk Threshold",
-            annotation_position="top right"
-        )
-        
-        # Mark high-risk days
-        if len(high_risk_days) > 0:
-            fig.add_trace(go.Scatter(
-                x=high_risk_days['Date'],
-                y=high_risk_days['Predicted'],
-                mode='markers',
-                name='High Risk Days',
-                marker=dict(size=12, color='#DC2626', symbol='diamond')
-            ))
+        # Threshold
+        fig.add_hline(y=HIGH_RISK_THRESHOLD, line_dash="dash", line_color="#DC2626",
+                      annotation_text="High Risk Threshold")
         
         fig.update_layout(
             title="30-Day Incident Forecast",
@@ -5250,1047 +5174,428 @@ def render_predictive_risk_monitor():
             plot_bgcolor='rgba(248,250,252,1)',
             font=dict(color='#334155'),
             hovermode='x unified',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-            xaxis=dict(showgrid=True, gridcolor='#E2E8F0'),
-            yaxis=dict(showgrid=True, gridcolor='#E2E8F0')
+            legend=dict(orientation="h", yanchor="bottom", y=1.02)
         )
         
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        # Summary cards
         st.markdown(f"""
         <div class="prediction-card">
-            <div style="font-size: 0.9rem; opacity: 0.9;">Next 7 Days Total</div>
-            <div class="prediction-value">{int(predicted_incidents[:7].sum())}</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">Next 7 Days</div>
+            <div class="prediction-value">{int(predicted[:7].sum())}</div>
             <div style="font-size: 0.85rem;">Predicted Incidents</div>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown(f"""
-        <div class="prediction-card" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);">
-            <div style="font-size: 0.9rem; opacity: 0.9;">High Risk Days</div>
-            <div class="prediction-value">{len(high_risk_days)}</div>
-            <div style="font-size: 0.85rem;">In Next 30 Days</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # High probability alerts
-        st.markdown("### ⚠️ High Probability Alerts")
+        st.markdown("### ⚠️ High Risk Alerts")
         
         if len(high_risk_days) > 0:
-            for idx, row in high_risk_days.head(5).iterrows():
-                day_name = row['Date'].strftime('%A')
-                date_str = row['Date'].strftime('%b %d, %Y')
-                risk_score = int(row['Predicted'])
-                
+            for _, row in high_risk_days.head(5).iterrows():
                 st.markdown(f"""
                 <div class="alert-box alert-danger" style="padding: 0.75rem; margin-bottom: 0.5rem;">
                     <span class="status-light status-red"></span>
                     <div>
-                        <strong>{day_name}</strong><br>
-                        <small>{date_str}</small><br>
-                        <small style="color: #DC2626;">Expected: {risk_score} incidents</small>
+                        <strong>{row['Date'].strftime('%b %d, %Y')}</strong><br>
+                        <small>Expected: {int(row['Predicted'])} incidents</small>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
         else:
-            st.markdown("""
-            <div class="alert-box alert-success">
-                <span>✅</span>
-                <div>No high-risk days predicted in the forecast period</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.success("No high-risk days in forecast")
     
-    # Risk factors analysis
+    # Risk factors
     st.markdown("---")
-    st.markdown("### 🔍 Contributing Risk Factors")
+    st.markdown("### 🔍 Key Risk Factors")
     
     col1, col2, col3, col4 = st.columns(4)
     
-    with col1:
-        st.markdown("""
-        <div class="form-section" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌤️</div>
-            <div class="form-section-title" style="justify-content: center; border: none; padding: 0;">Weather</div>
-            <div style="font-size: 2rem; font-weight: 700; color: #F97316;">32%</div>
-            <div style="color: #64748B; font-size: 0.8rem;">of predicted risk</div>
-            <hr style="margin: 0.75rem 0; border-color: #E2E8F0;">
-            <small style="color: #64748B;">Monsoon season increasing bird activity near airports</small>
-        </div>
-        """, unsafe_allow_html=True)
+    factors = [
+        ("🌤️", "Weather", "32%", "#F97316", "Monsoon season"),
+        ("✈️", "Traffic", "28%", "#3B82F6", "Holiday increase"),
+        ("🔧", "Maintenance", "22%", "#8B5CF6", "3 C-checks due"),
+        ("👥", "Human Factors", "18%", "#10B981", "Fatigue patterns")
+    ]
     
-    with col2:
-        st.markdown("""
-        <div class="form-section" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">✈️</div>
-            <div class="form-section-title" style="justify-content: center; border: none; padding: 0;">Traffic</div>
-            <div style="font-size: 2rem; font-weight: 700; color: #3B82F6;">28%</div>
-            <div style="color: #64748B; font-size: 0.8rem;">of predicted risk</div>
-            <hr style="margin: 0.75rem 0; border-color: #E2E8F0;">
-            <small style="color: #64748B;">Holiday season flight frequency increase expected</small>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div class="form-section" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔧</div>
-            <div class="form-section-title" style="justify-content: center; border: none; padding: 0;">Maintenance</div>
-            <div style="font-size: 2rem; font-weight: 700; color: #8B5CF6;">22%</div>
-            <div style="color: #64748B; font-size: 0.8rem;">of predicted risk</div>
-            <hr style="margin: 0.75rem 0; border-color: #E2E8F0;">
-            <small style="color: #64748B;">3 aircraft due for scheduled C-checks</small>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown("""
-        <div class="form-section" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">👥</div>
-            <div class="form-section-title" style="justify-content: center; border: none; padding: 0;">Human Factors</div>
-            <div style="font-size: 2rem; font-weight: 700; color: #10B981;">18%</div>
-            <div style="color: #64748B; font-size: 0.8rem;">of predicted risk</div>
-            <hr style="margin: 0.75rem 0; border-color: #E2E8F0;">
-            <small style="color: #64748B;">Crew fatigue patterns during peak schedule</small>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Historical accuracy
-    st.markdown("---")
-    st.markdown("### 📊 Model Performance")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Prediction Accuracy", "87.3%", "+2.1%")
-    with col2:
-        st.metric("Mean Absolute Error", "1.8 incidents", "-0.3")
-    with col3:
-        st.metric("High-Risk Detection Rate", "94.2%", "+1.5%")
+    for col, (icon, name, pct, color, desc) in zip([col1, col2, col3, col4], factors):
+        with col:
+            st.markdown(f"""
+            <div class="form-section" style="text-align: center;">
+                <div style="font-size: 2rem;">{icon}</div>
+                <div style="font-weight: 600; color: #1E40AF;">{name}</div>
+                <div style="font-size: 2rem; font-weight: 700; color: {color};">{pct}</div>
+                <small style="color: #64748B;">{desc}</small>
+            </div>
+            """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # DATA MANAGEMENT & CSV UPLOAD
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 def render_data_management():
-    """
-    Data Management page with CSV upload, data viewing, and export capabilities
-    """
-    import pandas as pd
+    """Data Management with CSV upload"""
     
     st.markdown("## 💾 Data Management")
     st.markdown("*Upload, view, and manage operational data*")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["📤 CSV Upload", "📊 View Data", "📈 Data Analysis", "📥 Export"])
+    tab1, tab2, tab3 = st.tabs(["📤 CSV Upload", "📊 View Data", "📥 Export"])
     
     with tab1:
         st.markdown("### Upload Operational Data")
         
-        st.markdown("""
-        <div class="alert-box alert-info">
-            <span style="font-size: 1.5rem;">📁</span>
-            <div>
-                <strong>Supported Data Types</strong><br>
-                <small>Upload CSV files containing flight operations, weather data, maintenance records, and more.</small>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        data_type = st.selectbox("Data Type", options=[
+            "Flight Operations Log", "Weather Data", "Maintenance Records",
+            "Crew Duty Times", "Fuel Records", "Passenger Statistics", "Custom Data"
+        ])
         
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            data_type = st.selectbox("Data Type", options=[
-                "Flight Operations Log",
-                "Weather Data (METAR/TAF)",
-                "Maintenance Records",
-                "Crew Duty Times",
-                "Fuel Consumption Records",
-                "Passenger Statistics",
-                "Delay Records",
-                "Training Records",
-                "Audit Findings",
-                "Custom Data"
-            ])
-        
-        with col2:
-            overwrite = st.checkbox("Overwrite existing data", value=False)
-            validate = st.checkbox("Validate data format", value=True)
-        
-        uploaded_file = st.file_uploader(
-            "Choose a CSV file",
-            type=['csv'],
-            help="Upload a CSV file. Maximum size: 200MB"
-        )
+        uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'])
         
         if uploaded_file is not None:
             try:
-                # Read the CSV
                 df = pd.read_csv(uploaded_file)
+                st.success(f"✅ Uploaded: {len(df)} rows, {len(df.columns)} columns")
                 
-                st.success(f"✅ File uploaded successfully!")
-                
-                # File info
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Rows", f"{len(df):,}")
-                with col2:
-                    st.metric("Columns", len(df.columns))
-                with col3:
-                    file_size = uploaded_file.size / 1024
-                    st.metric("Size", f"{file_size:.1f} KB")
-                
-                # Preview
-                st.markdown("#### 📋 Data Preview")
+                st.markdown("#### Preview")
                 st.dataframe(df.head(10), use_container_width=True)
                 
-                # Column info
                 with st.expander("📊 Column Information"):
-                    col_info = pd.DataFrame({
-                        'Column': df.columns,
-                        'Type': df.dtypes.astype(str),
-                        'Non-Null': df.count().values,
-                        'Null': df.isnull().sum().values,
-                        'Unique': df.nunique().values
-                    })
-                    st.dataframe(col_info, use_container_width=True)
+                    st.write(df.dtypes)
                 
-                # Save button
-                col1, col2 = st.columns([1, 3])
-                with col1:
-                    if st.button("💾 Save to Database", type="primary", use_container_width=True):
-                        # Store in session state for demo
-                        if 'uploaded_data' not in st.session_state:
-                            st.session_state.uploaded_data = {}
-                        st.session_state.uploaded_data[data_type] = {
-                            'data': df,
-                            'uploaded_at': datetime.now().isoformat(),
-                            'rows': len(df),
-                            'columns': len(df.columns)
-                        }
-                        st.success(f"✅ {data_type} data saved successfully! ({len(df):,} records)")
-                        st.balloons()
-                
+                if st.button("💾 Save to Database", type="primary"):
+                    if 'uploaded_data' not in st.session_state:
+                        st.session_state.uploaded_data = {}
+                    st.session_state.uploaded_data[data_type] = df
+                    st.success(f"✅ {data_type} saved!")
+                    
             except Exception as e:
-                st.error(f"❌ Error reading file: {str(e)}")
+                st.error(f"Error: {str(e)}")
         else:
-            # Upload placeholder
             st.markdown("""
             <div class="query-box">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">📁</div>
-                <div style="color: #64748B; font-size: 1.1rem;">Drag and drop a CSV file here</div>
-                <div style="color: #94A3B8; font-size: 0.9rem; margin-top: 0.5rem;">or click to browse</div>
-                <div style="color: #94A3B8; font-size: 0.8rem; margin-top: 1rem;">Supports: .csv files up to 200MB</div>
+                <div style="font-size: 4rem;">📁</div>
+                <div style="color: #64748B;">Drag and drop CSV here or click to browse</div>
             </div>
             """, unsafe_allow_html=True)
     
     with tab2:
-        st.markdown("### View Uploaded Data")
+        st.markdown("### Uploaded Data")
         
         if 'uploaded_data' in st.session_state and st.session_state.uploaded_data:
-            for name, info in st.session_state.uploaded_data.items():
-                with st.expander(f"📊 {name} ({info['rows']:,} rows, {info['columns']} columns)", expanded=False):
-                    st.caption(f"Uploaded: {info['uploaded_at'][:16]}")
-                    st.dataframe(info['data'], use_container_width=True)
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.button(f"🗑️ Delete {name}", key=f"del_{name}"):
-                            del st.session_state.uploaded_data[name]
-                            st.rerun()
+            for name, df in st.session_state.uploaded_data.items():
+                with st.expander(f"📊 {name} ({len(df)} rows)"):
+                    st.dataframe(df, use_container_width=True)
         else:
-            # Show sample data for demo
-            st.info("No data uploaded yet. Showing sample operational data for demonstration.")
-            
-            sample_df = pd.DataFrame({
-                'Date': pd.date_range(start='2024-12-01', periods=15, freq='D'),
-                'Flight': [f'PF-{100+i}' for i in range(15)],
-                'Route': ['SKT-DXB', 'LHE-KHI', 'ISB-DXB', 'KHI-JED', 'SKT-SHJ', 'LHE-DXB', 'ISB-KHI', 'KHI-MCT', 'SKT-BAH', 'LHE-RUH', 'ISB-AUH', 'KHI-DOH', 'SKT-KWI', 'LHE-SHJ', 'ISB-JED'],
-                'Aircraft': ['AP-BMA', 'AP-BMB', 'AP-BMC', 'AP-BMD', 'AP-BME', 'AP-BMF', 'AP-BMG', 'AP-BMH', 'AP-BMI', 'AP-BMJ', 'AP-BMA', 'AP-BMB', 'AP-BMC', 'AP-BMD', 'AP-BME'],
-                'PAX': [156, 178, 165, 180, 142, 175, 168, 70, 68, 72, 180, 176, 162, 174, 168],
-                'Delay_Min': [0, 15, 0, 45, 0, 30, 0, 0, 20, 0, 12, 0, 55, 0, 8],
-                'Fuel_Used_KG': [4520, 1850, 4680, 3200, 4380, 4720, 1780, 980, 1020, 950, 4650, 1890, 3180, 4690, 3220]
+            st.info("No data uploaded yet. Showing sample data.")
+            sample = pd.DataFrame({
+                'Date': pd.date_range('2024-12-01', periods=10),
+                'Flight': [f'PF-{100+i}' for i in range(10)],
+                'Route': ['SKT-DXB', 'LHE-KHI', 'ISB-DXB', 'KHI-JED', 'SKT-SHJ']*2,
+                'PAX': [156, 178, 165, 180, 142, 175, 168, 70, 68, 72],
+                'Delay': [0, 15, 0, 45, 0, 30, 0, 0, 20, 0]
             })
-            st.dataframe(sample_df, use_container_width=True)
+            st.dataframe(sample, use_container_width=True)
     
     with tab3:
-        st.markdown("### Data Analysis")
-        
-        st.markdown("""
-        <div class="alert-box alert-warning">
-            <span style="font-size: 1.5rem;">📊</span>
-            <div>
-                <strong>Quick Analysis</strong><br>
-                <small>Automatic statistical analysis of uploaded operational data.</small>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Demo analysis
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### Flight Statistics")
-            st.metric("Total Flights (This Month)", "347", "+12%")
-            st.metric("On-Time Performance", "87.3%", "+2.1%")
-            st.metric("Average Delay", "8.4 min", "-1.2 min")
-        
-        with col2:
-            st.markdown("#### Fleet Utilization")
-            st.metric("Block Hours", "2,847 hrs", "+156 hrs")
-            st.metric("Cycles", "1,243", "+89")
-            st.metric("Average Daily Utilization", "9.2 hrs/aircraft")
-    
-    with tab4:
         st.markdown("### Export Data")
-        
-        export_type = st.selectbox("Select data to export", options=[
-            "All Safety Reports (Combined)",
-            "Bird Strike Reports",
-            "Laser Strike Reports",
-            "TCAS Reports",
-            "Hazard Reports",
-            "Aircraft Incidents",
-            "FSR Reports",
-            "Captain DBR Reports",
-            "Investigation Summary",
-            "SLA Status Report",
-            "Monthly Statistics"
-        ])
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            format_type = st.selectbox("Export format", options=["CSV", "Excel (XLSX)", "JSON", "PDF Report"])
-        with col2:
-            date_range = st.selectbox("Date range", options=["Last 7 days", "Last 30 days", "Last 90 days", "This year", "All time", "Custom"])
-        
-        include_options = st.multiselect(
-            "Include in export",
-            options=["Header row", "Statistics summary", "Charts (Excel only)", "Audit trail"],
-            default=["Header row", "Statistics summary"]
-        )
+        export_type = st.selectbox("Data to export", ["All Reports", "Bird Strikes", "Hazards", "Incidents"])
+        format_type = st.selectbox("Format", ["CSV", "Excel", "JSON"])
         
         if st.button("📥 Generate Export", type="primary"):
             st.success(f"✅ {export_type} exported as {format_type}")
-            
-            # Demo download button
-            st.download_button(
-                label="⬇️ Download File",
-                data=f"Report Type: {export_type}\nFormat: {format_type}\nGenerated: {datetime.now().isoformat()}\n\nSample export data...",
-                file_name=f"airsial_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                mime="text/csv"
-            )
+            st.download_button("⬇️ Download", "Sample data", f"export.csv", "text/csv")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 # NATURAL LANGUAGE / AI QUERY
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 def render_nl_query():
-    """
-    Natural Language Query interface - allows users to query data using plain English
-    """
-    import pandas as pd
+    """Natural Language Query interface"""
     
     st.markdown("## 🤖 Natural Language Query")
-    st.markdown("*Ask questions in plain English and get instant insights from your safety data*")
+    st.markdown("*Ask questions in plain English*")
     
     st.markdown("""
     <div class="alert-box alert-info">
         <span style="font-size: 1.5rem;">💡</span>
-        <div>
-            <strong>How it works</strong><br>
-            <small>Type your question in natural language. The AI will interpret your query, generate the appropriate database query, and return results.</small>
-        </div>
+        <div>Type your question and get instant insights from safety data.</div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Query input
-    st.markdown("### Ask a Question")
+    query = st.text_input("Ask a question...", placeholder="e.g., Show all high-risk hazards in Lahore")
     
-    query = st.text_input(
-        "Type your question...",
-        placeholder="e.g., Show me all high-risk hazards reported in Lahore last month",
-        key="nl_query_input"
-    )
-    
-    # Quick query suggestions
     st.markdown("**Quick Queries:**")
     col1, col2, col3, col4 = st.columns(4)
     
-    with col1:
-        if st.button("🐦 Bird strikes this year", use_container_width=True):
-            query = "Show all bird strikes from 2024"
-    with col2:
-        if st.button("⚠️ High risk hazards", use_container_width=True):
-            query = "Show me all high and extreme risk hazards"
-    with col3:
-        if st.button("📊 Monthly trends", use_container_width=True):
-            query = "What are the monthly incident trends for the past 6 months?"
-    with col4:
-        if st.button("⏰ Overdue SLA items", use_container_width=True):
-            query = "Show all reports with overdue SLA"
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        if st.button("🔴 Laser incidents", use_container_width=True):
-            query = "List all laser strike incidents"
-    with col2:
-        if st.button("📡 TCAS events", use_container_width=True):
-            query = "Show TCAS resolution advisories this quarter"
-    with col3:
-        if st.button("🏢 By department", use_container_width=True):
-            query = "Which department reported the most hazards?"
-    with col4:
-        if st.button("✈️ By aircraft", use_container_width=True):
-            query = "Show incidents by aircraft registration"
+    if col1.button("🐦 Bird strikes", use_container_width=True):
+        query = "Show bird strikes this year"
+    if col2.button("⚠️ High risk", use_container_width=True):
+        query = "Show high risk hazards"
+    if col3.button("📊 Trends", use_container_width=True):
+        query = "Monthly incident trends"
+    if col4.button("⏰ Overdue", use_container_width=True):
+        query = "Show overdue SLA items"
     
     if query:
         st.markdown("---")
         
-        # Simulate query processing
-        with st.spinner("🔄 Processing your query with AI..."):
+        with st.spinner("Processing..."):
             import time
-            time.sleep(1.5)  # Simulate processing time
+            time.sleep(1)
         
-        # Show interpreted query
-        st.markdown("### 🔍 Query Interpretation")
-        
-        # Generate simulated SQL based on query keywords
-        sql_query = ""
-        results_df = None
-        
-        if "high risk" in query.lower() or "high-risk" in query.lower() or "extreme" in query.lower():
-            sql_query = """SELECT 
-    report_number,
-    hazard_title,
-    risk_level,
-    risk_classification,
-    location,
-    reporter_department,
-    hazard_date,
-    investigation_status
-FROM hazard_reports 
-WHERE risk_level IN ('High', 'Extreme')
-ORDER BY hazard_date DESC
-LIMIT 20;"""
-            results_df = pd.DataFrame({
-                'Report #': ['HZD-20241205-A1B2', 'HZD-20241203-C3D4', 'HZD-20241201-E5F6', 'HZD-20241128-G7H8', 'HZD-20241125-I9J0'],
-                'Title': ['FOD on Taxiway Alpha', 'Fuel Spill at Gate 5', 'Bird Congregation RWY 25', 'Lighting Failure Ramp B', 'Ground Equipment Malfunction'],
-                'Risk Level': ['High', 'Extreme', 'High', 'High', 'Extreme'],
-                'Classification': ['4B', '5A', '4B', '3A', '5B'],
-                'Location': ['SKT Taxiway', 'LHE Terminal', 'KHI Runway', 'ISB Ramp', 'SKT Hangar'],
-                'Department': ['Ground Ops', 'Engineering', 'Safety', 'Engineering', 'Ground Ops'],
-                'Date': ['Dec 05', 'Dec 03', 'Dec 01', 'Nov 28', 'Nov 25'],
-                'Status': ['Under Review', 'Action Required', 'Investigation', 'Closed', 'Closed']
+        # Generate SQL based on keywords
+        if "bird" in query.lower():
+            sql = "SELECT * FROM bird_strikes WHERE YEAR(incident_date) = 2024 ORDER BY incident_date DESC;"
+            results = pd.DataFrame({
+                'Report': ['BRD-20241205-X1Y2', 'BRD-20241130-Z3W4', 'BRD-20241115-Q5R6'],
+                'Date': ['Dec 05', 'Nov 30', 'Nov 15'],
+                'Aircraft': ['AP-BMA', 'AP-BMD', 'AP-BMB'],
+                'Species': ['Kite', 'Pigeon', 'Eagle'],
+                'Damage': ['Minor', 'None', 'Substantial']
             })
-            
-        elif "bird" in query.lower():
-            sql_query = """SELECT 
-    report_number,
-    incident_date,
-    flight_number,
-    aircraft_registration,
-    bird_species,
-    overall_damage,
-    flight_phase,
-    airport
-FROM bird_strikes 
-WHERE YEAR(incident_date) = 2024
-ORDER BY incident_date DESC;"""
-            results_df = pd.DataFrame({
-                'Report #': ['BRD-20241205-X1Y2', 'BRD-20241130-Z3W4', 'BRD-20241115-Q5R6', 'BRD-20241108-M7N8', 'BRD-20241025-P9Q0'],
-                'Date': ['Dec 05, 2024', 'Nov 30, 2024', 'Nov 15, 2024', 'Nov 08, 2024', 'Oct 25, 2024'],
-                'Flight': ['PF-123', 'PF-456', 'PF-789', 'PF-234', 'PF-567'],
-                'Aircraft': ['AP-BMA', 'AP-BMD', 'AP-BMB', 'AP-BME', 'AP-BMC'],
-                'Species': ['Black Kite', 'Pigeon', 'Eagle', 'Unknown', 'Crow'],
-                'Damage': ['Minor', 'None', 'Substantial', 'None', 'Minor'],
-                'Phase': ['Takeoff', 'Approach', 'Climb', 'Landing', 'Cruise']
+        elif "high risk" in query.lower() or "high-risk" in query.lower():
+            sql = "SELECT * FROM hazard_reports WHERE risk_level IN ('High', 'Extreme');"
+            results = pd.DataFrame({
+                'Report': ['HZD-20241205-A1B2', 'HZD-20241203-C3D4', 'HZD-20241201-E5F6'],
+                'Title': ['FOD on Taxiway', 'Fuel Spill', 'Bird Congregation'],
+                'Risk': ['High', 'Extreme', 'High'],
+                'Status': ['Under Review', 'Action Required', 'Investigation']
             })
-            
-        elif "laser" in query.lower():
-            sql_query = """SELECT 
-    report_number,
-    incident_date,
-    flight_number,
-    laser_color,
-    laser_intensity,
-    flight_phase,
-    location_description,
-    crew_affected
-FROM laser_strikes 
-ORDER BY incident_date DESC
-LIMIT 15;"""
-            results_df = pd.DataFrame({
-                'Report #': ['LSR-20241204-A2B3', 'LSR-20241128-C4D5', 'LSR-20241115-E6F7', 'LSR-20241102-G8H9'],
-                'Date': ['Dec 04, 2024', 'Nov 28, 2024', 'Nov 15, 2024', 'Nov 02, 2024'],
-                'Flight': ['PF-321', 'PF-654', 'PF-987', 'PF-147'],
-                'Color': ['Green', 'Green', 'Red', 'Green'],
-                'Intensity': ['High', 'Medium', 'Low', 'High'],
-                'Phase': ['Approach', 'Climb', 'Approach', 'Approach'],
-                'Location': ['10nm Final RWY 25', '5nm South LHE', '8nm Final RWY 18', '12nm Final RWY 25'],
-                'Crew Affected': ['Captain', 'Both', 'FO', 'Captain']
+        elif "overdue" in query.lower():
+            sql = "SELECT * FROM all_reports WHERE sla_deadline < CURRENT_DATE;"
+            results = pd.DataFrame({
+                'Report': ['HZD-20241105-O1P2', 'BRD-20241108-Q3R4'],
+                'Type': ['Hazard', 'Bird Strike'],
+                'Overdue': ['17 days', '22 days'],
+                'Assigned': ['John Smith', 'Jane Doe']
             })
-            
-        elif "tcas" in query.lower() or "ra" in query.lower():
-            sql_query = """SELECT 
-    report_number,
-    incident_date,
-    flight_number,
-    alert_type,
-    ra_sense,
-    ra_followed,
-    altitude_feet,
-    min_separation
-FROM tcas_reports 
-ORDER BY incident_date DESC;"""
-            results_df = pd.DataFrame({
-                'Report #': ['TCS-20241202-T1U2', 'TCS-20241125-V3W4', 'TCS-20241110-X5Y6'],
-                'Date': ['Dec 02, 2024', 'Nov 25, 2024', 'Nov 10, 2024'],
-                'Flight': ['PF-852', 'PF-963', 'PF-741'],
-                'Alert Type': ['RA - Climb', 'RA - Descend', 'TA Only'],
-                'RA Sense': ['Climb', 'Descend', 'N/A'],
-                'RA Followed': ['Yes - Fully', 'Yes - Fully', 'N/A'],
-                'Altitude': ['FL350', 'FL280', 'FL320'],
-                'Min Sep': ['400ft / 1.2nm', '500ft / 0.8nm', '800ft / 2.1nm']
-            })
-            
-        elif "overdue" in query.lower() or "sla" in query.lower():
-            sql_query = """SELECT 
-    report_number,
-    report_type,
-    hazard_title,
-    sla_deadline,
-    DATEDIFF(CURRENT_DATE, sla_deadline) as days_overdue,
-    assigned_to,
-    investigation_status
-FROM all_reports 
-WHERE sla_deadline < CURRENT_DATE 
-  AND investigation_status NOT IN ('Closed', 'Investigation Complete')
-ORDER BY days_overdue DESC;"""
-            results_df = pd.DataFrame({
-                'Report #': ['HZD-20241105-O1P2', 'BRD-20241108-Q3R4', 'INC-20241112-S5T6'],
-                'Type': ['Hazard', 'Bird Strike', 'Incident'],
-                'Title': ['Uneven taxiway surface', 'Multiple kite strike', 'Hydraulic leak'],
-                'SLA Deadline': ['Nov 20', 'Nov 15', 'Dec 02'],
-                'Days Overdue': [17, 22, 5],
-                'Assigned To': ['John Smith', 'Jane Doe', 'Mike Johnson'],
-                'Status': ['Awaiting Reply', 'Under Review', 'Investigation']
-            })
-            
-        elif "department" in query.lower():
-            sql_query = """SELECT 
-    reporter_department,
-    COUNT(*) as total_reports,
-    SUM(CASE WHEN risk_level = 'High' OR risk_level = 'Extreme' THEN 1 ELSE 0 END) as high_risk,
-    AVG(DATEDIFF(closure_date, report_date)) as avg_resolution_days
-FROM hazard_reports 
-GROUP BY reporter_department
-ORDER BY total_reports DESC;"""
-            results_df = pd.DataFrame({
-                'Department': ['Ground Operations', 'Engineering', 'Flight Operations', 'Cabin Services', 'Safety Department'],
-                'Total Reports': [45, 38, 32, 28, 22],
-                'High Risk': [12, 8, 15, 3, 10],
-                'Avg Resolution (Days)': [8.5, 12.3, 6.2, 5.8, 4.1]
-            })
-            
-        elif "monthly" in query.lower() or "trend" in query.lower():
-            sql_query = """SELECT 
-    DATE_FORMAT(incident_date, '%Y-%m') as month,
-    COUNT(*) as total_incidents,
-    SUM(CASE WHEN report_type = 'bird_strike' THEN 1 ELSE 0 END) as bird_strikes,
-    SUM(CASE WHEN report_type = 'hazard' THEN 1 ELSE 0 END) as hazards,
-    SUM(CASE WHEN report_type = 'incident' THEN 1 ELSE 0 END) as incidents
-FROM all_reports
-WHERE incident_date >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
-GROUP BY month
-ORDER BY month;"""
-            results_df = pd.DataFrame({
-                'Month': ['Jul 2024', 'Aug 2024', 'Sep 2024', 'Oct 2024', 'Nov 2024', 'Dec 2024'],
-                'Total': [42, 38, 55, 48, 51, 45],
-                'Bird Strikes': [8, 12, 15, 10, 7, 5],
-                'Hazards': [25, 18, 28, 22, 30, 28],
-                'Incidents': [9, 8, 12, 16, 14, 12]
-            })
-            
         else:
-            sql_query = """SELECT 
-    report_number,
-    report_type,
-    incident_date,
-    investigation_status,
-    risk_level
-FROM all_reports 
-ORDER BY incident_date DESC
-LIMIT 20;"""
-            results_df = pd.DataFrame({
-                'Report #': ['HZD-20241205-A1B2', 'BRD-20241204-C3D4', 'LSR-20241203-E5F6', 'TCS-20241202-G7H8', 'INC-20241201-I9J0'],
-                'Type': ['Hazard', 'Bird Strike', 'Laser Strike', 'TCAS', 'Incident'],
-                'Date': ['Dec 05', 'Dec 04', 'Dec 03', 'Dec 02', 'Dec 01'],
-                'Status': ['Under Review', 'Investigation', 'Closed', 'Closed', 'Action Required'],
-                'Risk': ['High', 'Medium', 'Low', 'Medium', 'High']
+            sql = "SELECT * FROM all_reports ORDER BY created_at DESC LIMIT 10;"
+            results = pd.DataFrame({
+                'Report': ['HZD-20241205', 'BRD-20241204', 'LSR-20241203'],
+                'Type': ['Hazard', 'Bird Strike', 'Laser'],
+                'Date': ['Dec 05', 'Dec 04', 'Dec 03'],
+                'Status': ['Open', 'Closed', 'Closed']
             })
         
-        # Display the interpreted query
+        st.markdown(f"**Your Question:** {query}")
+        
+        st.markdown("**Generated SQL:**")
+        st.markdown(f"""<div class="sql-result"><pre>{sql}</pre></div>""", unsafe_allow_html=True)
+        
+        st.markdown("### Results")
+        st.dataframe(results, use_container_width=True)
+        
         st.markdown(f"""
-        <div class="form-section">
-            <div class="form-section-title">🗣️ Your Question</div>
-            <div style="font-size: 1.1rem; color: #1E293B; padding: 0.5rem 0;">{query}</div>
+        <div class="alert-box alert-success">
+            <span>✅</span>
+            <div>Found {len(results)} records</div>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Display generated SQL
-        st.markdown("**Generated SQL Query:**")
-        st.markdown(f"""
-        <div class="sql-result">
-            <pre style="margin: 0; white-space: pre-wrap; font-size: 0.85rem;">{sql_query}</pre>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display results
-        st.markdown("### 📊 Results")
-        
-        if results_df is not None:
-            st.dataframe(results_df, use_container_width=True)
-            
-            # Summary
-            st.markdown(f"""
-            <div class="alert-box alert-success">
-                <span style="font-size: 1.5rem;">✅</span>
-                <div>
-                    <strong>Query completed successfully</strong><br>
-                    <small>Found {len(results_df)} matching records in 0.23 seconds</small>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Export options
-            col1, col2, col3 = st.columns([1, 1, 2])
-            with col1:
-                st.download_button(
-                    "📥 Export CSV",
-                    results_df.to_csv(index=False),
-                    file_name="query_results.csv",
-                    mime="text/csv"
-                )
-            with col2:
-                if st.button("📧 Email Results"):
-                    st.info("Email feature - configure SMTP settings")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CORRECTIVE ACTIONS (CPA) TABLE
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
+# CPA TABLE (Corrective Actions)
+# ==============================================================================
 
 def render_cpa_table():
-    """
-    Render Corrective/Preventive Actions (CPA) table with status tracking
-    Shows overdue, critical, warning, and on-track items with visual status lights
-    """
+    """Corrective/Preventive Actions table"""
     
     st.markdown("### 📋 Corrective & Preventive Actions (CPAs)")
     
-    # Sample CPA data - in production this would come from database
     cpa_data = [
-        {
-            "id": "CPA-2024-001",
-            "action": "Install bird deterrent system at RWY 25 threshold",
-            "source": "BRD-20241201-A1B2",
-            "source_type": "Bird Strike",
-            "responsible": "Engineering",
-            "responsible_person": "Ahmed Khan",
-            "due_date": "Dec 10, 2024",
-            "status": "overdue",
-            "days": -7,
-            "priority": "High"
-        },
-        {
-            "id": "CPA-2024-002",
-            "action": "Update laser strike reporting procedure in Operations Manual",
-            "source": "LSR-20241128-C3D4",
-            "source_type": "Laser Strike",
-            "responsible": "Safety Dept",
-            "responsible_person": "Fatima Ali",
-            "due_date": "Dec 18, 2024",
-            "status": "critical",
-            "days": 1,
-            "priority": "High"
-        },
-        {
-            "id": "CPA-2024-003",
-            "action": "Conduct FOD awareness training for ground crew",
-            "source": "HZD-20241125-E5F6",
-            "source_type": "Hazard",
-            "responsible": "Training",
-            "responsible_person": "Hassan Malik",
-            "due_date": "Dec 22, 2024",
-            "status": "warning",
-            "days": 5,
-            "priority": "Medium"
-        },
-        {
-            "id": "CPA-2024-004",
-            "action": "Review and update TCAS response procedures",
-            "source": "TCS-20241120-G7H8",
-            "source_type": "TCAS",
-            "responsible": "Flight Ops",
-            "responsible_person": "Capt. Imran Shah",
-            "due_date": "Dec 05, 2024",
-            "status": "overdue",
-            "days": -12,
-            "priority": "Critical"
-        },
-        {
-            "id": "CPA-2024-005",
-            "action": "Inspect and repair taxiway lighting system",
-            "source": "HZD-20241118-I9J0",
-            "source_type": "Hazard",
-            "responsible": "Engineering",
-            "responsible_person": "Bilal Ahmed",
-            "due_date": "Jan 05, 2025",
-            "status": "ok",
-            "days": 19,
-            "priority": "Medium"
-        },
-        {
-            "id": "CPA-2024-006",
-            "action": "Implement crew fatigue monitoring system",
-            "source": "INC-20241115-K1L2",
-            "source_type": "Incident",
-            "responsible": "HR / Crew Scheduling",
-            "responsible_person": "Sara Khan",
-            "due_date": "Jan 15, 2025",
-            "status": "ok",
-            "days": 29,
-            "priority": "High"
-        },
+        {"id": "CPA-001", "action": "Install bird deterrent at RWY 25", "source": "BRD-20241201", "dept": "Engineering", "due": "Dec 10", "status": "overdue", "days": -7},
+        {"id": "CPA-002", "action": "Update laser strike procedure", "source": "LSR-20241128", "dept": "Safety", "due": "Dec 18", "status": "critical", "days": 1},
+        {"id": "CPA-003", "action": "FOD awareness training", "source": "HZD-20241125", "dept": "Training", "due": "Dec 22", "status": "warning", "days": 5},
+        {"id": "CPA-004", "action": "Review TCAS procedures", "source": "TCS-20241120", "dept": "Flight Ops", "due": "Dec 05", "status": "overdue", "days": -12},
+        {"id": "CPA-005", "action": "Taxiway lighting inspection", "source": "HZD-20241118", "dept": "Engineering", "due": "Jan 05", "status": "ok", "days": 19},
     ]
     
-    # Status light mapping
-    status_config = {
-        "overdue": {"light": "status-red", "label": "OVERDUE", "color": "#DC2626"},
-        "critical": {"light": "status-red", "label": "CRITICAL", "color": "#DC2626"},
-        "warning": {"light": "status-yellow", "label": "WARNING", "color": "#EAB308"},
-        "ok": {"light": "status-green", "label": "ON TRACK", "color": "#22C55E"}
-    }
-    
-    # Summary row
-    overdue_count = len([c for c in cpa_data if c['status'] == 'overdue'])
-    critical_count = len([c for c in cpa_data if c['status'] == 'critical'])
-    warning_count = len([c for c in cpa_data if c['status'] == 'warning'])
-    ok_count = len([c for c in cpa_data if c['status'] == 'ok'])
+    # Summary
+    overdue = len([c for c in cpa_data if c['status'] == 'overdue'])
+    critical = len([c for c in cpa_data if c['status'] == 'critical'])
+    warning = len([c for c in cpa_data if c['status'] == 'warning'])
+    ok = len([c for c in cpa_data if c['status'] == 'ok'])
     
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown(f"""
-        <div class="kpi-card" style="border-left: 4px solid #DC2626;">
-            <div class="kpi-value" style="color: #DC2626;">{overdue_count}</div>
-            <div class="kpi-label">Overdue</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="kpi-card" style="border-left: 4px solid #F97316;">
-            <div class="kpi-value" style="color: #F97316;">{critical_count}</div>
-            <div class="kpi-label">Critical</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown(f"""
-        <div class="kpi-card" style="border-left: 4px solid #EAB308;">
-            <div class="kpi-value" style="color: #EAB308;">{warning_count}</div>
-            <div class="kpi-label">Warning</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col4:
-        st.markdown(f"""
-        <div class="kpi-card" style="border-left: 4px solid #22C55E;">
-            <div class="kpi-value" style="color: #22C55E;">{ok_count}</div>
-            <div class="kpi-label">On Track</div>
-        </div>
-        """, unsafe_allow_html=True)
+    col1.markdown(f'<div class="kpi-card" style="border-left: 4px solid #DC2626;"><div class="kpi-value" style="color: #DC2626;">{overdue}</div><div class="kpi-label">Overdue</div></div>', unsafe_allow_html=True)
+    col2.markdown(f'<div class="kpi-card" style="border-left: 4px solid #F97316;"><div class="kpi-value" style="color: #F97316;">{critical}</div><div class="kpi-label">Critical</div></div>', unsafe_allow_html=True)
+    col3.markdown(f'<div class="kpi-card" style="border-left: 4px solid #EAB308;"><div class="kpi-value" style="color: #EAB308;">{warning}</div><div class="kpi-label">Warning</div></div>', unsafe_allow_html=True)
+    col4.markdown(f'<div class="kpi-card" style="border-left: 4px solid #22C55E;"><div class="kpi-value" style="color: #22C55E;">{ok}</div><div class="kpi-label">On Track</div></div>', unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Build CPA table
+    # Table
+    status_map = {
+        "overdue": ("status-red", "OVERDUE", "#DC2626"),
+        "critical": ("status-red", "CRITICAL", "#DC2626"),
+        "warning": ("status-yellow", "WARNING", "#EAB308"),
+        "ok": ("status-green", "ON TRACK", "#22C55E")
+    }
+    
     table_html = """
     <table class="cpa-table">
-        <tr>
-            <th style="width: 90px;">Status</th>
-            <th style="width: 110px;">CPA ID</th>
-            <th>Action Required</th>
-            <th style="width: 130px;">Source Report</th>
-            <th style="width: 130px;">Responsible</th>
-            <th style="width: 110px;">Due Date</th>
-            <th style="width: 80px;">Priority</th>
-        </tr>
+        <tr><th>Status</th><th>CPA ID</th><th>Action</th><th>Source</th><th>Dept</th><th>Due</th></tr>
     """
     
-    for cpa in cpa_data:
-        config = status_config[cpa['status']]
-        
-        # Calculate days text
-        if cpa['days'] < 0:
-            days_text = f"{abs(cpa['days'])} days overdue"
-        elif cpa['days'] == 0:
-            days_text = "Due today"
-        else:
-            days_text = f"{cpa['days']} days left"
-        
-        # Priority badge color
-        priority_colors = {
-            "Critical": "#DC2626",
-            "High": "#F97316",
-            "Medium": "#EAB308",
-            "Low": "#22C55E"
-        }
-        priority_color = priority_colors.get(cpa['priority'], "#64748B")
-        
-        # Source type badge
-        source_badges = {
-            "Bird Strike": "cat-bird",
-            "Laser Strike": "cat-laser",
-            "TCAS": "cat-tcas",
-            "Hazard": "cat-hazard",
-            "Incident": "cat-incident"
-        }
-        source_badge = source_badges.get(cpa['source_type'], "cat-incident")
-        
+    for c in cpa_data:
+        light, label, color = status_map[c['status']]
+        days_txt = f"{abs(c['days'])} days {'overdue' if c['days']<0 else 'left'}"
         table_html += f"""
         <tr>
-            <td>
-                <span class="status-light {config['light']}"></span>
-                <span style="color: {config['color']}; font-weight: 600; font-size: 0.75rem;">{config['label']}</span>
-            </td>
-            <td><strong style="color: #1E40AF;">{cpa['id']}</strong></td>
-            <td style="max-width: 300px;">{cpa['action']}</td>
-            <td>
-                <span class="category-badge {source_badge}">{cpa['source_type']}</span><br>
-                <small style="color: #64748B;">{cpa['source']}</small>
-            </td>
-            <td>
-                <strong>{cpa['responsible']}</strong><br>
-                <small style="color: #64748B;">{cpa['responsible_person']}</small>
-            </td>
-            <td>
-                {cpa['due_date']}<br>
-                <small style="color: {config['color']};">{days_text}</small>
-            </td>
-            <td>
-                <span style="background: {priority_color}20; color: {priority_color}; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.7rem; font-weight: 600;">
-                    {cpa['priority']}
-                </span>
-            </td>
+            <td><span class="status-light {light}"></span><span style="color: {color}; font-weight: 600; font-size: 0.75rem;">{label}</span></td>
+            <td><strong style="color: #1E40AF;">{c['id']}</strong></td>
+            <td>{c['action']}</td>
+            <td><span class="category-badge cat-hazard">{c['source']}</span></td>
+            <td>{c['dept']}</td>
+            <td>{c['due']}<br><small style="color: {color};">{days_txt}</small></td>
         </tr>
         """
     
     table_html += "</table>"
-    
     st.markdown(table_html, unsafe_allow_html=True)
     
-    # Alert if there are overdue items
-    if overdue_count > 0:
+    if overdue > 0:
         st.markdown(f"""
         <div class="alert-box alert-danger" style="margin-top: 1rem;">
-            <span style="font-size: 1.5rem;">⚠️</span>
-            <div>
-                <strong>{overdue_count} overdue action(s)</strong> require immediate attention<br>
-                <small>Please review and update the status or request an extension</small>
-            </div>
+            <span>⚠️</span>
+            <div><strong>{overdue} overdue action(s)</strong> require immediate attention</div>
         </div>
         """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# UPDATED SIDEBAR WITH NEW NAVIGATION STRUCTURE
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
+# UPDATED SIDEBAR V3
+# ==============================================================================
 
 def render_sidebar_v3():
-    """Render updated sidebar with new navigation structure for v3.0"""
+    """Updated sidebar with new navigation"""
     
     with st.sidebar:
         st.markdown(f"""
-        <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, #1E40AF, #3B82F6); border-radius: 12px; margin-bottom: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, #1E40AF, #3B82F6); border-radius: 12px; margin-bottom: 1rem;">
             <span style="font-size: 2.5rem;">🛡️✈️</span>
-            <h3 style="color: white; margin: 0.5rem 0 0.25rem 0; font-weight: 700;">Air Sial Safety</h3>
+            <h3 style="color: white; margin: 0.5rem 0;">Air Sial Safety</h3>
             <small style="color: #BFDBFE;">Enterprise SMS v3.0</small>
         </div>
         """, unsafe_allow_html=True)
         
-        # User info card
         st.markdown(f"""
         <div style="padding: 0.75rem; background: #F1F5F9; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #E2E8F0;">
             <div style="font-weight: 600; color: #1E293B;">👤 {st.session_state.get('user_name', 'User')}</div>
             <div style="font-size: 0.8rem; color: #64748B;">{st.session_state.get('user_department', 'Department')}</div>
-            <div style="font-size: 0.75rem; color: #3B82F6; margin-top: 0.25rem;">Role: {st.session_state.get('user_role', 'Reporter').replace('_', ' ').title()}</div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("---")
-        
-        # Navigation with new structure
         st.markdown("### 📍 Navigation")
         
         page = st.radio(
-            "Select Page",
+            "Page",
             options=[
                 "📊 Dashboard",
                 "📈 Predictive Risk",
                 "💾 Data & CSV Upload",
                 "🤖 NL/AI Query",
                 "📋 View Reports",
-                "---SEPARATOR1---",
+                "──────────────",
                 "🐦 Bird Strike Report",
                 "🔴 Laser Strike Report",
                 "📡 TCAS Report",
                 "🚨 Incident Report",
                 "⚠️ Hazard Report",
-                "---SEPARATOR2---",
+                "──────────────",
                 "📋 Flight Services (FSR)",
                 "👨‍✈️ Captain's DBR",
-                "---SEPARATOR3---",
+                "──────────────",
                 "🤖 AI Assistant",
                 "⚙️ Settings"
             ],
-            label_visibility="collapsed",
-            format_func=lambda x: "─" * 25 if x.startswith("---") else x
+            label_visibility="collapsed"
         )
         
         st.markdown("---")
         
-        # Quick Actions
-        st.markdown("### ⚡ Quick Actions")
-        
         if st.button("🆘 Emergency Report", use_container_width=True, type="primary"):
             return "🚨 Incident Report"
         
-        if st.button("📊 Quick Stats", use_container_width=True):
-            return "📊 Dashboard"
-        
         st.markdown("---")
         
-        # System Status
-        st.markdown("### 🖥️ System Status")
-        st.markdown("""
-        <div style="font-size: 0.8rem; color: #64748B;">
-            <div style="margin-bottom: 0.25rem;">
-                <span class="status-light status-green" style="width: 8px; height: 8px;"></span>
-                Database: Connected
-            </div>
-            <div style="margin-bottom: 0.25rem;">
-                <span class="status-light status-green" style="width: 8px; height: 8px;"></span>
-                AI Services: Online
-            </div>
-            <div>
-                <span class="status-light status-green" style="width: 8px; height: 8px;"></span>
-                Email: Configured
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # Logout
         if st.button("🚪 Logout", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
         
-        # Footer
-        st.markdown("""
-        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E2E8F0;">
-            <small style="color: #94A3B8;">© 2024 Air Sial</small><br>
-            <small style="color: #CBD5E1;">Safety Management System</small>
-        </div>
-        """, unsafe_allow_html=True)
-        
         return page
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# UPDATED MAIN FUNCTION FOR V3.0
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
+# MAIN V3 ENTRY POINT
+# ==============================================================================
 
 def main_v3():
-    """Main application entry point for Version 3.0 with all new features"""
+    """Main entry point for v3.0"""
     
-    # Page configuration
     st.set_page_config(
-        page_title="Air Sial Corporate Safety v3.0",
+        page_title="Air Sial Safety v3.0",
         page_icon="🛡️",
         layout="wide",
         initial_sidebar_state="expanded"
     )
     
-    # Apply light theme CSS
     apply_custom_css()
     
-    # Check authentication
     if not st.session_state.get('logged_in', False):
         render_login()
         return
     
-    # Render header with logo support
     render_header_with_logo()
     
-    # Render updated sidebar and get selected page
     page = render_sidebar_v3()
     
-    # Skip separator options
-    if page and page.startswith("---"):
+    # Skip separators
+    if page and "────" in page:
         page = "📊 Dashboard"
     
-    # Route to appropriate page
+    # Route pages
     if page == "📊 Dashboard":
         render_dashboard()
         st.markdown("---")
-        render_cpa_table()  # Add CPA table to dashboard
-        
+        render_cpa_table()
     elif page == "📈 Predictive Risk":
         render_predictive_risk_monitor()
-        
     elif page == "💾 Data & CSV Upload":
         render_data_management()
-        
     elif page == "🤖 NL/AI Query":
         render_nl_query()
-        
     elif page == "📋 View Reports":
         render_view_reports()
-        
     elif page == "🐦 Bird Strike Report":
         ocr_data = render_ocr_scanner("bird_strike")
         render_bird_strike_form(ocr_data)
-        
     elif page == "🔴 Laser Strike Report":
         ocr_data = render_ocr_scanner("laser_strike")
         render_laser_strike_form(ocr_data)
-        
     elif page == "📡 TCAS Report":
         ocr_data = render_ocr_scanner("tcas_report")
         render_tcas_form(ocr_data)
-        
     elif page == "🚨 Incident Report":
         ocr_data = render_ocr_scanner("incident_report")
         render_incident_form(ocr_data)
-        
     elif page == "⚠️ Hazard Report":
         ocr_data = render_ocr_scanner("hazard_report")
         render_hazard_form(ocr_data)
-        
     elif page == "📋 Flight Services (FSR)":
         render_fsr_form()
-        
     elif page == "👨‍✈️ Captain's DBR":
         render_dbr_form()
-        
     elif page == "🤖 AI Assistant":
         render_ai_assistant()
-        
     elif page == "⚙️ Settings":
         render_settings()
 
 
-# Override main entry point to use v3
+# Override main
 if __name__ == "__main__":
     main_v3()
