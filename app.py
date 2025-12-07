@@ -1070,15 +1070,29 @@ def apply_custom_css():
 
 def load_logo_base64():
     """Load logo.png and convert to base64 for embedding"""
-    logo_paths = ["logo.png", "./logo.png", "assets/logo.png", "static/logo.png", "/mount/src/airops-pro/logo.png"]
+    import pathlib
+    
+    # Get the directory where this script is located
+    script_dir = pathlib.Path(__file__).parent.resolve()
+    
+    # Try multiple possible locations
+    logo_paths = [
+        script_dir / "logo.png",                    # Same folder as app.py
+        pathlib.Path("logo.png"),                   # Current working directory
+        pathlib.Path("./logo.png"),
+        pathlib.Path("/mount/src/airops-pro/logo.png"),  # Streamlit Cloud path
+        script_dir / "assets" / "logo.png",
+        script_dir / "static" / "logo.png",
+    ]
     
     for path in logo_paths:
-        if os.path.exists(path):
-            try:
+        try:
+            if path.exists():
                 with open(path, "rb") as f:
                     return base64.b64encode(f.read()).decode()
-            except:
-                continue
+        except Exception:
+            continue
+    
     return None
 
 
