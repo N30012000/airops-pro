@@ -1198,8 +1198,7 @@ def render_header():
     st.markdown(f"""
     <div class="main-header">
         <div style="display: flex; align-items: center;">
-           <img src="data:image/png;base64,{{airsial_logo}}" class="header-logo" style="height:55px; margin-right:10px;">
-           
+            <span class="header-logo">🛡️✈️</span>
             <div>
                 <h1 class="header-title">{Config.APP_NAME}</h1>
                 <p class="header-subtitle">{Config.APP_SUBTITLE} | {Config.COMPANY_ICAO} | AOC: {Config.AOC_NUMBER}</p>
