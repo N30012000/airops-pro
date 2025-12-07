@@ -635,71 +635,76 @@ class Database:
 
 
 db = Database()
+# ══════════════════════════════════════════════════════════════════════════════
+# CUSTOM CSS STYLING
+# ══════════════════════════════════════════════════════════════════════════════
+
 
 # ==============================================================================
 # LIGHT THEME CSS - PROFESSIONAL ENTERPRISE DESIGN
 # ==============================================================================
 
 def apply_custom_css():
-    """Apply professional light theme CSS"""
-    st.markdown("""
+    """Apply professional light theme CSS with ERP mode support"""
+    
+    # Check if ERP mode is active
+    erp_mode = st.session_state.get('erp_mode', False)
+    
+    if erp_mode:
+        header_bg = "linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)"
+        header_animation = """
+        @keyframes erp-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .main-header { animation: erp-flash 1s infinite; }
+        """
+    else:
+        header_bg = "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)"
+        header_animation = ""
+    
+    st.markdown(f"""
     <style>
     /* ===========================================================================
        LIGHT THEME - AIR SIAL CORPORATE SAFETY v3.0
        =========================================================================== */
     
-    /* Import Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Root Variables */
-    :root {
+    :root {{
         --primary-blue: #1E40AF;
         --primary-blue-light: #3B82F6;
-        --primary-blue-dark: #1E3A8A;
-        --accent-gold: #D97706;
         --bg-primary: #F8FAFC;
         --bg-secondary: #F1F5F9;
         --bg-card: #FFFFFF;
         --border-color: #E2E8F0;
-        --border-hover: #CBD5E1;
         --text-primary: #1E293B;
         --text-secondary: #334155;
         --text-muted: #64748B;
-        --text-light: #94A3B8;
-        --success: #22C55E;
-        --warning: #EAB308;
-        --danger: #DC2626;
-        --info: #3B82F6;
-    }
+    }}
     
-    /* Main App Background */
-    .stApp {
+    .stApp {{
         background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-    }
+    }}
     
-    /* Hide Streamlit Branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
     
-    /* Sidebar - Light Gray */
-    section[data-testid="stSidebar"] {
+    section[data-testid="stSidebar"] {{
         background: linear-gradient(180deg, #F1F5F9 0%, #E2E8F0 100%);
         border-right: 1px solid #E2E8F0;
-    }
+    }}
     
-    section[data-testid="stSidebar"] .stMarkdown {
-        color: #1E293B;
-    }
-    
-    section[data-testid="stSidebar"] .stRadio label {
+    section[data-testid="stSidebar"] .stRadio label {{
         color: #334155 !important;
         font-weight: 500;
-    }
+    }}
     
-    /* Header Styling */
-    .main-header {
-        background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+    {header_animation}
+    
+    .main-header {{
+        background: {header_bg};
         padding: 1.5rem 2rem;
         border-radius: 12px;
         margin-bottom: 1.5rem;
@@ -707,41 +712,28 @@ def apply_custom_css():
         align-items: center;
         justify-content: space-between;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
+    }}
     
-    .main-header h1, .header-title {
+    .main-header h1, .header-title {{
         color: #FFFFFF;
         font-size: 1.75rem;
         font-weight: 700;
         margin: 0;
-    }
+    }}
     
-    .header-subtitle {
+    .header-subtitle {{
         color: #BFDBFE;
         font-size: 0.9rem;
         margin-top: 0.25rem;
-    }
+    }}
     
-    .header-logo {
-        font-size: 2.5rem;
-        margin-right: 1rem;
-    }
-    
-    .header-time {
+    .header-time {{
         color: #FFFFFF;
         font-size: 0.9rem;
         text-align: right;
-    }
+    }}
     
-    /* KPI Cards */
-    .kpi-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .kpi-card {
+    .kpi-card {{
         background: #FFFFFF;
         border-radius: 12px;
         padding: 1.25rem;
@@ -751,15 +743,15 @@ def apply_custom_css():
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
-    }
+    }}
     
-    .kpi-card:hover {
+    .kpi-card:hover {{
         transform: translateY(-3px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         border-color: #3B82F6;
-    }
+    }}
     
-    .kpi-card::before {
+    .kpi-card::before {{
         content: '';
         position: absolute;
         top: 0;
@@ -767,426 +759,360 @@ def apply_custom_css():
         right: 0;
         height: 4px;
         background: linear-gradient(90deg, #1E40AF, #3B82F6);
-    }
+    }}
     
-    .kpi-value {
+    .kpi-value {{
         font-size: 2.25rem;
         font-weight: 700;
         color: #1E40AF;
         line-height: 1;
         margin: 0.5rem 0;
-    }
+    }}
     
-    .kpi-label {
+    .kpi-label {{
         color: #64748B;
         font-size: 0.8rem;
         font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+    }}
     
-    /* Risk Badges */
-    .risk-badge {
+    .risk-badge {{
         display: inline-block;
         padding: 0.35rem 0.75rem;
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
-    }
+    }}
     
-    .risk-extreme {
-        background: #FEE2E2;
-        color: #DC2626;
-        border: 1px solid #FECACA;
-    }
+    .risk-extreme {{ background: #FEE2E2; color: #DC2626; }}
+    .risk-high {{ background: #FFEDD5; color: #EA580C; }}
+    .risk-medium {{ background: #FEF9C3; color: #CA8A04; }}
+    .risk-low {{ background: #DCFCE7; color: #16A34A; }}
     
-    .risk-high {
-        background: #FFEDD5;
-        color: #EA580C;
-        border: 1px solid #FED7AA;
-    }
+    .sla-overdue {{ background: #FEE2E2; border-left: 4px solid #DC2626; color: #991B1B; }}
+    .sla-critical {{ background: #FFEDD5; border-left: 4px solid #EA580C; color: #9A3412; }}
+    .sla-warning {{ background: #FEF9C3; border-left: 4px solid #CA8A04; color: #854D0E; }}
+    .sla-ok {{ background: #DCFCE7; border-left: 4px solid #22C55E; color: #166534; }}
     
-    .risk-medium {
-        background: #FEF9C3;
-        color: #CA8A04;
-        border: 1px solid #FEF08A;
-    }
-    
-    .risk-low {
-        background: #DCFCE7;
-        color: #16A34A;
-        border: 1px solid #BBF7D0;
-    }
-    
-    /* SLA Indicators */
-    .sla-indicator {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-    }
-    
-    .sla-overdue {
-        background: #FEE2E2;
-        border-left: 4px solid #DC2626;
-        color: #991B1B;
-    }
-    
-    .sla-critical {
-        background: #FFEDD5;
-        border-left: 4px solid #EA580C;
-        color: #9A3412;
-    }
-    
-    .sla-warning {
-        background: #FEF9C3;
-        border-left: 4px solid #CA8A04;
-        color: #854D0E;
-    }
-    
-    .sla-ok {
-        background: #DCFCE7;
-        border-left: 4px solid #22C55E;
-        color: #166534;
-    }
-    
-    /* Report Cards */
-    .report-card {
+    .report-card {{
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
         border-radius: 10px;
         padding: 1.25rem;
         margin-bottom: 1rem;
-        transition: all 0.2s ease;
-    }
+    }}
     
-    .report-card:hover {
+    .report-card:hover {{
         border-color: #3B82F6;
         box-shadow: 0 4px 15px rgba(30, 64, 175, 0.1);
-    }
+    }}
     
-    .report-number {
+    .report-number {{
         font-family: 'Courier New', monospace;
         font-weight: 600;
         color: #1E40AF;
-    }
+    }}
     
-    /* Category Badges */
-    .category-badge {
+    .category-badge {{
         display: inline-block;
         padding: 0.25rem 0.6rem;
         border-radius: 12px;
         font-size: 0.7rem;
         font-weight: 600;
         text-transform: uppercase;
-    }
+    }}
     
-    .cat-bird { background: #DBEAFE; color: #1D4ED8; }
-    .cat-laser { background: #F3E8FF; color: #7C3AED; }
-    .cat-tcas { background: #FFEDD5; color: #C2410C; }
-    .cat-hazard { background: #FEE2E2; color: #DC2626; }
-    .cat-incident { background: #D1FAE5; color: #059669; }
-    .cat-fsr { background: #CCFBF1; color: #0D9488; }
-    .cat-dbr { background: #FEF3C7; color: #D97706; }
+    .cat-bird {{ background: #DBEAFE; color: #1D4ED8; }}
+    .cat-laser {{ background: #F3E8FF; color: #7C3AED; }}
+    .cat-tcas {{ background: #FFEDD5; color: #C2410C; }}
+    .cat-hazard {{ background: #FEE2E2; color: #DC2626; }}
+    .cat-incident {{ background: #D1FAE5; color: #059669; }}
+    .cat-fsr {{ background: #CCFBF1; color: #0D9488; }}
+    .cat-dbr {{ background: #FEF3C7; color: #D97706; }}
     
-    /* Form Styling */
-    .form-section {
+    .form-section {{
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
+    }}
     
-    .form-section-title {
+    .form-section-title {{
         color: #1E40AF;
         font-size: 1.1rem;
         font-weight: 600;
         margin-bottom: 1rem;
         padding-bottom: 0.75rem;
         border-bottom: 2px solid #DBEAFE;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
+    }}
     
-    /* Input Fields - Light Theme */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea,
-    .stSelectbox > div > div > div,
-    .stMultiSelect > div > div > div {
+    .stSelectbox > div > div > div {{
         background-color: #FFFFFF !important;
         border: 1px solid #E2E8F0 !important;
         color: #1E293B !important;
         border-radius: 8px !important;
-    }
-    
-    .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus {
-        border-color: #3B82F6 !important;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-    }
+    }}
     
     .stTextInput label,
     .stTextArea label,
-    .stSelectbox label,
-    .stMultiSelect label,
-    .stDateInput label,
-    .stTimeInput label,
-    .stNumberInput label,
-    .stCheckbox label,
-    .stRadio label {
+    .stSelectbox label {{
         color: #334155 !important;
         font-weight: 500 !important;
-    }
+    }}
     
-    /* Button Styling */
-    .stButton > button {
+    .stButton > button {{
         background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
         color: #FFFFFF;
         border: none;
         border-radius: 8px;
         padding: 0.6rem 1.5rem;
         font-weight: 600;
-        transition: all 0.3s ease;
-    }
+    }}
     
-    .stButton > button:hover {
+    .stButton > button:hover {{
         background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
         box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
-        transform: translateY(-2px);
-    }
+    }}
     
-    /* Tab Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 0;
+    .stTabs [data-baseweb="tab-list"] {{
         background: #F1F5F9;
         border-radius: 10px;
         padding: 0.25rem;
-    }
+    }}
     
-    .stTabs [data-baseweb="tab"] {
+    .stTabs [data-baseweb="tab"] {{
         background: transparent;
         color: #64748B;
         border-radius: 8px;
-        padding: 0.75rem 1.25rem;
-        font-weight: 500;
-    }
+    }}
     
-    .stTabs [aria-selected="true"] {
+    .stTabs [aria-selected="true"] {{
         background: #FFFFFF;
         color: #1E40AF;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
+    }}
     
-    /* Expander Styling */
-    .streamlit-expanderHeader {
-        background: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        color: #1E293B;
-    }
-    
-    .streamlit-expanderContent {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-top: none;
-    }
-    
-    /* Metric Styling */
-    [data-testid="stMetricValue"] {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1E40AF;
-    }
-    
-    [data-testid="stMetricLabel"] {
-        color: #64748B;
-    }
-    
-    /* Alert Boxes */
-    .alert-box {
+    .alert-box {{
         padding: 1rem 1.25rem;
         border-radius: 10px;
         margin-bottom: 1rem;
         display: flex;
         align-items: center;
         gap: 1rem;
-        border: 1px solid;
-    }
+    }}
     
-    .alert-success { background: #F0FDF4; border-color: #86EFAC; color: #166534; }
-    .alert-warning { background: #FFFBEB; border-color: #FCD34D; color: #92400E; }
-    .alert-danger { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
-    .alert-info { background: #EFF6FF; border-color: #93C5FD; color: #1E40AF; }
+    .alert-success {{ background: #F0FDF4; border: 1px solid #86EFAC; color: #166534; }}
+    .alert-warning {{ background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E; }}
+    .alert-danger {{ background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }}
+    .alert-info {{ background: #EFF6FF; border: 1px solid #93C5FD; color: #1E40AF; }}
     
-    /* Status Lights */
-    .status-light {
+    .status-light {{
         width: 12px;
         height: 12px;
         border-radius: 50%;
         display: inline-block;
         margin-right: 8px;
-    }
+    }}
     
-    .status-red { background: #DC2626; box-shadow: 0 0 8px rgba(220, 38, 38, 0.5); }
-    .status-yellow { background: #EAB308; box-shadow: 0 0 8px rgba(234, 179, 8, 0.5); }
-    .status-green { background: #22C55E; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+    .status-red {{ background: #DC2626; box-shadow: 0 0 8px rgba(220, 38, 38, 0.5); }}
+    .status-yellow {{ background: #EAB308; box-shadow: 0 0 8px rgba(234, 179, 8, 0.5); }}
+    .status-green {{ background: #22C55E; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }}
     
-    /* CPA Table */
-    .cpa-table {
+    .cpa-table {{
         width: 100%;
         border-collapse: collapse;
         background: #FFFFFF;
         border-radius: 10px;
         overflow: hidden;
         border: 1px solid #E2E8F0;
-    }
+    }}
     
-    .cpa-table th {
+    .cpa-table th {{
         background: #1E40AF;
         color: #FFFFFF;
         padding: 0.75rem 1rem;
         text-align: left;
         font-weight: 600;
-    }
+    }}
     
-    .cpa-table td {
+    .cpa-table td {{
         padding: 0.75rem 1rem;
         border-bottom: 1px solid #E2E8F0;
         color: #334155;
-    }
+    }}
     
-    .cpa-table tr:hover {
+    .cpa-table tr:hover {{
         background: #F8FAFC;
-    }
+    }}
     
-    /* Prediction Card */
-    .prediction-card {
+    .prediction-card {{
         background: linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 12px;
         margin-bottom: 1rem;
-    }
+    }}
     
-    .prediction-value {
+    .prediction-value {{
         font-size: 3rem;
         font-weight: 700;
-    }
+    }}
     
-    /* Query Box */
-    .query-box {
-        background: #F8FAFC;
-        border: 2px dashed #CBD5E1;
+    .weather-card {{
+        background: #FFFFFF;
         border-radius: 12px;
-        padding: 2rem;
-        text-align: center;
-    }
-    
-    .sql-result {
-        background: #1E293B;
-        color: #22C55E;
-        font-family: 'Monaco', 'Consolas', monospace;
         padding: 1rem;
-        border-radius: 8px;
-        overflow-x: auto;
-    }
+        text-align: center;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }}
     
-    /* Data Table */
-    .dataframe {
-        background: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 8px !important;
-    }
+    .weather-icon {{
+        font-size: 2rem;
+        margin-bottom: 0.25rem;
+    }}
     
-    .dataframe th {
-        background: #F8FAFC !important;
-        color: #334155 !important;
-        font-weight: 600 !important;
-    }
+    .weather-temp {{
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1E40AF;
+    }}
     
-    .dataframe td {
-        color: #475569 !important;
-        border-color: #E2E8F0 !important;
-    }
+    .weather-city {{
+        color: #64748B;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }}
     
-    /* OCR Scanner Box */
-    .ocr-scanner {
+    .ocr-scanner {{
         background: #F8FAFC;
         border: 2px dashed #CBD5E1;
         border-radius: 12px;
         padding: 2rem;
         text-align: center;
         margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
-    }
+    }}
     
-    .ocr-scanner:hover {
+    .ocr-scanner:hover {{
         border-color: #3B82F6;
         background: #EFF6FF;
-    }
+    }}
     
-    /* Risk Matrix Cell */
-    .risk-matrix-cell {
-        width: 60px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 0.75rem;
-        border-radius: 4px;
-    }
+    .erp-emergency {{
+        background: #FEE2E2;
+        border: 2px solid #DC2626;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }}
     
-    /* Scrollbar */
-    ::-webkit-scrollbar {
+    .bulletin-card {{
+        background: #FFFFFF;
+        border-left: 4px solid #3B82F6;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-radius: 0 8px 8px 0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }}
+    
+    [data-testid="stMetricValue"] {{
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1E40AF;
+    }}
+    
+    [data-testid="stMetricLabel"] {{
+        color: #64748B;
+    }}
+    
+    .dataframe {{
+        background: #FFFFFF !important;
+        border: 1px solid #E2E8F0 !important;
+    }}
+    
+    .dataframe th {{
+        background: #F8FAFC !important;
+        color: #334155 !important;
+    }}
+    
+    .dataframe td {{
+        color: #475569 !important;
+    }}
+    
+    ::-webkit-scrollbar {{
         width: 8px;
-        height: 8px;
-    }
+    }}
     
-    ::-webkit-scrollbar-track {
+    ::-webkit-scrollbar-track {{
         background: #F1F5F9;
-    }
+    }}
     
-    ::-webkit-scrollbar-thumb {
+    ::-webkit-scrollbar-thumb {{
         background: #94A3B8;
         border-radius: 4px;
-    }
+    }}
     
-    ::-webkit-scrollbar-thumb:hover {
-        background: #64748B;
-    }
-    
-    /* Print Styles */
-    @media print {
-        .no-print { display: none !important; }
-        .stApp { background: white !important; }
-    }
+    @media print {{
+        .no-print {{ display: none !important; }}
+    }}
     
     </style>
     """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+
+# ==============================================================================
+# LOGO LOADING
+# ==============================================================================
+
+def load_logo_base64():
+    """Load logo.png and convert to base64 for embedding"""
+    logo_paths = ["logo.png", "./logo.png", "assets/logo.png", "static/logo.png", "/mount/src/airops-pro/logo.png"]
+    
+    for path in logo_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    return base64.b64encode(f.read()).decode()
+            except:
+                continue
+    return None
+
+
+# ==============================================================================
 # UI COMPONENTS
-# ══════════════════════════════════════════════════════════════════════════════
+# ==============================================================================
 
 def render_header():
-    """Render the main application header"""
+    """Render the main application header with logo support"""
     current_time = get_pakistan_time()
     
+    # Check ERP mode
+    erp_mode = st.session_state.get('erp_mode', False)
+    
+    # Try to load logo
+    logo_base64 = load_logo_base64()
+    if logo_base64:
+        logo_html = f'<img src="data:image/png;base64,{logo_base64}" style="height: 60px; width: auto; margin-right: 15px;" alt="Air Sial Logo">'
+    else:
+        logo_html = '<span style="font-size: 2.5rem; margin-right: 15px;">🛡️✈️</span>'
+    
+    # ERP mode banner
+    erp_banner = ""
+    if erp_mode:
+        erp_banner = '<div style="background: #DC2626; color: white; padding: 0.5rem; text-align: center; font-weight: bold; margin-bottom: 0.5rem; border-radius: 8px;">⚠️ EMERGENCY RESPONSE PLAN ACTIVATED ⚠️</div>'
+    
     st.markdown(f"""
+    {erp_banner}
     <div class="main-header">
         <div style="display: flex; align-items: center;">
-            <span class="header-logo">🛡️✈️</span>
+            {logo_html}
             <div>
                 <h1 class="header-title">{Config.APP_NAME}</h1>
-                <p class="header-subtitle">{Config.APP_SUBTITLE} | {Config.COMPANY_ICAO} | AOC: {Config.AOC_NUMBER}</p>
+                <p class="header-subtitle">{Config.APP_SUBTITLE} v3.0 | {Config.COMPANY_ICAO} | AOC: {Config.AOC_NUMBER}</p>
             </div>
         </div>
         <div class="header-time">
@@ -1196,7 +1122,6 @@ def render_header():
         </div>
     </div>
     """, unsafe_allow_html=True)
-
 
 def render_kpi_cards(counts: dict, investigation_stats: dict):
     """Render dashboard KPI cards"""
@@ -5042,139 +4967,621 @@ def main():
         render_settings()
 
 
-# Original main() removed - using main_v3() instead
+# Original main() call removed - using main_v3() at end of file
+
 
 # ==============================================================================
-# NEW ENTERPRISE FEATURES - VERSION 3.0
+# NEW ENTERPRISE FEATURES V3.0
 # ==============================================================================
 
 # ==============================================================================
-# LOGO LOADING FUNCTION
+# 1. GEOSPATIAL RISK MAP
 # ==============================================================================
 
-def load_logo_base64():
-    """Load logo.png and convert to base64 for embedding"""
-    logo_paths = ["logo.png", "./logo.png", "assets/logo.png", "static/logo.png"]
+def generate_mock_locations():
+    """Generate mock incident locations around Pakistan airports for demo"""
+    import random
     
-    for path in logo_paths:
-        if os.path.exists(path):
-            try:
-                with open(path, "rb") as f:
-                    return base64.b64encode(f.read()).decode()
-            except:
-                continue
-    return None
+    # Airport coordinates
+    airports = {
+        "Karachi (OPKC)": (24.9065, 67.1608),
+        "Lahore (OPLA)": (31.5216, 74.4036),
+        "Islamabad (OPIS)": (33.5607, 72.8494),
+        "Sialkot (OPSK)": (32.5356, 74.3639),
+        "Peshawar (OPPS)": (33.9939, 71.5146),
+        "Multan (OPMT)": (30.2033, 71.4191),
+    }
+    
+    incidents = []
+    incident_types = [
+        ("Bird Strike", "#3B82F6", "blue"),
+        ("Laser Strike", "#8B5CF6", "purple"),
+        ("Hazard", "#DC2626", "red"),
+        ("TCAS Event", "#F97316", "orange"),
+        ("Runway Incursion", "#EAB308", "yellow"),
+    ]
+    
+    random.seed(42)  # Reproducible demo data
+    
+    for airport_name, (lat, lon) in airports.items():
+        # Generate 5-15 incidents around each airport
+        num_incidents = random.randint(5, 15)
+        for i in range(num_incidents):
+            # Random offset within ~50km radius
+            lat_offset = random.uniform(-0.3, 0.3)
+            lon_offset = random.uniform(-0.3, 0.3)
+            
+            incident_type, color, color_name = random.choice(incident_types)
+            severity = random.choice(["Low", "Medium", "High", "Extreme"])
+            
+            incidents.append({
+                "lat": lat + lat_offset,
+                "lon": lon + lon_offset,
+                "airport": airport_name,
+                "type": incident_type,
+                "severity": severity,
+                "color": color,
+                "color_name": color_name,
+                "date": f"2024-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
+                "report_id": f"RPT-{random.randint(1000, 9999)}"
+            })
+    
+    return incidents
 
 
-def render_header_with_logo():
-    """Render header with logo support"""
-    current_time = get_pakistan_time()
+def render_geospatial_map():
+    """Render Geospatial Risk Map page"""
     
-    logo_base64 = load_logo_base64()
-    if logo_base64:
-        logo_html = f'<img src="data:image/png;base64,{logo_base64}" style="height: 60px; width: auto; margin-right: 15px;" alt="Logo">'
-    else:
-        logo_html = '<span style="font-size: 2.5rem; margin-right: 15px;">🛡️✈️</span>'
+    st.markdown("## 🌍 Geospatial Risk Map")
+    st.markdown("*Visualize safety incidents across Air Sial network*")
     
-    st.markdown(f"""
-    <div class="main-header">
-        <div style="display: flex; align-items: center;">
-            {logo_html}
-            <div>
-                <h1 class="header-title">{Config.APP_NAME}</h1>
-                <p class="header-subtitle">{Config.APP_SUBTITLE} v3.0 | {Config.COMPANY_ICAO}</p>
-            </div>
-        </div>
-        <div class="header-time">
-            <div>Pakistan Standard Time</div>
-            <div style="font-size: 1.3rem;">{current_time.strftime("%H:%M:%S")}</div>
-            <div style="font-size: 0.85rem; opacity: 0.8;">{current_time.strftime("%A, %d %B %Y")}</div>
+    st.markdown("""
+    <div class="alert-box alert-info">
+        <span style="font-size: 1.5rem;">🗺️</span>
+        <div>
+            <strong>Interactive Incident Map</strong><br>
+            <small>View safety incidents plotted by location. Color indicates incident type.</small>
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Filters
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        filter_type = st.multiselect(
+            "Incident Type",
+            options=["Bird Strike", "Laser Strike", "Hazard", "TCAS Event", "Runway Incursion"],
+            default=["Bird Strike", "Laser Strike", "Hazard"]
+        )
+    with col2:
+        filter_severity = st.multiselect(
+            "Severity",
+            options=["Low", "Medium", "High", "Extreme"],
+            default=["High", "Extreme"]
+        )
+    with col3:
+        filter_airport = st.multiselect(
+            "Airport",
+            options=["Karachi (OPKC)", "Lahore (OPLA)", "Islamabad (OPIS)", "Sialkot (OPSK)", "Peshawar (OPPS)", "Multan (OPMT)"],
+            default=[]
+        )
+    
+    # Generate mock data
+    incidents = generate_mock_locations()
+    
+    # Apply filters
+    filtered = incidents
+    if filter_type:
+        filtered = [i for i in filtered if i['type'] in filter_type]
+    if filter_severity:
+        filtered = [i for i in filtered if i['severity'] in filter_severity]
+    if filter_airport:
+        filtered = [i for i in filtered if i['airport'] in filter_airport]
+    
+    # Create DataFrame for map
+    df = pd.DataFrame(filtered)
+    
+    if len(df) > 0:
+        # Summary stats
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total Incidents", len(df))
+        with col2:
+            high_risk = len(df[df['severity'].isin(['High', 'Extreme'])])
+            st.metric("High/Extreme Risk", high_risk)
+        with col3:
+            bird_strikes = len(df[df['type'] == 'Bird Strike'])
+            st.metric("Bird Strikes", bird_strikes)
+        with col4:
+            unique_airports = df['airport'].nunique()
+            st.metric("Airports Affected", unique_airports)
+        
+        st.markdown("---")
+        
+        # Map using pydeck
+        try:
+            import pydeck as pdk
+            
+            # Color mapping
+            color_map = {
+                "blue": [59, 130, 246, 200],
+                "purple": [139, 92, 246, 200],
+                "red": [220, 38, 38, 200],
+                "orange": [249, 115, 22, 200],
+                "yellow": [234, 179, 8, 200],
+            }
+            
+            df['color'] = df['color_name'].map(color_map)
+            
+            layer = pdk.Layer(
+                "ScatterplotLayer",
+                data=df,
+                get_position=["lon", "lat"],
+                get_color="color",
+                get_radius=8000,
+                pickable=True,
+            )
+            
+            view_state = pdk.ViewState(
+                latitude=30.5,
+                longitude=69.5,
+                zoom=5,
+                pitch=0,
+            )
+            
+            deck = pdk.Deck(
+                layers=[layer],
+                initial_view_state=view_state,
+                tooltip={"text": "{type}\n{airport}\nSeverity: {severity}\nDate: {date}"}
+            )
+            
+            st.pydeck_chart(deck)
+            
+        except ImportError:
+            # Fallback to st.map
+            st.map(df[['lat', 'lon']], zoom=5)
+        
+        # Legend
+        st.markdown("### Legend")
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.markdown("🔵 Bird Strike")
+        col2.markdown("🟣 Laser Strike")
+        col3.markdown("🔴 Hazard")
+        col4.markdown("🟠 TCAS Event")
+        col5.markdown("🟡 Runway Incursion")
+        
+        # Data table
+        with st.expander("📊 View Incident Data Table"):
+            display_df = df[['report_id', 'date', 'airport', 'type', 'severity']].copy()
+            display_df.columns = ['Report ID', 'Date', 'Airport', 'Type', 'Severity']
+            st.dataframe(display_df, use_container_width=True)
+    else:
+        st.warning("No incidents match the selected filters.")
 
 
 # ==============================================================================
-# PREDICTIVE RISK MONITOR
+# 2. AUDIT & COMPLIANCE MANAGER
 # ==============================================================================
 
-def render_predictive_risk_monitor():
+def render_audit_compliance():
+    """Render Audit & Compliance Manager page"""
+    
+    st.markdown("## 📋 Audit & Compliance Manager")
+    st.markdown("*Safety Assurance & IOSA Audit Preparedness*")
+    
+    tab1, tab2, tab3 = st.tabs(["🔍 Ramp Inspection", "📊 IOSA Preparedness", "📝 Audit Findings"])
+    
+    with tab1:
+        st.markdown("### Ramp Inspection Checklist")
+        st.markdown("*Complete this checklist during aircraft turnaround*")
+        
+        with st.form("ramp_inspection_form"):
+            col1, col2 = st.columns(2)
+            with col1:
+                inspection_date = st.date_input("Inspection Date", value=date.today())
+                aircraft_reg = st.selectbox("Aircraft Registration", options=list(AIRCRAFT_FLEET.keys()))
+                flight_number = st.text_input("Flight Number", placeholder="PF-XXX")
+            with col2:
+                inspector_name = st.text_input("Inspector Name", value=st.session_state.get('user_name', ''))
+                location = st.selectbox("Location", options=["OPSK - Sialkot", "OPKC - Karachi", "OPLA - Lahore", "OPIS - Islamabad"])
+                inspection_type = st.selectbox("Inspection Type", options=["Pre-Departure", "Post-Arrival", "Transit", "Overnight"])
+            
+            st.markdown("---")
+            st.markdown("#### Ground Equipment & Safety")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                chk_chocks = st.checkbox("✅ Wheel chocks in place", value=True)
+                chk_cones = st.checkbox("✅ Safety cones positioned")
+                chk_fod = st.checkbox("✅ FOD check completed")
+                chk_fire_ext = st.checkbox("✅ Fire extinguisher available")
+                chk_spill_kit = st.checkbox("✅ Spill kit accessible")
+            with col2:
+                chk_gpu = st.checkbox("✅ GPU properly connected")
+                chk_stairs = st.checkbox("✅ Stairs/jetbridge secure")
+                chk_belt_loader = st.checkbox("✅ Belt loader positioned correctly")
+                chk_fuel_truck = st.checkbox("✅ Fuel truck grounded")
+                chk_catering = st.checkbox("✅ Catering truck clear of hazards")
+            
+            st.markdown("#### Aircraft Condition")
+            col1, col2 = st.columns(2)
+            with col1:
+                chk_tires = st.checkbox("✅ Tires - no visible damage/wear")
+                chk_brakes = st.checkbox("✅ Brakes - no fluid leaks")
+                chk_landing_gear = st.checkbox("✅ Landing gear - normal condition")
+            with col2:
+                chk_engine = st.checkbox("✅ Engines - no visible damage/leaks")
+                chk_fuselage = st.checkbox("✅ Fuselage - no dents/damage")
+                chk_windows = st.checkbox("✅ Windows/windshield - clear")
+            
+            st.markdown("#### Remarks")
+            remarks = st.text_area("Additional Observations", placeholder="Enter any discrepancies or notes...")
+            
+            submitted = st.form_submit_button("✅ Submit Inspection", type="primary", use_container_width=True)
+            
+            if submitted:
+                # Calculate compliance
+                checks = [chk_chocks, chk_cones, chk_fod, chk_fire_ext, chk_spill_kit, 
+                         chk_gpu, chk_stairs, chk_belt_loader, chk_fuel_truck, chk_catering,
+                         chk_tires, chk_brakes, chk_landing_gear, chk_engine, chk_fuselage, chk_windows]
+                compliance = sum(checks) / len(checks) * 100
+                
+                if compliance == 100:
+                    st.success(f"✅ Inspection Complete - 100% Compliance")
+                elif compliance >= 80:
+                    st.warning(f"⚠️ Inspection Complete - {compliance:.0f}% Compliance - Some items require attention")
+                else:
+                    st.error(f"❌ Inspection Complete - {compliance:.0f}% Compliance - Multiple discrepancies found")
+                
+                st.balloons()
+    
+    with tab2:
+        st.markdown("### IOSA Audit Preparedness")
+        st.markdown("*IATA Operational Safety Audit Readiness Status*")
+        
+        # Overall progress
+        overall_progress = 0.85
+        st.markdown(f"""
+        <div class="form-section" style="text-align: center;">
+            <h3 style="color: #1E40AF;">Overall IOSA Readiness</h3>
+            <div style="font-size: 4rem; font-weight: 700; color: {'#22C55E' if overall_progress >= 0.8 else '#EAB308'};">{overall_progress*100:.0f}%</div>
+            <div style="color: #64748B;">Target: 100% by March 2025</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.progress(overall_progress)
+        
+        st.markdown("---")
+        st.markdown("#### Section-wise Compliance")
+        
+        sections = [
+            ("ORG - Organization & Management", 92, "Complete"),
+            ("FLT - Flight Operations", 88, "In Progress"),
+            ("DSP - Operational Control & Dispatch", 85, "In Progress"),
+            ("MNT - Aircraft Maintenance", 78, "Action Required"),
+            ("CAB - Cabin Operations", 90, "Complete"),
+            ("GRH - Ground Handling", 82, "In Progress"),
+            ("CGO - Cargo Operations", 75, "Action Required"),
+            ("SEC - Security Management", 88, "In Progress"),
+        ]
+        
+        for section, progress, status in sections:
+            col1, col2, col3 = st.columns([3, 1, 1])
+            with col1:
+                st.markdown(f"**{section}**")
+                st.progress(progress/100)
+            with col2:
+                color = "#22C55E" if progress >= 85 else "#EAB308" if progress >= 75 else "#DC2626"
+                st.markdown(f"<span style='color: {color}; font-weight: bold;'>{progress}%</span>", unsafe_allow_html=True)
+            with col3:
+                if status == "Complete":
+                    st.markdown("✅ Complete")
+                elif status == "In Progress":
+                    st.markdown("🔄 In Progress")
+                else:
+                    st.markdown("⚠️ Action Req'd")
+    
+    with tab3:
+        st.markdown("### Recent Audit Findings")
+        
+        findings = [
+            {"id": "F-2024-001", "section": "MNT", "finding": "Incomplete tool control documentation", "severity": "Minor", "status": "Open", "due": "Dec 15, 2024"},
+            {"id": "F-2024-002", "section": "FLT", "finding": "EFB update procedure needs revision", "severity": "Observation", "status": "Closed", "due": "Nov 30, 2024"},
+            {"id": "F-2024-003", "section": "GRH", "finding": "FOD prevention training overdue for 3 staff", "severity": "Minor", "status": "In Progress", "due": "Dec 20, 2024"},
+            {"id": "F-2024-004", "section": "CGO", "finding": "DG handling manual not current revision", "severity": "Major", "status": "Open", "due": "Dec 10, 2024"},
+        ]
+        
+        for f in findings:
+            severity_color = {"Major": "#DC2626", "Minor": "#EAB308", "Observation": "#3B82F6"}[f['severity']]
+            status_icon = {"Open": "🔴", "In Progress": "🟡", "Closed": "🟢"}[f['status']]
+            
+            st.markdown(f"""
+            <div class="report-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #1E40AF;">{f['id']}</strong> | <span class="category-badge cat-hazard">{f['section']}</span>
+                        <div style="margin-top: 0.5rem;">{f['finding']}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: {severity_color}20; color: {severity_color}; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">{f['severity']}</span>
+                        <div style="margin-top: 0.5rem;">{status_icon} {f['status']}</div>
+                        <small style="color: #64748B;">Due: {f['due']}</small>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+
+# ==============================================================================
+# 3. MANAGEMENT OF CHANGE (MoC) WORKFLOW
+# ==============================================================================
+
+def render_moc_workflow():
+    """Render Management of Change page"""
+    
+    st.markdown("## 🔄 Management of Change (MoC)")
+    st.markdown("*Operational Change Request & Risk Assessment*")
+    
+    tab1, tab2 = st.tabs(["📝 New Change Request", "📋 Pending Changes"])
+    
+    with tab1:
+        st.markdown("### Submit Operational Change Request")
+        
+        with st.form("moc_form"):
+            st.markdown("#### Change Details")
+            col1, col2 = st.columns(2)
+            with col1:
+                change_type = st.selectbox("Change Type", options=[
+                    "New Route / Destination",
+                    "New Aircraft Type",
+                    "Fleet Addition",
+                    "Operational Procedure Change",
+                    "Maintenance Procedure Change",
+                    "Training Program Change",
+                    "Ground Equipment Change",
+                    "IT System Change",
+                    "Organizational Change",
+                    "Regulatory Compliance",
+                    "Other"
+                ])
+                change_title = st.text_input("Change Title*", placeholder="Brief title of the change")
+            with col2:
+                initiator_dept = st.selectbox("Initiating Department", options=DEPARTMENTS)
+                priority = st.selectbox("Priority", options=["Low", "Medium", "High", "Critical"])
+                target_date = st.date_input("Target Implementation Date")
+            
+            change_description = st.text_area("Change Description*", placeholder="Detailed description of the proposed change...", height=100)
+            
+            st.markdown("---")
+            st.markdown("#### Risk Assessment")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**Potential Hazards Identified**")
+                haz_safety = st.checkbox("Safety Impact")
+                haz_operational = st.checkbox("Operational Disruption")
+                haz_regulatory = st.checkbox("Regulatory Non-Compliance")
+                haz_training = st.checkbox("Training Requirements")
+                haz_cost = st.checkbox("Cost Impact")
+            with col2:
+                likelihood = st.select_slider("Likelihood", options=["Rare", "Unlikely", "Possible", "Likely", "Almost Certain"])
+                severity = st.select_slider("Severity", options=["Negligible", "Minor", "Moderate", "Major", "Catastrophic"])
+            
+            mitigation = st.text_area("Proposed Mitigation Measures", placeholder="How will identified risks be mitigated?")
+            
+            st.markdown("---")
+            st.markdown("#### Approvals Required")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                appr_safety = st.checkbox("Safety Manager", value=True)
+                appr_qa = st.checkbox("Quality Assurance")
+            with col2:
+                appr_ops = st.checkbox("Operations Manager")
+                appr_maint = st.checkbox("Maintenance Manager")
+            with col3:
+                appr_training = st.checkbox("Training Manager")
+                appr_accountable = st.checkbox("Accountable Manager", value=True)
+            
+            submitted = st.form_submit_button("📤 Submit Change Request", type="primary", use_container_width=True)
+            
+            if submitted:
+                if change_title and change_description:
+                    st.success("✅ Change Request Submitted Successfully!")
+                    st.info(f"Reference: MOC-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:4].upper()}")
+                    st.balloons()
+                else:
+                    st.error("Please fill in all required fields")
+    
+    with tab2:
+        st.markdown("### Pending Change Requests")
+        
+        pending_changes = [
+            {
+                "id": "MOC-20241201-A1B2",
+                "title": "New Dubai-Sialkot Route",
+                "type": "New Route / Destination",
+                "dept": "Flight Operations",
+                "priority": "High",
+                "status": "Pending Safety Review",
+                "submitted": "Dec 01, 2024",
+                "risk": "Medium"
+            },
+            {
+                "id": "MOC-20241128-C3D4",
+                "title": "ATR 72-600 FANS-1/A Installation",
+                "type": "Aircraft Modification",
+                "dept": "Engineering",
+                "priority": "Medium",
+                "status": "Awaiting QA Approval",
+                "submitted": "Nov 28, 2024",
+                "risk": "Low"
+            },
+            {
+                "id": "MOC-20241125-E5F6",
+                "title": "Updated De-icing Procedures",
+                "type": "Operational Procedure Change",
+                "dept": "Ground Operations",
+                "priority": "High",
+                "status": "Approved - Implementation",
+                "submitted": "Nov 25, 2024",
+                "risk": "Low"
+            },
+        ]
+        
+        for change in pending_changes:
+            priority_color = {"Critical": "#DC2626", "High": "#F97316", "Medium": "#EAB308", "Low": "#22C55E"}[change['priority']]
+            risk_color = {"High": "#DC2626", "Medium": "#EAB308", "Low": "#22C55E"}[change['risk']]
+            
+            with st.expander(f"📄 {change['id']} - {change['title']}"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**Type:** {change['type']}")
+                    st.markdown(f"**Department:** {change['dept']}")
+                    st.markdown(f"**Submitted:** {change['submitted']}")
+                with col2:
+                    st.markdown(f"**Priority:** <span style='color: {priority_color};'>{change['priority']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"**Risk Level:** <span style='color: {risk_color};'>{change['risk']}</span>", unsafe_allow_html=True)
+                    st.markdown(f"**Status:** {change['status']}")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.button("✅ Approve", key=f"approve_{change['id']}")
+                with col2:
+                    st.button("❌ Reject", key=f"reject_{change['id']}")
+                with col3:
+                    st.button("💬 Comment", key=f"comment_{change['id']}")
+
+
+# ==============================================================================
+# 4. ERP "RED MODE"
+# ==============================================================================
+
+def render_erp_controls():
+    """Render ERP mode toggle in sidebar and emergency contacts when active"""
+    
+    st.markdown("### 🚨 Emergency Response")
+    
+    erp_active = st.session_state.get('erp_mode', False)
+    
+    if erp_active:
+        if st.button("🟢 DEACTIVATE ERP MODE", use_container_width=True, type="secondary"):
+            st.session_state.erp_mode = False
+            st.rerun()
+        
+        st.markdown("""
+        <div class="erp-emergency">
+            <h4 style="color: #DC2626; margin: 0 0 1rem 0;">⚠️ ERP ACTIVE</h4>
+            <div style="font-size: 0.85rem;">
+                <strong>Emergency Contacts:</strong><br>
+                📞 CEO: +92-XXX-XXXXXXX<br>
+                📞 Safety Manager: +92-XXX-XXXXXXX<br>
+                📞 CAA Pakistan: +92-51-9144000<br>
+                📞 Insurance: +92-XXX-XXXXXXX<br>
+                📞 Media Relations: +92-XXX-XXXXXXX
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        if st.button("🚨 ACTIVATE ERP MODE", use_container_width=True, type="primary"):
+            st.session_state.erp_mode = True
+            st.rerun()
+
+
+# ==============================================================================
+# 5. SAFETY NEWSFEED (Dashboard Widget)
+# ==============================================================================
+
+def render_safety_bulletins():
+    """Render Safety Bulletins widget for dashboard"""
+    
+    st.markdown("### 📰 Safety Bulletins")
+    
+    bulletins = [
+        {
+            "date": "Dec 07, 2024",
+            "title": "Winter Ops: De-icing Procedures Updated",
+            "content": "Revised de-icing holdover times for Type I and Type IV fluids. All crew to review updated OM-A Chapter 8.",
+            "priority": "High",
+            "category": "Operations"
+        },
+        {
+            "date": "Dec 05, 2024",
+            "title": "Bird Activity Warning - Sialkot",
+            "content": "Increased bird activity reported near RWY 28 threshold. Enhanced vigilance during approach and departure. Bird dispersal unit activated.",
+            "priority": "Medium",
+            "category": "Wildlife"
+        },
+        {
+            "date": "Dec 03, 2024",
+            "title": "TCAS Bulletin: Updated RA Response",
+            "content": "Reminder: Always follow TCAS RA commands. Recent industry events highlight importance of immediate response to RA advisories.",
+            "priority": "High",
+            "category": "Safety"
+        },
+        {
+            "date": "Dec 01, 2024",
+            "title": "Fog Season Advisory",
+            "content": "November-February fog season. Review low visibility procedures. Ensure CATII/III currency is maintained.",
+            "priority": "Medium",
+            "category": "Weather"
+        },
+    ]
+    
+    for bulletin in bulletins:
+        priority_color = {"High": "#DC2626", "Medium": "#EAB308", "Low": "#22C55E"}[bulletin['priority']]
+        
+        st.markdown(f"""
+        <div class="bulletin-card" style="border-left-color: {priority_color};">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <strong style="color: #1E40AF;">{bulletin['title']}</strong>
+                    <div style="font-size: 0.85rem; color: #475569; margin-top: 0.25rem;">{bulletin['content']}</div>
+                </div>
+                <div style="text-align: right; min-width: 100px;">
+                    <span style="background: {priority_color}20; color: {priority_color}; padding: 0.15rem 0.4rem; border-radius: 8px; font-size: 0.7rem; font-weight: 600;">{bulletin['priority']}</span>
+                    <div style="font-size: 0.75rem; color: #64748B; margin-top: 0.25rem;">{bulletin['date']}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+
+# ==============================================================================
+# PREDICTIVE RISK MONITOR (From previous version)
+# ==============================================================================
+
+def render_predictive_risk():
     """Predictive Risk Monitor with 30-day forecast"""
     import numpy as np
     
     st.markdown("## 📈 Predictive Risk Monitor")
     st.markdown("*AI-Powered Incident Forecasting*")
     
-    st.markdown("""
-    <div class="alert-box alert-info">
-        <span style="font-size: 1.5rem;">🤖</span>
-        <div>
-            <strong>Machine Learning Predictions</strong><br>
-            <small>Forecasts based on historical data, weather, traffic volume, and seasonal trends.</small>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Generate forecast data
     np.random.seed(42)
     dates = pd.date_range(start=date.today(), periods=30, freq='D')
     
-    base_risk = 12
+    base = 12
     trend = np.linspace(0, 4, 30)
     seasonal = 5 * np.sin(np.linspace(0, 2*np.pi, 30))
     noise = np.random.normal(0, 2.5, 30)
-    predicted = np.maximum(0, base_risk + trend + seasonal + noise)
+    predicted = np.maximum(0, base + trend + seasonal + noise)
     
-    forecast_df = pd.DataFrame({
-        'Date': dates,
-        'Predicted': predicted,
-        'Lower': np.maximum(0, predicted - 5),
-        'Upper': predicted + 5
-    })
-    
-    HIGH_RISK_THRESHOLD = 18
-    high_risk_days = forecast_df[forecast_df['Predicted'] > HIGH_RISK_THRESHOLD]
+    HIGH_RISK = 18
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
         fig = go.Figure()
-        
-        # Confidence interval
-        fig.add_trace(go.Scatter(
-            x=pd.concat([forecast_df['Date'], forecast_df['Date'][::-1]]),
-            y=pd.concat([forecast_df['Upper'], forecast_df['Lower'][::-1]]),
-            fill='toself',
-            fillcolor='rgba(59, 130, 246, 0.2)',
-            line=dict(color='rgba(255,255,255,0)'),
-            name='95% Confidence'
-        ))
-        
-        # Prediction line
-        fig.add_trace(go.Scatter(
-            x=forecast_df['Date'],
-            y=forecast_df['Predicted'],
-            mode='lines+markers',
-            name='Predicted Incidents',
-            line=dict(color='#1E40AF', width=3),
-            marker=dict(size=6)
-        ))
-        
-        # Threshold
-        fig.add_hline(y=HIGH_RISK_THRESHOLD, line_dash="dash", line_color="#DC2626",
-                      annotation_text="High Risk Threshold")
-        
+        fig.add_trace(go.Scatter(x=dates, y=predicted, mode='lines+markers', name='Predicted', line=dict(color='#1E40AF', width=3)))
+        fig.add_hline(y=HIGH_RISK, line_dash="dash", line_color="#DC2626", annotation_text="High Risk Threshold")
         fig.update_layout(
-            title="30-Day Incident Forecast",
-            xaxis_title="Date",
-            yaxis_title="Predicted Incidents",
+            title="30-Day Forecast",
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(248,250,252,1)',
             font=dict(color='#334155'),
-            hovermode='x unified',
-            legend=dict(orientation="h", yanchor="bottom", y=1.02)
+            xaxis=dict(showgrid=True, gridcolor='#E2E8F0'),
+            yaxis=dict(showgrid=True, gridcolor='#E2E8F0')
         )
-        
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -5186,289 +5593,80 @@ def render_predictive_risk_monitor():
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("### ⚠️ High Risk Alerts")
-        
-        if len(high_risk_days) > 0:
-            for _, row in high_risk_days.head(5).iterrows():
-                st.markdown(f"""
-                <div class="alert-box alert-danger" style="padding: 0.75rem; margin-bottom: 0.5rem;">
-                    <span class="status-light status-red"></span>
-                    <div>
-                        <strong>{row['Date'].strftime('%b %d, %Y')}</strong><br>
-                        <small>Expected: {int(row['Predicted'])} incidents</small>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.success("No high-risk days in forecast")
-    
-    # Risk factors
-    st.markdown("---")
-    st.markdown("### 🔍 Key Risk Factors")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    factors = [
-        ("🌤️", "Weather", "32%", "#F97316", "Monsoon season"),
-        ("✈️", "Traffic", "28%", "#3B82F6", "Holiday increase"),
-        ("🔧", "Maintenance", "22%", "#8B5CF6", "3 C-checks due"),
-        ("👥", "Human Factors", "18%", "#10B981", "Fatigue patterns")
-    ]
-    
-    for col, (icon, name, pct, color, desc) in zip([col1, col2, col3, col4], factors):
-        with col:
-            st.markdown(f"""
-            <div class="form-section" style="text-align: center;">
-                <div style="font-size: 2rem;">{icon}</div>
-                <div style="font-weight: 600; color: #1E40AF;">{name}</div>
-                <div style="font-size: 2rem; font-weight: 700; color: {color};">{pct}</div>
-                <small style="color: #64748B;">{desc}</small>
-            </div>
-            """, unsafe_allow_html=True)
+        high_days = sum(1 for p in predicted if p > HIGH_RISK)
+        st.metric("High Risk Days", high_days)
 
 
 # ==============================================================================
-# DATA MANAGEMENT & CSV UPLOAD
+# DATA MANAGEMENT (From previous version)
 # ==============================================================================
 
 def render_data_management():
     """Data Management with CSV upload"""
     
     st.markdown("## 💾 Data Management")
-    st.markdown("*Upload, view, and manage operational data*")
     
-    tab1, tab2, tab3 = st.tabs(["📤 CSV Upload", "📊 View Data", "📥 Export"])
+    tab1, tab2 = st.tabs(["📤 Upload CSV", "📥 Export"])
     
     with tab1:
-        st.markdown("### Upload Operational Data")
-        
-        data_type = st.selectbox("Data Type", options=[
-            "Flight Operations Log", "Weather Data", "Maintenance Records",
-            "Crew Duty Times", "Fuel Records", "Passenger Statistics", "Custom Data"
-        ])
-        
-        uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'])
-        
-        if uploaded_file is not None:
-            try:
-                df = pd.read_csv(uploaded_file)
-                st.success(f"✅ Uploaded: {len(df)} rows, {len(df.columns)} columns")
-                
-                st.markdown("#### Preview")
-                st.dataframe(df.head(10), use_container_width=True)
-                
-                with st.expander("📊 Column Information"):
-                    st.write(df.dtypes)
-                
-                if st.button("💾 Save to Database", type="primary"):
-                    if 'uploaded_data' not in st.session_state:
-                        st.session_state.uploaded_data = {}
-                    st.session_state.uploaded_data[data_type] = df
-                    st.success(f"✅ {data_type} saved!")
-                    
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-        else:
-            st.markdown("""
-            <div class="query-box">
-                <div style="font-size: 4rem;">📁</div>
-                <div style="color: #64748B;">Drag and drop CSV here or click to browse</div>
-            </div>
-            """, unsafe_allow_html=True)
+        uploaded = st.file_uploader("Upload CSV", type=['csv'])
+        if uploaded:
+            df = pd.read_csv(uploaded)
+            st.success(f"✅ Loaded {len(df)} rows")
+            st.dataframe(df.head(10), use_container_width=True)
     
     with tab2:
-        st.markdown("### Uploaded Data")
-        
-        if 'uploaded_data' in st.session_state and st.session_state.uploaded_data:
-            for name, df in st.session_state.uploaded_data.items():
-                with st.expander(f"📊 {name} ({len(df)} rows)"):
-                    st.dataframe(df, use_container_width=True)
-        else:
-            st.info("No data uploaded yet. Showing sample data.")
-            sample = pd.DataFrame({
-                'Date': pd.date_range('2024-12-01', periods=10),
-                'Flight': [f'PF-{100+i}' for i in range(10)],
-                'Route': ['SKT-DXB', 'LHE-KHI', 'ISB-DXB', 'KHI-JED', 'SKT-SHJ']*2,
-                'PAX': [156, 178, 165, 180, 142, 175, 168, 70, 68, 72],
-                'Delay': [0, 15, 0, 45, 0, 30, 0, 0, 20, 0]
-            })
-            st.dataframe(sample, use_container_width=True)
-    
-    with tab3:
-        st.markdown("### Export Data")
-        export_type = st.selectbox("Data to export", ["All Reports", "Bird Strikes", "Hazards", "Incidents"])
-        format_type = st.selectbox("Format", ["CSV", "Excel", "JSON"])
-        
-        if st.button("📥 Generate Export", type="primary"):
-            st.success(f"✅ {export_type} exported as {format_type}")
-            st.download_button("⬇️ Download", "Sample data", f"export.csv", "text/csv")
+        export_type = st.selectbox("Export", ["All Reports", "Bird Strikes", "Hazards"])
+        if st.button("📥 Generate Export"):
+            st.download_button("⬇️ Download", "Sample data", "export.csv")
 
 
 # ==============================================================================
-# NATURAL LANGUAGE / AI QUERY
+# NL/AI QUERY (From previous version)  
 # ==============================================================================
 
 def render_nl_query():
-    """Natural Language Query interface"""
+    """Natural Language Query"""
     
     st.markdown("## 🤖 Natural Language Query")
-    st.markdown("*Ask questions in plain English*")
     
-    st.markdown("""
-    <div class="alert-box alert-info">
-        <span style="font-size: 1.5rem;">💡</span>
-        <div>Type your question and get instant insights from safety data.</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    query = st.text_input("Ask a question...", placeholder="e.g., Show all high-risk hazards in Lahore")
-    
-    st.markdown("**Quick Queries:**")
-    col1, col2, col3, col4 = st.columns(4)
-    
-    if col1.button("🐦 Bird strikes", use_container_width=True):
-        query = "Show bird strikes this year"
-    if col2.button("⚠️ High risk", use_container_width=True):
-        query = "Show high risk hazards"
-    if col3.button("📊 Trends", use_container_width=True):
-        query = "Monthly incident trends"
-    if col4.button("⏰ Overdue", use_container_width=True):
-        query = "Show overdue SLA items"
+    query = st.text_input("Ask a question...", placeholder="e.g., Show high risk hazards")
     
     if query:
-        st.markdown("---")
-        
-        with st.spinner("Processing..."):
-            import time
-            time.sleep(1)
-        
-        # Generate SQL based on keywords
-        if "bird" in query.lower():
-            sql = "SELECT * FROM bird_strikes WHERE YEAR(incident_date) = 2024 ORDER BY incident_date DESC;"
-            results = pd.DataFrame({
-                'Report': ['BRD-20241205-X1Y2', 'BRD-20241130-Z3W4', 'BRD-20241115-Q5R6'],
-                'Date': ['Dec 05', 'Nov 30', 'Nov 15'],
-                'Aircraft': ['AP-BMA', 'AP-BMD', 'AP-BMB'],
-                'Species': ['Kite', 'Pigeon', 'Eagle'],
-                'Damage': ['Minor', 'None', 'Substantial']
-            })
-        elif "high risk" in query.lower() or "high-risk" in query.lower():
-            sql = "SELECT * FROM hazard_reports WHERE risk_level IN ('High', 'Extreme');"
-            results = pd.DataFrame({
-                'Report': ['HZD-20241205-A1B2', 'HZD-20241203-C3D4', 'HZD-20241201-E5F6'],
-                'Title': ['FOD on Taxiway', 'Fuel Spill', 'Bird Congregation'],
-                'Risk': ['High', 'Extreme', 'High'],
-                'Status': ['Under Review', 'Action Required', 'Investigation']
-            })
-        elif "overdue" in query.lower():
-            sql = "SELECT * FROM all_reports WHERE sla_deadline < CURRENT_DATE;"
-            results = pd.DataFrame({
-                'Report': ['HZD-20241105-O1P2', 'BRD-20241108-Q3R4'],
-                'Type': ['Hazard', 'Bird Strike'],
-                'Overdue': ['17 days', '22 days'],
-                'Assigned': ['John Smith', 'Jane Doe']
-            })
-        else:
-            sql = "SELECT * FROM all_reports ORDER BY created_at DESC LIMIT 10;"
-            results = pd.DataFrame({
-                'Report': ['HZD-20241205', 'BRD-20241204', 'LSR-20241203'],
-                'Type': ['Hazard', 'Bird Strike', 'Laser'],
-                'Date': ['Dec 05', 'Dec 04', 'Dec 03'],
-                'Status': ['Open', 'Closed', 'Closed']
-            })
-        
-        st.markdown(f"**Your Question:** {query}")
-        
         st.markdown("**Generated SQL:**")
-        st.markdown(f"""<div class="sql-result"><pre>{sql}</pre></div>""", unsafe_allow_html=True)
-        
-        st.markdown("### Results")
-        st.dataframe(results, use_container_width=True)
-        
-        st.markdown(f"""
-        <div class="alert-box alert-success">
-            <span>✅</span>
-            <div>Found {len(results)} records</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.code("SELECT * FROM hazard_reports WHERE risk_level = 'High'", language="sql")
+        st.dataframe(pd.DataFrame({'Report': ['HZD-001', 'HZD-002'], 'Risk': ['High', 'High']}))
 
 
 # ==============================================================================
-# CPA TABLE (Corrective Actions)
+# CPA TABLE (From previous version)
 # ==============================================================================
 
 def render_cpa_table():
-    """Corrective/Preventive Actions table"""
+    """Corrective Actions table"""
     
-    st.markdown("### 📋 Corrective & Preventive Actions (CPAs)")
+    st.markdown("### 📋 Corrective & Preventive Actions")
     
     cpa_data = [
-        {"id": "CPA-001", "action": "Install bird deterrent at RWY 25", "source": "BRD-20241201", "dept": "Engineering", "due": "Dec 10", "status": "overdue", "days": -7},
-        {"id": "CPA-002", "action": "Update laser strike procedure", "source": "LSR-20241128", "dept": "Safety", "due": "Dec 18", "status": "critical", "days": 1},
-        {"id": "CPA-003", "action": "FOD awareness training", "source": "HZD-20241125", "dept": "Training", "due": "Dec 22", "status": "warning", "days": 5},
-        {"id": "CPA-004", "action": "Review TCAS procedures", "source": "TCS-20241120", "dept": "Flight Ops", "due": "Dec 05", "status": "overdue", "days": -12},
-        {"id": "CPA-005", "action": "Taxiway lighting inspection", "source": "HZD-20241118", "dept": "Engineering", "due": "Jan 05", "status": "ok", "days": 19},
+        {"id": "CPA-001", "action": "Install bird deterrent", "status": "overdue", "days": -7},
+        {"id": "CPA-002", "action": "Update laser procedure", "status": "critical", "days": 1},
+        {"id": "CPA-003", "action": "FOD training", "status": "warning", "days": 5},
+        {"id": "CPA-004", "action": "TCAS procedure review", "status": "ok", "days": 19},
     ]
     
-    # Summary
-    overdue = len([c for c in cpa_data if c['status'] == 'overdue'])
-    critical = len([c for c in cpa_data if c['status'] == 'critical'])
-    warning = len([c for c in cpa_data if c['status'] == 'warning'])
-    ok = len([c for c in cpa_data if c['status'] == 'ok'])
-    
-    col1, col2, col3, col4 = st.columns(4)
-    col1.markdown(f'<div class="kpi-card" style="border-left: 4px solid #DC2626;"><div class="kpi-value" style="color: #DC2626;">{overdue}</div><div class="kpi-label">Overdue</div></div>', unsafe_allow_html=True)
-    col2.markdown(f'<div class="kpi-card" style="border-left: 4px solid #F97316;"><div class="kpi-value" style="color: #F97316;">{critical}</div><div class="kpi-label">Critical</div></div>', unsafe_allow_html=True)
-    col3.markdown(f'<div class="kpi-card" style="border-left: 4px solid #EAB308;"><div class="kpi-value" style="color: #EAB308;">{warning}</div><div class="kpi-label">Warning</div></div>', unsafe_allow_html=True)
-    col4.markdown(f'<div class="kpi-card" style="border-left: 4px solid #22C55E;"><div class="kpi-value" style="color: #22C55E;">{ok}</div><div class="kpi-label">On Track</div></div>', unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Table
-    status_map = {
-        "overdue": ("status-red", "OVERDUE", "#DC2626"),
-        "critical": ("status-red", "CRITICAL", "#DC2626"),
-        "warning": ("status-yellow", "WARNING", "#EAB308"),
-        "ok": ("status-green", "ON TRACK", "#22C55E")
-    }
-    
-    table_html = """
-    <table class="cpa-table">
-        <tr><th>Status</th><th>CPA ID</th><th>Action</th><th>Source</th><th>Dept</th><th>Due</th></tr>
-    """
-    
-    for c in cpa_data:
-        light, label, color = status_map[c['status']]
-        days_txt = f"{abs(c['days'])} days {'overdue' if c['days']<0 else 'left'}"
-        table_html += f"""
-        <tr>
-            <td><span class="status-light {light}"></span><span style="color: {color}; font-weight: 600; font-size: 0.75rem;">{label}</span></td>
-            <td><strong style="color: #1E40AF;">{c['id']}</strong></td>
-            <td>{c['action']}</td>
-            <td><span class="category-badge cat-hazard">{c['source']}</span></td>
-            <td>{c['dept']}</td>
-            <td>{c['due']}<br><small style="color: {color};">{days_txt}</small></td>
-        </tr>
-        """
-    
-    table_html += "</table>"
-    st.markdown(table_html, unsafe_allow_html=True)
-    
-    if overdue > 0:
-        st.markdown(f"""
-        <div class="alert-box alert-danger" style="margin-top: 1rem;">
-            <span>⚠️</span>
-            <div><strong>{overdue} overdue action(s)</strong> require immediate attention</div>
-        </div>
-        """, unsafe_allow_html=True)
+    for cpa in cpa_data:
+        status_map = {"overdue": ("🔴", "#DC2626"), "critical": ("🔴", "#DC2626"), "warning": ("🟡", "#EAB308"), "ok": ("🟢", "#22C55E")}
+        icon, color = status_map[cpa['status']]
+        days_txt = f"{abs(cpa['days'])} days {'overdue' if cpa['days']<0 else 'left'}"
+        st.markdown(f"{icon} **{cpa['id']}** - {cpa['action']} - <span style='color:{color}'>{days_txt}</span>", unsafe_allow_html=True)
 
 
 # ==============================================================================
-# UPDATED SIDEBAR V3
+# UPDATED SIDEBAR WITH ALL NEW FEATURES
 # ==============================================================================
 
 def render_sidebar_v3():
-    """Updated sidebar with new navigation"""
+    """Updated sidebar with all features"""
     
     with st.sidebar:
         st.markdown(f"""
@@ -5486,6 +5684,9 @@ def render_sidebar_v3():
         </div>
         """, unsafe_allow_html=True)
         
+        # ERP Controls
+        render_erp_controls()
+        
         st.markdown("---")
         st.markdown("### 📍 Navigation")
         
@@ -5494,7 +5695,10 @@ def render_sidebar_v3():
             options=[
                 "📊 Dashboard",
                 "📈 Predictive Risk",
-                "💾 Data & CSV Upload",
+                "🌍 Geospatial Map",
+                "📋 Audit & Compliance",
+                "🔄 Management of Change",
+                "💾 Data Management",
                 "🤖 NL/AI Query",
                 "📋 View Reports",
                 "──────────────",
@@ -5518,14 +5722,78 @@ def render_sidebar_v3():
         if st.button("🆘 Emergency Report", use_container_width=True, type="primary"):
             return "🚨 Incident Report"
         
-        st.markdown("---")
-        
         if st.button("🚪 Logout", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
         
         return page
+
+
+# ==============================================================================
+# UPDATED DASHBOARD WITH SAFETY BULLETINS
+# ==============================================================================
+
+def render_dashboard_v3():
+    """Enhanced dashboard with weather and safety bulletins"""
+    
+    # Get counts
+    counts = db.get_report_counts() if db.is_connected else {
+        'bird_strikes': len(st.session_state.get('bird_strikes', [])),
+        'laser_strikes': len(st.session_state.get('laser_strikes', [])),
+        'tcas_reports': len(st.session_state.get('tcas_reports', [])),
+        'hazard_reports': len(st.session_state.get('hazard_reports', [])),
+        'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
+        'fsr_reports': len(st.session_state.get('fsr_reports', [])),
+        'captain_dbr': len(st.session_state.get('captain_dbr', []))
+    }
+    
+    investigation_stats = db.get_investigation_stats() if db.is_connected else {'total': sum(counts.values()), 'open': 0, 'closed': 0}
+    
+    # KPI Cards
+    render_kpi_cards(counts, investigation_stats)
+    
+    # Weather Widget
+    st.markdown("---")
+    WeatherService.render_weather_widget()
+    
+    # Main content with Safety Bulletins
+    st.markdown("---")
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        # Charts
+        st.markdown("### 📈 Report Distribution")
+        
+        tab1, tab2 = st.tabs(["📊 By Type", "📅 By Month"])
+        
+        with tab1:
+            report_data = {
+                'Type': ['Bird', 'Laser', 'TCAS', 'Hazards', 'Incidents', 'FSR', 'DBR'],
+                'Count': [counts.get('bird_strikes', 0), counts.get('laser_strikes', 0), 
+                         counts.get('tcas_reports', 0), counts.get('hazard_reports', 0),
+                         counts.get('aircraft_incidents', 0), counts.get('fsr_reports', 0),
+                         counts.get('captain_dbr', 0)]
+            }
+            fig = px.pie(report_data, values='Count', names='Type', hole=0.4)
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='#334155')
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with tab2:
+            months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            fig = go.Figure()
+            fig.add_trace(go.Bar(name='Bird', x=months, y=[5, 8, 12, 7, 4, 3], marker_color='#3B82F6'))
+            fig.add_trace(go.Bar(name='Hazards', x=months, y=[8, 12, 15, 10, 8, 6], marker_color='#EF4444'))
+            fig.update_layout(barmode='group', paper_bgcolor='rgba(0,0,0,0)', font_color='#334155')
+            st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        # Safety Bulletins
+        render_safety_bulletins()
+    
+    # CPA Table
+    st.markdown("---")
+    render_cpa_table()
 
 
 # ==============================================================================
@@ -5548,7 +5816,7 @@ def main_v3():
         render_login()
         return
     
-    render_header_with_logo()
+    render_header()
     
     page = render_sidebar_v3()
     
@@ -5558,12 +5826,16 @@ def main_v3():
     
     # Route pages
     if page == "📊 Dashboard":
-        render_dashboard()
-        st.markdown("---")
-        render_cpa_table()
+        render_dashboard_v3()
     elif page == "📈 Predictive Risk":
-        render_predictive_risk_monitor()
-    elif page == "💾 Data & CSV Upload":
+        render_predictive_risk()
+    elif page == "🌍 Geospatial Map":
+        render_geospatial_map()
+    elif page == "📋 Audit & Compliance":
+        render_audit_compliance()
+    elif page == "🔄 Management of Change":
+        render_moc_workflow()
+    elif page == "💾 Data Management":
         render_data_management()
     elif page == "🤖 NL/AI Query":
         render_nl_query()
@@ -5594,6 +5866,5 @@ def main_v3():
         render_settings()
 
 
-# Override main
 if __name__ == "__main__":
     main_v3()
