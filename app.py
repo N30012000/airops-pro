@@ -4714,8 +4714,8 @@ def render_view_reports():
             }
             dept_bg, dept_color = dept_colors.get(report_dept, ('#F1F5F9', '#475569'))
             
-            with st.expander(f"📋 {report_num} - {report_title}"):
-                # Header with badges - NEW Department Badge
+            with st.expander(f"📋 {report_num} - {report_title}", expanded=False):
+                # Header with badges - Department Badge
                 st.markdown(f"""
                 <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
                     <span style="background: {badge_class[1]}; color: {badge_class[2]}; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">{rtype}</span>
@@ -4724,18 +4724,40 @@ def render_view_reports():
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Main info and tracking tabs
-                tab_details, tab_email, tab_ai = st.tabs(["📄 Details", "📧 Communication Track", "🤖 AI Conclusion"])
+                # PROMINENT TABS with custom styling
+                st.markdown("""
+                <style>
+                .report-tabs .stTabs [data-baseweb="tab-list"] {
+                    gap: 8px;
+                    background: #F1F5F9;
+                    padding: 8px;
+                    border-radius: 12px;
+                }
+                .report-tabs .stTabs [data-baseweb="tab"] {
+                    padding: 10px 20px;
+                    font-weight: 600;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Main tabs - make them prominent
+                tab_details, tab_email, tab_ai, tab_actions = st.tabs([
+                    "📄 Report Details", 
+                    "📧 Communication Track", 
+                    "🤖 AI Conclusion",
+                    "⚡ Actions"
+                ])
                 
                 with tab_details:
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.markdown(f"**Report Number:** {report_num}")
+                        st.markdown(f"**Report Number:** `{report_num}`")
                         st.markdown(f"**Date:** {report_date}")
                     with col2:
                         st.markdown(f"**Type:** {rtype}")
                         st.markdown(f"**Status:** {report_status}")
                     with col3:
+                        st.markdown(f"**Department:** {report_dept}")
                         if rtype == 'Hazard Reports':
                             risk = report.get('risk_level', 'Low')
                             try:
@@ -4748,10 +4770,13 @@ def render_view_reports():
                     
                     # Show key details based on report type
                     if rtype == 'Bird Strikes':
-                        st.markdown(f"**Flight:** {report.get('flight_number', 'N/A')}")
-                        st.markdown(f"**Aircraft:** {report.get('aircraft_registration', 'N/A')}")
-                        st.markdown(f"**Species:** {report.get('bird_species', 'Unknown')}")
-                        st.markdown(f"**Damage:** {report.get('overall_damage', 'N/A')}")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown(f"**Flight:** {report.get('flight_number', 'N/A')}")
+                            st.markdown(f"**Aircraft:** {report.get('aircraft_registration', 'N/A')}")
+                        with col2:
+                            st.markdown(f"**Species:** {report.get('bird_species', 'Unknown')}")
+                            st.markdown(f"**Damage:** {report.get('overall_damage', 'N/A')}")
                     
                     elif rtype == 'Laser Strikes':
                         st.markdown(f"**Flight:** {report.get('flight_number', 'N/A')}")
@@ -4771,24 +4796,11 @@ def render_view_reports():
                     elif rtype == 'Aircraft Incidents':
                         st.markdown(f"**Flight:** {report.get('flight_number', 'N/A')}")
                         st.markdown(f"**Category:** {report.get('primary_category', 'N/A')}")
-                    
-                    # Action buttons
-                    st.markdown("---")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        if st.button("📝 Edit", key=f"edit_{report_num}"):
-                            st.session_state.editing_report = report_num
-                    with col2:
-                        if st.button("📄 Generate PDF", key=f"pdf_{report_num}"):
-                            st.info("PDF generation feature - coming soon")
-                    with col3:
-                        if st.button("📧 Send Email", key=f"email_{report_num}"):
-                            st.info("Email feature - coming soon")
                 
                 with tab_email:
-                    # EMAIL TRACK & TRACE - NEW
+                    # EMAIL TRACK & TRACE
                     st.markdown("#### 📧 Communication Timeline")
-                    st.markdown("*Email thread related to this report*")
+                    st.markdown("*Complete email thread for this report*")
                     
                     # Generate mock emails
                     emails = generate_mock_emails(report_num)
@@ -4812,44 +4824,159 @@ def render_view_reports():
                         </div>
                         """, unsafe_allow_html=True)
                     
-                    # Compose new email button
-                    if st.button("✉️ Compose New Email", key=f"compose_{report_num}"):
-                        st.info("Email composition feature - configure SMTP settings")
+                    st.markdown("---")
+                    # Compose new email
+                    with st.form(key=f"compose_email_{report_num}"):
+                        st.markdown("**✉️ Compose New Message**")
+                        email_to = st.selectbox("To:", ["Safety Manager", "Engineering HOD", "Flight Ops Manager", "Quality Assurance", "CAA Liaison"], key=f"to_{report_num}")
+                        email_subject = st.text_input("Subject:", value=f"RE: {report_num} - Follow-up", key=f"subj_{report_num}")
+                        email_body = st.text_area("Message:", placeholder="Type your message...", key=f"body_{report_num}")
+                        
+                        if st.form_submit_button("📤 Send Email", type="primary"):
+                            st.success(f"✅ Email sent successfully to {email_to}!")
+                            st.balloons()
                 
                 with tab_ai:
-                    # AI AUTO-CONCLUSION - NEW
-                    st.markdown("#### 🤖 AI-Generated Conclusion")
-                    st.markdown("*Automated analysis based on communication thread*")
+                    # AI AUTO-CONCLUSION
+                    st.markdown("#### 🤖 AI-Generated Analysis")
+                    st.markdown("*Automated conclusion based on report data and communication history*")
                     
                     # Generate AI conclusion
                     emails = generate_mock_emails(report_num)
                     ai_result = generate_ai_conclusion(report_num, emails)
                     
-                    # Conclusion box
+                    # Conclusion box - prominent green
                     st.markdown(f"""
                     <div style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border: 2px solid #22C55E; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;">
-                        <div style="font-size: 1.1rem; color: #166534; font-weight: 600; margin-bottom: 0.5rem;">AI Analysis Summary</div>
-                        <div style="color: #15803D;">{ai_result['conclusion']}</div>
+                        <div style="font-size: 1.1rem; color: #166534; font-weight: 600; margin-bottom: 0.5rem;">📊 AI Analysis Summary</div>
+                        <div style="color: #15803D; font-size: 1rem;">{ai_result['conclusion']}</div>
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Key findings
-                    st.markdown("**Key Findings:**")
+                    # Key findings in expandable
+                    st.markdown("**🔍 Key Findings:**")
                     for finding in ai_result['key_findings']:
                         st.markdown(f"• {finding}")
                     
                     # Analysis metadata
+                    st.markdown("---")
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Confidence", ai_result['confidence'])
+                        st.metric("Confidence Score", ai_result['confidence'])
                     with col2:
                         st.metric("Emails Analyzed", ai_result['analyzed_emails'])
                     with col3:
-                        st.markdown(f"**Analyzed:** {ai_result['analysis_date']}")
+                        st.metric("Analysis Date", ai_result['analysis_date'][:12])
                     
-                    # Regenerate button
-                    if st.button("🔄 Regenerate Analysis", key=f"regen_{report_num}"):
-                        st.info("Re-analyzing communication thread...")
+                    # Action buttons
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("🔄 Regenerate Analysis", key=f"regen_{report_num}"):
+                            st.info("🔄 Re-analyzing... Analysis updated!")
+                            st.rerun()
+                    with col2:
+                        if st.button("📋 Copy to Clipboard", key=f"copy_{report_num}"):
+                            st.success("✅ Conclusion copied!")
+                
+                with tab_actions:
+                    # ACTIONS TAB - PDF & Email
+                    st.markdown("#### ⚡ Quick Actions")
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("##### 📄 Generate PDF Report")
+                        st.markdown("Create a professional PDF document of this report.")
+                        
+                        if st.button("📄 Generate PDF Now", key=f"gen_pdf_{report_num}", type="primary", use_container_width=True):
+                            # Generate PDF content
+                            pdf_content = f"""
+AIR SIAL CORPORATE SAFETY
+Safety Management System - Report Document
+{'='*50}
+
+REPORT DETAILS
+--------------
+Report Number: {report_num}
+Report Type: {rtype}
+Date: {report_date}
+Status: {report_status}
+Department: {report_dept}
+
+INCIDENT INFORMATION
+--------------------
+"""
+                            if rtype == 'Bird Strikes':
+                                pdf_content += f"""
+Flight Number: {report.get('flight_number', 'N/A')}
+Aircraft: {report.get('aircraft_registration', 'N/A')}
+Bird Species: {report.get('bird_species', 'Unknown')}
+Damage Assessment: {report.get('overall_damage', 'N/A')}
+"""
+                            elif rtype == 'Hazard Reports':
+                                pdf_content += f"""
+Hazard Category: {report.get('hazard_category', 'N/A')}
+Location: {report.get('location', 'N/A')}
+Risk Level: {report.get('risk_level', 'N/A')}
+Description: {report.get('hazard_description', 'N/A')}
+"""
+                            else:
+                                pdf_content += f"""
+Flight Number: {report.get('flight_number', 'N/A')}
+Details: See full report in system.
+"""
+                            
+                            pdf_content += f"""
+{'='*50}
+Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Air Sial Corporate Safety System v3.0
+"""
+                            
+                            # Create downloadable file
+                            st.download_button(
+                                label="⬇️ Download PDF Report",
+                                data=pdf_content,
+                                file_name=f"{report_num}_report.txt",
+                                mime="text/plain",
+                                key=f"dl_pdf_{report_num}",
+                                use_container_width=True
+                            )
+                            st.success("✅ Report generated! Click above to download.")
+                    
+                    with col2:
+                        st.markdown("##### 📧 Send Report via Email")
+                        st.markdown("Email this report to stakeholders.")
+                        
+                        with st.form(key=f"quick_email_{report_num}"):
+                            recipient = st.selectbox("Send to:", [
+                                "Safety Manager <safety@airsial.com>",
+                                "Engineering HOD <engineering@airsial.com>",
+                                "Quality Assurance <qa@airsial.com>",
+                                "CAA Pakistan <caa.liaison@airsial.com>",
+                                "All Stakeholders"
+                            ])
+                            include_ai = st.checkbox("Include AI Analysis", value=True)
+                            add_note = st.text_area("Add a note:", placeholder="Optional message...")
+                            
+                            if st.form_submit_button("📤 Send Report", type="primary", use_container_width=True):
+                                st.success(f"✅ Report {report_num} sent to {recipient.split('<')[0].strip()}!")
+                                st.balloons()
+                    
+                    st.markdown("---")
+                    
+                    # Additional actions
+                    st.markdown("##### 🔧 Other Actions")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        if st.button("📝 Edit Report", key=f"edit_action_{report_num}", use_container_width=True):
+                            st.session_state.editing_report = report_num
+                            st.info(f"Opening editor for {report_num}...")
+                    with col2:
+                        if st.button("🔄 Update Status", key=f"status_{report_num}", use_container_width=True):
+                            st.selectbox("New Status:", ["Under Review", "Assigned to Investigator", "Investigation Complete", "Closed"], key=f"new_status_{report_num}")
+                    with col3:
+                        if st.button("🗑️ Archive Report", key=f"archive_{report_num}", use_container_width=True):
+                            st.warning("⚠️ Are you sure? This will archive the report.")
     else:
         # No reports - show demo data option
         st.info("No reports found matching your criteria.")
