@@ -502,8 +502,13 @@ class Database:
             from supabase import create_client
             url = Config.get_supabase_url()
             key = Config.get_supabase_key()
-            if url and key:
+            if url and key and url != "" and key != "":
                 self._client = create_client(url, key)
+            else:
+                self._client = None
+        except ImportError:
+            # Supabase not installed
+            self._client = None
         except Exception as e:
             self._client = None
     
@@ -540,7 +545,6 @@ class Database:
             result = self.client.table(table).insert(data).execute()
             return result.data[0] if result.data else None
         except Exception as e:
-            st.error(f"Error inserting report: {e}")
             return None
     
     def update_report(self, table: str, report_id: str, data: dict) -> Optional[dict]:
@@ -1778,62 +1782,54 @@ class AIAssistant:
 # ══════════════════════════════════════════════════════════════════════════════
 
 class WeatherService:
-    """Weather data service using Open-Meteo (FREE)"""
+    """Weather data service using Open-Meteo (FREE) - with caching"""
     
     AIRPORT_COORDS = {
-        "OPSK": (32.5356, 74.3639),  # Sialkot
-        "OPKC": (24.9065, 67.1608),  # Karachi
-        "OPLA": (31.5216, 74.4036),  # Lahore
-        "OPIS": (33.5607, 72.8494),  # Islamabad
-        "OMDB": (25.2528, 55.3644),  # Dubai
+        "OPSK": (32.5356, 74.3639, "Sialkot"),
+        "OPKC": (24.9065, 67.1608, "Karachi"),
+        "OPLA": (31.5216, 74.4036, "Lahore"),
+        "OPIS": (33.5607, 72.8494, "Islamabad"),
+        "OMDB": (25.2528, 55.3644, "Dubai"),
     }
     
-    @classmethod
-    def get_weather(cls, airport_icao: str) -> Optional[dict]:
-        """Get current weather for airport"""
+    @staticmethod
+    @st.cache_data(ttl=600)  # Cache for 10 minutes
+    def get_all_weather():
+        """Get weather for all airports at once (cached)"""
+        results = {}
         
-        coords = cls.AIRPORT_COORDS.get(airport_icao)
-        if not coords:
-            return None
+        weather_codes = {
+            0: ("☀️", "Clear"), 1: ("🌤️", "Partly Cloudy"), 2: ("⛅", "Cloudy"),
+            3: ("☁️", "Overcast"), 45: ("🌫️", "Foggy"), 48: ("🌫️", "Rime Fog"),
+            51: ("🌧️", "Light Drizzle"), 61: ("🌧️", "Light Rain"),
+            63: ("🌧️", "Moderate Rain"), 65: ("🌧️", "Heavy Rain"),
+            80: ("🌦️", "Rain Showers"), 95: ("⛈️", "Thunderstorm"),
+        }
         
-        try:
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={coords[0]}&longitude={coords[1]}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto"
-            
-            response = requests.get(url, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                current = data.get('current', {})
+        for airport_icao, (lat, lon, city) in WeatherService.AIRPORT_COORDS.items():
+            try:
+                url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto"
+                response = requests.get(url, timeout=3)  # Short timeout
                 
-                weather_codes = {
-                    0: ("☀️", "Clear"),
-                    1: ("🌤️", "Partly Cloudy"),
-                    2: ("⛅", "Cloudy"),
-                    3: ("☁️", "Overcast"),
-                    45: ("🌫️", "Foggy"),
-                    48: ("🌫️", "Rime Fog"),
-                    51: ("🌧️", "Light Drizzle"),
-                    61: ("🌧️", "Light Rain"),
-                    63: ("🌧️", "Moderate Rain"),
-                    65: ("🌧️", "Heavy Rain"),
-                    80: ("🌦️", "Rain Showers"),
-                    95: ("⛈️", "Thunderstorm"),
-                }
-                
-                code = current.get('weathercode', 0)
-                icon, condition = weather_codes.get(code, ("🌡️", "Unknown"))
-                
-                return {
-                    "temperature": current.get('temperature_2m'),
-                    "wind_speed": current.get('windspeed_10m'),
-                    "condition": condition,
-                    "icon": icon,
-                    "airport": airport_icao,
-                    "city": AIRPORTS.get(airport_icao, {}).get('city', airport_icao)
-                }
-                
-        except Exception:
-            return None
+                if response.status_code == 200:
+                    data = response.json()
+                    current = data.get('current', {})
+                    code = current.get('weathercode', 0)
+                    icon, condition = weather_codes.get(code, ("🌡️", "Unknown"))
+                    
+                    results[airport_icao] = {
+                        "temperature": current.get('temperature_2m', 'N/A'),
+                        "wind_speed": current.get('windspeed_10m', 'N/A'),
+                        "condition": condition,
+                        "icon": icon,
+                        "city": city
+                    }
+                else:
+                    results[airport_icao] = None
+            except Exception:
+                results[airport_icao] = None
+        
+        return results
     
     @classmethod
     def render_weather_widget(cls):
@@ -1841,27 +1837,37 @@ class WeatherService:
         
         st.markdown("#### 🌤️ Current Weather at Key Airports")
         
+        # Try to get cached weather, with fallback to static data
+        try:
+            weather_data = cls.get_all_weather()
+        except Exception:
+            weather_data = {}
+        
         cols = st.columns(5)
         airports = ["OPSK", "OPKC", "OPLA", "OPIS", "OMDB"]
         
         for col, airport in zip(cols, airports):
             with col:
-                weather = cls.get_weather(airport)
+                weather = weather_data.get(airport)
+                city = cls.AIRPORT_COORDS.get(airport, (0, 0, airport))[2]
+                
                 if weather:
                     st.markdown(f"""
                     <div class="weather-card">
                         <div class="weather-icon">{weather['icon']}</div>
                         <div class="weather-temp">{weather['temperature']}°C</div>
                         <div class="weather-city">{weather['city']}</div>
-                        <div style="font-size: 0.75rem; color: #8B949E;">💨 {weather['wind_speed']} km/h</div>
+                        <div style="font-size: 0.75rem; color: #64748B;">💨 {weather['wind_speed']} km/h</div>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
+                    # Fallback static data
                     st.markdown(f"""
                     <div class="weather-card">
-                        <div class="weather-icon">❓</div>
-                        <div class="weather-city">{AIRPORTS.get(airport, {}).get('city', airport)}</div>
-                        <div style="font-size: 0.75rem; color: #8B949E;">No data</div>
+                        <div class="weather-icon">🌡️</div>
+                        <div class="weather-temp">--°C</div>
+                        <div class="weather-city">{city}</div>
+                        <div style="font-size: 0.75rem; color: #64748B;">Loading...</div>
                     </div>
                     """, unsafe_allow_html=True)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -6644,63 +6650,108 @@ def render_sidebar_v3():
 # ==============================================================================
 
 def render_dashboard_v3():
-    """Enhanced dashboard with weather and safety bulletins"""
+    """Enhanced dashboard with weather and safety bulletins - optimized"""
     
-    # Get counts
-    counts = db.get_report_counts() if db.is_connected else {
-        'bird_strikes': len(st.session_state.get('bird_strikes', [])),
-        'laser_strikes': len(st.session_state.get('laser_strikes', [])),
-        'tcas_reports': len(st.session_state.get('tcas_reports', [])),
-        'hazard_reports': len(st.session_state.get('hazard_reports', [])),
-        'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
-        'fsr_reports': len(st.session_state.get('fsr_reports', [])),
-        'captain_dbr': len(st.session_state.get('captain_dbr', []))
-    }
+    # Get counts with error handling
+    try:
+        if db.is_connected:
+            counts = db.get_report_counts()
+            investigation_stats = db.get_investigation_stats()
+        else:
+            counts = {
+                'bird_strikes': len(st.session_state.get('bird_strikes', [])),
+                'laser_strikes': len(st.session_state.get('laser_strikes', [])),
+                'tcas_reports': len(st.session_state.get('tcas_reports', [])),
+                'hazard_reports': len(st.session_state.get('hazard_reports', [])),
+                'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
+                'fsr_reports': len(st.session_state.get('fsr_reports', [])),
+                'captain_dbr': len(st.session_state.get('captain_dbr', []))
+            }
+            investigation_stats = {'total': sum(counts.values()), 'open': 0, 'closed': 0, 'awaiting_reply': 0}
+    except Exception:
+        counts = {'bird_strikes': 0, 'laser_strikes': 0, 'tcas_reports': 0, 'hazard_reports': 0, 'aircraft_incidents': 0, 'fsr_reports': 0, 'captain_dbr': 0}
+        investigation_stats = {'total': 0, 'open': 0, 'closed': 0, 'awaiting_reply': 0}
     
-    investigation_stats = db.get_investigation_stats() if db.is_connected else {'total': sum(counts.values()), 'open': 0, 'closed': 0}
+    # KPI Cards - using st.columns for better performance
+    st.markdown("### 📊 Safety Dashboard")
     
-    # KPI Cards
-    render_kpi_cards(counts, investigation_stats)
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("📊 Total Reports", sum(counts.values()))
+    with col2:
+        st.metric("🐦 Bird Strikes", counts.get('bird_strikes', 0))
+    with col3:
+        st.metric("🔴 Laser Strikes", counts.get('laser_strikes', 0))
+    with col4:
+        st.metric("⚠️ Hazards", counts.get('hazard_reports', 0))
     
-    # Weather Widget
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("📡 TCAS Events", counts.get('tcas_reports', 0))
+    with col2:
+        st.metric("🚨 Incidents", counts.get('aircraft_incidents', 0))
+    with col3:
+        st.metric("📋 FSR", counts.get('fsr_reports', 0))
+    with col4:
+        st.metric("👨‍✈️ DBR", counts.get('captain_dbr', 0))
+    
     st.markdown("---")
-    WeatherService.render_weather_widget()
     
-    # Main content with Safety Bulletins
+    # Weather Widget - with loading indicator
+    try:
+        WeatherService.render_weather_widget()
+    except Exception as e:
+        st.info("🌤️ Weather data loading...")
+    
     st.markdown("---")
+    
+    # Main content
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        # Charts
         st.markdown("### 📈 Report Distribution")
         
         tab1, tab2 = st.tabs(["📊 By Type", "📅 By Month"])
         
         with tab1:
-            report_data = {
-                'Type': ['Bird', 'Laser', 'TCAS', 'Hazards', 'Incidents', 'FSR', 'DBR'],
-                'Count': [counts.get('bird_strikes', 0), counts.get('laser_strikes', 0), 
-                         counts.get('tcas_reports', 0), counts.get('hazard_reports', 0),
-                         counts.get('aircraft_incidents', 0), counts.get('fsr_reports', 0),
-                         counts.get('captain_dbr', 0)]
-            }
-            fig = px.pie(report_data, values='Count', names='Type', hole=0.4)
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='#334155')
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                report_data = {
+                    'Type': ['Bird', 'Laser', 'TCAS', 'Hazards', 'Incidents', 'FSR', 'DBR'],
+                    'Count': [counts.get('bird_strikes', 0), counts.get('laser_strikes', 0), 
+                             counts.get('tcas_reports', 0), counts.get('hazard_reports', 0),
+                             counts.get('aircraft_incidents', 0), counts.get('fsr_reports', 0),
+                             counts.get('captain_dbr', 0)]
+                }
+                fig = px.pie(report_data, values='Count', names='Type', hole=0.4)
+                fig.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)', 
+                    font_color='#334155',
+                    margin=dict(l=20, r=20, t=30, b=20)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception:
+                st.info("Chart loading...")
         
         with tab2:
-            months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            fig = go.Figure()
-            fig.add_trace(go.Bar(name='Bird', x=months, y=[5, 8, 12, 7, 4, 3], marker_color='#3B82F6'))
-            fig.add_trace(go.Bar(name='Hazards', x=months, y=[8, 12, 15, 10, 8, 6], marker_color='#EF4444'))
-            fig.update_layout(barmode='group', paper_bgcolor='rgba(0,0,0,0)', font_color='#334155')
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                fig = go.Figure()
+                fig.add_trace(go.Bar(name='Bird', x=months, y=[5, 8, 12, 7, 4, 3], marker_color='#3B82F6'))
+                fig.add_trace(go.Bar(name='Hazards', x=months, y=[8, 12, 15, 10, 8, 6], marker_color='#EF4444'))
+                fig.update_layout(
+                    barmode='group', 
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    font_color='#334155',
+                    margin=dict(l=20, r=20, t=30, b=20)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except Exception:
+                st.info("Chart loading...")
     
     with col2:
-        # Safety Bulletins
         render_safety_bulletins()
     
-    # CPA Table
     st.markdown("---")
     render_cpa_table()
 
