@@ -638,7 +638,26 @@ class Database:
             pass
 
 
-db = Database()
+# Lazy database initialization - only connects when actually needed
+_db_instance = None
+
+def get_db():
+    """Get database instance (lazy initialization)"""
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = Database()
+    return _db_instance
+
+# For backwards compatibility - this property won't connect until accessed
+class LazyDB:
+    @property
+    def is_connected(self):
+        return get_db().is_connected
+    
+    def __getattr__(self, name):
+        return getattr(get_db(), name)
+
+db = LazyDB()
 # ══════════════════════════════════════════════════════════════════════════════
 # CUSTOM CSS STYLING
 # ══════════════════════════════════════════════════════════════════════════════
