@@ -1,55 +1,9 @@
-# ══════════════════════════════════════════════════════════════════════════════
-# AIR SIAL CORPORATE SAFETY MANAGEMENT SYSTEM
-# Requirements File
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Core Framework
 streamlit>=1.28.0
-
-# Data Processing
 pandas>=2.0.0
+plotly>=5.18.0
 numpy>=1.24.0
-
-# Visualization
-plotly>=5.15.0
-
-# Database
-supabase>=2.0.0
-
-# Excel/Spreadsheet Support
-openpyxl>=3.1.0
-xlsxwriter>=3.1.0
-
-# PDF Generation
-reportlab>=4.0.0
-pypdf>=3.0.0
-
-# HTTP Requests
 requests>=2.31.0
-
-# OCR Support
-pytesseract>=0.3.10
 Pillow>=10.0.0
-
-# AI Integration (Optional)
-groq>=0.4.0
-
-# Date/Time
+pydeck>=0.8.0
+reportlab>=4.0.0
 python-dateutil>=2.8.0
-
-# ══════════════════════════════════════════════════════════════════════════════
-# SYSTEM DEPENDENCIES (Install separately)
-# ══════════════════════════════════════════════════════════════════════════════
-# 
-# Ubuntu/Debian:
-#   sudo apt-get install tesseract-ocr
-#   sudo apt-get install tesseract-ocr-eng
-#
-# macOS:
-#   brew install tesseract
-#
-# Windows:
-#   Download from: https://github.com/UB-Mannheim/tesseract/wiki
-#   Add to PATH
-#
-# ══════════════════════════════════════════════════════════════════════════════
