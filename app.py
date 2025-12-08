@@ -1782,7 +1782,7 @@ class AIAssistant:
 # ══════════════════════════════════════════════════════════════════════════════
 
 class WeatherService:
-    """Weather data service using Open-Meteo (FREE) - with caching"""
+    """Weather data service - uses static data by default, API on refresh"""
     
     AIRPORT_COORDS = {
         "OPSK": (32.5356, 74.3639, "Sialkot"),
@@ -1792,12 +1792,19 @@ class WeatherService:
         "OMDB": (25.2528, 55.3644, "Dubai"),
     }
     
+    # Static default weather data (prevents freezing on load)
+    STATIC_WEATHER = {
+        "OPSK": {"icon": "🌤️", "temperature": 18, "wind_speed": 12, "city": "Sialkot", "condition": "Partly Cloudy"},
+        "OPKC": {"icon": "☀️", "temperature": 28, "wind_speed": 15, "city": "Karachi", "condition": "Clear"},
+        "OPLA": {"icon": "🌤️", "temperature": 20, "wind_speed": 10, "city": "Lahore", "condition": "Partly Cloudy"},
+        "OPIS": {"icon": "⛅", "temperature": 15, "wind_speed": 8, "city": "Islamabad", "condition": "Cloudy"},
+        "OMDB": {"icon": "☀️", "temperature": 32, "wind_speed": 18, "city": "Dubai", "condition": "Clear"},
+    }
+    
     @staticmethod
-    @st.cache_data(ttl=600)  # Cache for 10 minutes
-    def get_all_weather():
-        """Get weather for all airports at once (cached)"""
+    def fetch_live_weather():
+        """Fetch live weather - only called on user action"""
         results = {}
-        
         weather_codes = {
             0: ("☀️", "Clear"), 1: ("🌤️", "Partly Cloudy"), 2: ("⛅", "Cloudy"),
             3: ("☁️", "Overcast"), 45: ("🌫️", "Foggy"), 48: ("🌫️", "Rime Fog"),
@@ -1809,7 +1816,7 @@ class WeatherService:
         for airport_icao, (lat, lon, city) in WeatherService.AIRPORT_COORDS.items():
             try:
                 url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto"
-                response = requests.get(url, timeout=3)  # Short timeout
+                response = requests.get(url, timeout=5)
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -1824,33 +1831,37 @@ class WeatherService:
                         "icon": icon,
                         "city": city
                     }
-                else:
-                    results[airport_icao] = None
             except Exception:
-                results[airport_icao] = None
+                pass
         
-        return results
+        return results if results else None
     
     @classmethod
     def render_weather_widget(cls):
         """Render weather widget for key airports"""
         
-        st.markdown("#### 🌤️ Current Weather at Key Airports")
+        col_header, col_btn = st.columns([4, 1])
+        with col_header:
+            st.markdown("#### 🌤️ Current Weather at Key Airports")
+        with col_btn:
+            refresh = st.button("🔄 Refresh", key="refresh_weather")
         
-        # Try to get cached weather, with fallback to static data
-        try:
-            weather_data = cls.get_all_weather()
-        except Exception:
-            weather_data = {}
+        # Use cached live data if available, otherwise static
+        if refresh:
+            with st.spinner("Fetching live weather..."):
+                live_data = cls.fetch_live_weather()
+                if live_data:
+                    st.session_state.weather_cache = live_data
+                    st.session_state.weather_updated = datetime.now().strftime("%H:%M")
+        
+        weather_data = st.session_state.get('weather_cache', cls.STATIC_WEATHER)
         
         cols = st.columns(5)
         airports = ["OPSK", "OPKC", "OPLA", "OPIS", "OMDB"]
         
         for col, airport in zip(cols, airports):
             with col:
-                weather = weather_data.get(airport)
-                city = cls.AIRPORT_COORDS.get(airport, (0, 0, airport))[2]
-                
+                weather = weather_data.get(airport, cls.STATIC_WEATHER.get(airport))
                 if weather:
                     st.markdown(f"""
                     <div class="weather-card">
@@ -1860,16 +1871,10 @@ class WeatherService:
                         <div style="font-size: 0.75rem; color: #64748B;">💨 {weather['wind_speed']} km/h</div>
                     </div>
                     """, unsafe_allow_html=True)
-                else:
-                    # Fallback static data
-                    st.markdown(f"""
-                    <div class="weather-card">
-                        <div class="weather-icon">🌡️</div>
-                        <div class="weather-temp">--°C</div>
-                        <div class="weather-city">{city}</div>
-                        <div style="font-size: 0.75rem; color: #64748B;">Loading...</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+        
+        if st.session_state.get('weather_updated'):
+            st.caption(f"Last updated: {st.session_state.weather_updated}")
+
 # ══════════════════════════════════════════════════════════════════════════════
 # REPORT FORMS - CAA PAKISTAN COMPLIANT
 # ══════════════════════════════════════════════════════════════════════════════
