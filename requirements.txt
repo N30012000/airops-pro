@@ -1,36 +1,5 @@
-# Air Sial Corporate Safety - Requirements
-# All FREE libraries - No paid services required
-
-# Core Framework
 streamlit>=1.28.0
-
-# Data Processing
 pandas>=2.0.0
-numpy>=1.24.0
-
-# Visualization
 plotly>=5.15.0
-
-# Database
-supabase>=2.0.0
-
-# File Export
-openpyxl>=3.1.0
 reportlab>=4.0.0
-
-# HTTP Requests (for Gemini API)
-requests>=2.31.0
-
-# OCR Support (FREE - Tesseract)
-# Note: Tesseract-OCR must be installed on the system:
-# Ubuntu/Debian: sudo apt-get install tesseract-ocr
-# macOS: brew install tesseract
-# Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
-pytesseract>=0.3.10
-Pillow>=10.0.0
-
-# Optional AI (Groq as backup)
-groq>=0.4.0
-
-# JSON handling (standard library, but listed for clarity)
-# json - included in Python standard library
+pydeck>=0.8.0
