@@ -68,14 +68,6 @@ try:
 except ImportError:
     REPORTLAB_AVAILABLE = False
 
-# Google Gemini AI
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    genai = None
-    GEMINI_AVAILABLE = False
-
 # Air Sial SMS v3.0 - Configuration
 
 
@@ -6552,12 +6544,6 @@ def render_ai_assistant():
     </div>
     """, unsafe_allow_html=True)
     
-    # Show Gemini status
-    if GEMINI_AVAILABLE and Config.get_gemini_key():
-        st.success("✅ Gemini AI Connected")
-    else:
-        st.info("ℹ️ Using built-in AI (Add GEMINI_API_KEY to secrets for enhanced AI)")
-    
     # Sidebar with quick actions
     with st.sidebar:
         st.markdown("### 🎯 Quick Analysis")
@@ -6670,58 +6656,15 @@ def render_ai_assistant():
 
 
 def generate_ai_response(query):
-    """Generate AI response based on user query and report data using Gemini AI."""
+    """Generate AI response based on user query and report data."""
     
-    # Get current statistics for context
+    query_lower = query.lower()
+    
+    # Get current statistics
     report_counts = get_report_counts()
     risk_distribution = get_risk_distribution()
     total_reports = get_total_reports()
     high_risk_count = get_high_risk_count()
-    
-    # Try Gemini AI first
-    if GEMINI_AVAILABLE and genai:
-        try:
-            api_key = Config.get_gemini_key()
-            if api_key:
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-pro')
-                
-                # Build context from current data
-                context = f"""
-                You are an AI Safety Assistant for Air Sial airline's Safety Management System.
-                
-                Current Safety Statistics:
-                - Total Reports: {total_reports}
-                - High/Extreme Risk Items: {high_risk_count}
-                - Bird Strikes: {report_counts.get('bird_strikes', 0)}
-                - Laser Strikes: {report_counts.get('laser_strikes', 0)}
-                - TCAS Reports: {report_counts.get('tcas_reports', 0)}
-                - Hazard Reports: {report_counts.get('hazard_reports', 0)}
-                - Aircraft Incidents: {report_counts.get('aircraft_incidents', 0)}
-                - FSR Reports: {report_counts.get('fsr_reports', 0)}
-                - Captain Debriefs: {report_counts.get('captain_dbr', 0)}
-                
-                Risk Distribution:
-                - Extreme: {risk_distribution.get('Extreme', 0)}
-                - High: {risk_distribution.get('High', 0)}
-                - Medium: {risk_distribution.get('Medium', 0)}
-                - Low: {risk_distribution.get('Low', 0)}
-                
-                Please provide helpful, professional aviation safety guidance.
-                Format your response with HTML tags for better display.
-                """
-                
-                prompt = f"{context}\n\nUser Query: {query}"
-                response = model.generate_content(prompt)
-                
-                if response and response.text:
-                    return response.text
-        except Exception as e:
-            # Fall through to pattern matching if Gemini fails
-            pass
-    
-    # Fallback to pattern matching
-    query_lower = query.lower()
     
     # Pattern matching for different query types
     if any(word in query_lower for word in ['trend', 'pattern', 'over time']):
