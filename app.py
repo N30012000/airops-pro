@@ -45,16 +45,28 @@ from typing import Optional, Dict, List, Any, Tuple
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pydeck as pdk
 import streamlit as st
 from plotly.subplots import make_subplots
-from reportlab.lib.colors import HexColor
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+
+# Optional pydeck for geospatial mapping
+try:
+    import pydeck as pdk
+    PYDECK_AVAILABLE = True
+except ImportError:
+    pdk = None
+    PYDECK_AVAILABLE = False
+
+# PDF generation
+try:
+    from reportlab.lib.colors import HexColor
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.pdfgen import canvas
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 # Air Sial SMS v3.0 - Configuration
 
@@ -437,22 +449,6 @@ def get_airport_name(icao: str) -> str:
 
 def get_aircraft_info(registration: str) -> dict:
     return AIRCRAFT_FLEET.get(registration.upper(), {"type": "Unknown", "msn": "N/A", "config": "N/A", "engines": "N/A", "mtow": "N/A"})
-
-def initialize_session_state():
-    defaults = {
-        'logged_in': False, 'user_id': None, 'user_name': 'Guest User', 'user_role': 'reporter',
-        'user_department': 'Safety Department', 'user_email': '', 'erp_mode': False,
-        'bird_strikes': [], 'laser_strikes': [], 'tcas_reports': [], 'hazard_reports': [],
-        'aircraft_incidents': [], 'fsr_reports': [], 'captain_dbr': [],
-        'ocr_data_bird_strike': None, 'ocr_data_laser_strike': None, 'ocr_data_tcas_report': None,
-        'ocr_data_hazard_report': None, 'ocr_data_incident_report': None,
-        'smtp_server': 'smtp.gmail.com', 'smtp_port': 587, 'smtp_email': '', 'smtp_password': '',
-        'smtp_name': 'Air Sial Safety System', 'smtp_tls': True, 'email_log': [],
-        'weather_cache': None, 'weather_updated': None, 'chat_history': [],
-    }
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DYNAMIC STATISTICS FROM SESSION STATE - NO MOCK DATA
@@ -7680,37 +7676,40 @@ def render_geospatial_map():
         df['color'] = df['risk_level'].map(lambda x: color_map.get(x, [108, 117, 125, 200]))
         
         # PyDeck map
-        try:
-            
-            layer = pdk.Layer(
-                'ScatterplotLayer',
-                data=df,
-                get_position='[longitude, latitude]',
-                get_color='color',
-                get_radius=50000,
-                pickable=True
-            )
-            
-            # Center on Pakistan/Air Sial routes
-            view_state = pdk.ViewState(
-                latitude=30.3753,
-                longitude=69.3451,
-                zoom=5,
-                pitch=0
-            )
-            
-            deck = pdk.Deck(
-                layers=[layer],
-                initial_view_state=view_state,
-                tooltip={
-                    'text': '{type}\n{id}\nRisk: {risk_level}\nDate: {date}'
-                }
-            )
-            
-            st.pydeck_chart(deck)
-            
-        except ImportError:
-            # Fallback to simple map
+        if PYDECK_AVAILABLE and pdk is not None:
+            try:
+                layer = pdk.Layer(
+                    'ScatterplotLayer',
+                    data=df,
+                    get_position='[longitude, latitude]',
+                    get_color='color',
+                    get_radius=50000,
+                    pickable=True
+                )
+                
+                # Center on Pakistan/Air Sial routes
+                view_state = pdk.ViewState(
+                    latitude=30.3753,
+                    longitude=69.3451,
+                    zoom=5,
+                    pitch=0
+                )
+                
+                deck = pdk.Deck(
+                    layers=[layer],
+                    initial_view_state=view_state,
+                    tooltip={
+                        'text': '{type}\n{id}\nRisk: {risk_level}\nDate: {date}'
+                    }
+                )
+                
+                st.pydeck_chart(deck)
+                
+            except Exception as e:
+                # Fallback to simple map
+                st.map(df[['latitude', 'longitude']])
+        else:
+            # Fallback to simple map if pydeck not available
             st.map(df[['latitude', 'longitude']])
         
         # Legend
@@ -9471,8 +9470,12 @@ def route_to_page():
     # Get the render function
     render_func = page_routing.get(current_page, render_dashboard)
     
-    # Call the render function
-    render_func()
+    # Call the render function with error handling
+    try:
+        render_func()
+    except Exception as e:
+        st.error(f"Error rendering {current_page}: {str(e)}")
+        st.exception(e)
 
 
 def main():
@@ -9486,28 +9489,33 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    # Initialize session state
-    initialize_session_state()
-    
-    # Apply custom CSS
-    apply_custom_css()
-    
-    # Check authentication
-    if not st.session_state.get('authenticated', False):
-        render_login_page()
-        return
-    
-    # Render sidebar
-    render_sidebar()
-    
-    # Render header
-    render_header()
-    
-    # Route to current page
-    route_to_page()
-    
-    # Footer
-    render_footer()
+    try:
+        # Initialize session state
+        initialize_session_state()
+        
+        # Apply custom CSS
+        apply_custom_css()
+        
+        # Check authentication
+        if not st.session_state.get('authenticated', False):
+            render_login_page()
+            return
+        
+        # Render sidebar
+        render_sidebar()
+        
+        # Render header
+        render_header()
+        
+        # Route to current page
+        route_to_page()
+        
+        # Footer
+        render_footer()
+        
+    except Exception as e:
+        st.error(f"An error occurred: {str(e)}")
+        st.exception(e)
 
 
 def render_footer():
