@@ -1,5 +1,36 @@
+# Air Sial SMS v3.0 - Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core Framework
 streamlit>=1.28.0
+
+# Data Processing
 pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
 plotly>=5.15.0
-reportlab>=4.0.0
 pydeck>=0.8.0
+
+# PDF Generation
+reportlab>=4.0.0
+
+# Excel Support (for data export)
+openpyxl>=3.1.0
+xlsxwriter>=3.1.0
+
+# Image Processing (for OCR features)
+Pillow>=10.0.0
+
+# Date/Time utilities
+python-dateutil>=2.8.0
+
+# HTTP requests (for API integrations)
+requests>=2.31.0
+
+# Optional: Google AI (if using Gemini for AI features)
+# google-generativeai>=0.3.0
+
+# Optional: Real OCR
+# pytesseract>=0.3.10
+# opencv-python>=4.8.0
