@@ -759,56 +759,16 @@ def render_weather_widget():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def apply_custom_css():
-    erp_mode = st.session_state.get('erp_mode', False)
-    header_bg = "linear-gradient(135deg, #DC2626 0%, #B91C1C 100%)" if erp_mode else "linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%)"
-    erp_animation = "@keyframes erp-flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }" if erp_mode else ""
-    
-    st.markdown(f"""
+    st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    :root {{ --primary-blue: #1E40AF; --primary-blue-light: #3B82F6; --bg-primary: #F8FAFC; --bg-secondary: #F1F5F9; --bg-card: #FFFFFF; --border-color: #E2E8F0; --text-primary: #1E293B; --text-secondary: #334155; --text-muted: #64748B; }}
-    * {{ font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }}
-    .stApp {{ background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%); }}
-    #MainMenu {{visibility: hidden;}} footer {{visibility: hidden;}} header {{visibility: hidden;}}
-    section[data-testid="stSidebar"] {{ background: linear-gradient(180deg, #F8FAFC 0%, #E2E8F0 100%); border-right: 1px solid #E2E8F0; }}
-    section[data-testid="stSidebar"] .stRadio label {{ color: #334155 !important; font-weight: 500; }}
-    {erp_animation}
-    .main-header {{ background: {header_bg}; padding: 1.5rem 2rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); {"animation: erp-flash 1.5s infinite;" if erp_mode else ""} }}
-    .kpi-card {{ background: #FFFFFF; border-radius: 12px; padding: 1.25rem; text-align: center; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; position: relative; overflow: hidden; }}
-    .kpi-card:hover {{ transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); border-color: #3B82F6; }}
-    .kpi-card::before {{ content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #1E40AF, #3B82F6); }}
-    .kpi-value {{ font-size: 2.25rem; font-weight: 700; color: #1E40AF; line-height: 1; margin: 0.5rem 0; }}
-    .kpi-label {{ color: #64748B; font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }}
-    .risk-badge {{ display: inline-block; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }}
-    .risk-extreme {{ background: #FEE2E2; color: #DC2626; }} .risk-high {{ background: #FFEDD5; color: #EA580C; }} .risk-medium {{ background: #FEF9C3; color: #CA8A04; }} .risk-low {{ background: #DCFCE7; color: #16A34A; }}
-    .sla-indicator {{ padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 0.5rem; display: flex; align-items: center; }}
-    .sla-overdue {{ background: #FEE2E2; border-left: 4px solid #DC2626; }} .sla-critical {{ background: #FFEDD5; border-left: 4px solid #EA580C; }} .sla-warning {{ background: #FEF9C3; border-left: 4px solid #CA8A04; }} .sla-ok {{ background: #DCFCE7; border-left: 4px solid #22C55E; }}
-    .form-section {{ background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }}
-    .form-section-title {{ color: #1E40AF; font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 2px solid #DBEAFE; display: flex; align-items: center; gap: 0.5rem; }}
-    .report-card {{ background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; transition: all 0.2s ease; }}
-    .report-card:hover {{ border-color: #3B82F6; box-shadow: 0 4px 15px rgba(30, 64, 175, 0.1); }}
-    .category-badge {{ display: inline-block; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }}
-    .cat-bird {{ background: #DBEAFE; color: #1D4ED8; }} .cat-laser {{ background: #F3E8FF; color: #7C3AED; }} .cat-tcas {{ background: #FFEDD5; color: #C2410C; }} .cat-hazard {{ background: #FEE2E2; color: #DC2626; }} .cat-incident {{ background: #D1FAE5; color: #059669; }} .cat-fsr {{ background: #CCFBF1; color: #0D9488; }} .cat-dbr {{ background: #FEF3C7; color: #D97706; }}
-    .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div > div {{ background-color: #FFFFFF !important; border: 1px solid #E2E8F0 !important; color: #1E293B !important; border-radius: 8px !important; }}
-    .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {{ border-color: #3B82F6 !important; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important; }}
-    .stButton > button {{ background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%); color: #FFFFFF; border: none; border-radius: 8px; padding: 0.6rem 1.5rem; font-weight: 600; transition: all 0.2s ease; }}
-    .stButton > button:hover {{ background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%); box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3); transform: translateY(-1px); }}
-    .stTabs [data-baseweb="tab-list"] {{ background: #F1F5F9; border-radius: 10px; padding: 0.25rem; gap: 0.25rem; }}
-    .stTabs [data-baseweb="tab"] {{ background: transparent; color: #64748B; border-radius: 8px; font-weight: 500; }}
-    .stTabs [aria-selected="true"] {{ background: #FFFFFF; color: #1E40AF; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }}
-    .alert-box {{ padding: 1rem 1.25rem; border-radius: 10px; margin-bottom: 1rem; display: flex; align-items: center; gap: 1rem; }}
-    .alert-success {{ background: #F0FDF4; border: 1px solid #86EFAC; color: #166534; }} .alert-warning {{ background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E; }} .alert-danger {{ background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }} .alert-info {{ background: #EFF6FF; border: 1px solid #93C5FD; color: #1E40AF; }}
-    .bulletin-card {{ background: #FFFFFF; border-left: 4px solid #3B82F6; padding: 1rem; margin-bottom: 0.75rem; border-radius: 0 8px 8px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-    .prediction-card {{ background: linear-gradient(135deg, #1E40AF 0%, #7C3AED 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; text-align: center; }}
-    .prediction-value {{ font-size: 3rem; font-weight: 700; }}
-    .erp-emergency {{ background: #FEE2E2; border: 2px solid #DC2626; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }}
-    [data-testid="stMetricValue"] {{ font-size: 2rem; font-weight: 700; color: #1E40AF; }}
-    [data-testid="stMetricLabel"] {{ color: #64748B; font-weight: 500; }}
-    ::-webkit-scrollbar {{ width: 8px; height: 8px; }}
-    ::-webkit-scrollbar-track {{ background: #F1F5F9; }}
-    ::-webkit-scrollbar-thumb {{ background: #94A3B8; border-radius: 4px; }}
-    ::-webkit-scrollbar-thumb:hover {{ background: #64748B; }}
-    @media print {{ .no-print {{ display: none !important; }} }}
+    .stApp { background: #F8FAFC; }
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+    .risk-badge { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .risk-extreme { background: #FEE2E2; color: #DC2626; }
+    .risk-high { background: #FFEDD5; color: #EA580C; }
+    .risk-medium { background: #FEF9C3; color: #CA8A04; }
+    .risk-low { background: #DCFCE7; color: #16A34A; }
+    .form-section { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -8738,218 +8698,60 @@ def process_nl_query(query):
 def render_login_page():
     """Render the login page."""
     
-    # Initialize registration state
-    if 'show_register' not in st.session_state:
-        st.session_state['show_register'] = False
-    if 'show_forgot_password' not in st.session_state:
-        st.session_state['show_forgot_password'] = False
-    if 'registered_users' not in st.session_state:
-        st.session_state['registered_users'] = {
-            'admin': {'password': 'admin123', 'email': 'admin@airsial.com', 'role': 'Administrator'},
-            'safety': {'password': 'safety123', 'email': 'safety@airsial.com', 'role': 'Safety Officer'},
-            'viewer': {'password': 'viewer123', 'email': 'viewer@airsial.com', 'role': 'Viewer'},
-            'pilot': {'password': 'pilot123', 'email': 'pilot@airsial.com', 'role': 'Flight Crew'},
-            'engineer': {'password': 'engineer123', 'email': 'engineer@airsial.com', 'role': 'Maintenance'},
-            'manager': {'password': 'manager123', 'email': 'manager@airsial.com', 'role': 'Management'}
-        }
-    
-    # Center the form
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # Logo section
-        st.markdown("""
-        <div style="text-align: center; padding: 30px 0;">
-        """, unsafe_allow_html=True)
-        
-        # Try to load logo
+        # Logo
         logo_path = get_logo_path()
         if logo_path:
             try:
                 st.image(logo_path, width=150)
             except:
-                st.markdown('<div style="font-size: 4rem;">✈️</div>', unsafe_allow_html=True)
+                st.markdown("# ✈️")
         else:
-            st.markdown('<div style="font-size: 4rem;">✈️</div>', unsafe_allow_html=True)
+            st.markdown("# ✈️")
         
-        st.markdown("""
-            <h1 style="color: #1e3c72; margin: 10px 0; font-size: 2.5rem;">AIR SIAL</h1>
-            <h2 style="color: #666; font-weight: normal; font-size: 1.1rem;">
-                Safety Management System v3.0
-            </h2>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("# AIR SIAL")
+        st.markdown("### Safety Management System v3.0")
+        st.markdown("---")
         
-        # Show appropriate form based on state
-        if st.session_state.get('show_register'):
-            render_register_form()
-        elif st.session_state.get('show_forgot_password'):
-            render_forgot_password_form()
-        else:
-            render_sign_in_form()
-
-
-def render_sign_in_form():
-    """Render the sign in form."""
-    st.markdown("""
-    <div style="background: white; padding: 30px; border-radius: 15px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
-    """, unsafe_allow_html=True)
-    
-    with st.form("login_form"):
+        # Login form
         st.markdown("### 🔐 Sign In")
         
-        username = st.text_input("Username", placeholder="Enter your username")
-        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        username = st.text_input("Username", key="login_user")
+        password = st.text_input("Password", type="password", key="login_pass")
         
-        col_rem, col_forgot = st.columns([1, 1])
-        with col_rem:
-            remember_me = st.checkbox("Remember me")
-        
-        login_btn = st.form_submit_button("Sign In", use_container_width=True, type="primary")
-        
-        if login_btn:
-            users = st.session_state.get('registered_users', {})
-            if username.lower() in users and users[username.lower()]['password'] == password:
+        if st.button("Sign In", type="primary", use_container_width=True):
+            # Demo users
+            users = {
+                'admin': ('admin123', 'Administrator'),
+                'safety': ('safety123', 'Safety Officer'),
+                'viewer': ('viewer123', 'Viewer'),
+                'pilot': ('pilot123', 'Flight Crew'),
+                'engineer': ('engineer123', 'Maintenance'),
+                'manager': ('manager123', 'Management')
+            }
+            
+            if username.lower() in users and users[username.lower()][0] == password:
                 st.session_state['authenticated'] = True
                 st.session_state['username'] = username
-                st.session_state['user_role'] = users[username.lower()].get('role', 'Viewer')
-                st.session_state['login_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                st.success("✅ Login successful!")
-                time.sleep(0.5)
+                st.session_state['user_role'] = users[username.lower()][1]
                 st.rerun()
             else:
-                st.error("❌ Invalid username or password")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Links for Register and Forgot Password
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_reg, col_forgot = st.columns(2)
-    with col_reg:
-        if st.button("📝 Create New Account", use_container_width=True):
-            st.session_state['show_register'] = True
-            st.session_state['show_forgot_password'] = False
-            st.rerun()
-    with col_forgot:
-        if st.button("🔑 Forgot Password?", use_container_width=True):
-            st.session_state['show_forgot_password'] = True
-            st.session_state['show_register'] = False
-            st.rerun()
-    
-    # Demo credentials
-    with st.expander("📋 Demo Credentials"):
-        st.markdown("""
-        | Username | Password | Role |
-        |----------|----------|------|
-        | admin | admin123 | Administrator |
-        | safety | safety123 | Safety Officer |
-        | pilot | pilot123 | Flight Crew |
-        | viewer | viewer123 | Viewer |
-        """)
-
-
-def render_register_form():
-    """Render the registration form."""
-    st.markdown("""
-    <div style="background: white; padding: 30px; border-radius: 15px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
-    """, unsafe_allow_html=True)
-    
-    with st.form("register_form"):
-        st.markdown("### 📝 Create New Account")
+                st.error("❌ Invalid credentials")
         
-        new_username = st.text_input("Username", placeholder="Choose a username")
-        new_email = st.text_input("Email", placeholder="your.email@airsial.com")
-        new_password = st.text_input("Password", type="password", placeholder="Create a password")
-        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm your password")
+        st.markdown("---")
         
-        role = st.selectbox("Role", options=[
-            "Viewer", "Flight Crew", "Maintenance", "Safety Officer", "Management"
-        ])
-        
-        employee_id = st.text_input("Employee ID", placeholder="e.g., EMP-001")
-        
-        agree_terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
-        
-        register_btn = st.form_submit_button("Create Account", use_container_width=True, type="primary")
-        
-        if register_btn:
-            users = st.session_state.get('registered_users', {})
-            
-            if not new_username or not new_email or not new_password:
-                st.error("❌ Please fill in all required fields")
-            elif new_username.lower() in users:
-                st.error("❌ Username already exists")
-            elif new_password != confirm_password:
-                st.error("❌ Passwords do not match")
-            elif len(new_password) < 6:
-                st.error("❌ Password must be at least 6 characters")
-            elif not agree_terms:
-                st.error("❌ Please agree to the Terms of Service")
-            else:
-                # Register the new user
-                users[new_username.lower()] = {
-                    'password': new_password,
-                    'email': new_email,
-                    'role': role,
-                    'employee_id': employee_id,
-                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                }
-                st.session_state['registered_users'] = users
-                st.success("✅ Account created successfully! Please sign in.")
-                time.sleep(1)
-                st.session_state['show_register'] = False
-                st.rerun()
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Back to login
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("⬅️ Back to Sign In", use_container_width=True):
-        st.session_state['show_register'] = False
-        st.rerun()
-
-
-def render_forgot_password_form():
-    """Render the forgot password form."""
-    st.markdown("""
-    <div style="background: white; padding: 30px; border-radius: 15px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
-    """, unsafe_allow_html=True)
-    
-    with st.form("forgot_password_form"):
-        st.markdown("### 🔑 Reset Password")
-        st.markdown("Enter your username or email to reset your password.")
-        
-        reset_input = st.text_input("Username or Email", placeholder="Enter your username or email")
-        
-        reset_btn = st.form_submit_button("Send Reset Link", use_container_width=True, type="primary")
-        
-        if reset_btn:
-            users = st.session_state.get('registered_users', {})
-            
-            # Check if user exists
-            user_found = False
-            for uname, udata in users.items():
-                if uname == reset_input.lower() or udata.get('email', '').lower() == reset_input.lower():
-                    user_found = True
-                    break
-            
-            if user_found:
-                st.success("✅ Password reset link sent to your email!")
-                st.info("📧 For demo purposes: Your temporary password is 'reset123'. Please change it after login.")
-                # In production, this would send an actual email
-            else:
-                st.error("❌ No account found with that username or email")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Back to login
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("⬅️ Back to Sign In", use_container_width=True):
-        st.session_state['show_forgot_password'] = False
-        st.rerun()
+        # Demo credentials
+        with st.expander("📋 Demo Credentials"):
+            st.markdown("""
+            | Username | Password | Role |
+            |----------|----------|------|
+            | admin | admin123 | Administrator |
+            | safety | safety123 | Safety Officer |
+            | pilot | pilot123 | Flight Crew |
+            | viewer | viewer123 | Viewer |
+            """)
 
 
 def authenticate_user(username, password):
