@@ -9453,7 +9453,7 @@ def route_to_page():
         'Aircraft Incident Report': render_incident_form,
         'Hazard Report': render_hazard_form,
         'FSR Report': render_fsr_form,
-        'Captain Debrief': render_captain_debrief_form,
+        'Captain Debrief': render_captain_dbr_form,
         'Report Detail': render_report_detail,
         'AI Assistant': render_ai_assistant,
         'Email Center': render_email_center,
