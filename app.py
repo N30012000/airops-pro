@@ -56,36 +56,7 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
-"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                     AIR SIAL CORPORATE SAFETY MANAGEMENT SYSTEM              ║
-║                              Enterprise Edition v3.0                         ║
-║                                                                              ║
-║  A comprehensive, CAA Pakistan compliant Safety Management System           ║
-║  designed for commercial aviation safety reporting, investigation,          ║
-║  and risk management.                                                        ║
-║                                                                              ║
-║  Features:                                                                   ║
-║  • Full CAA-compliant mandatory reporting (Bird Strike, Laser, TCAS, etc.)  ║
-║  • ICAO Standard Risk Assessment Matrix                                      ║
-║  • 15-Day SLA Tracking with Escalation                                      ║
-║  • OCR Document Scanning (Tesseract Simulation)                             ║
-║  • Investigation Workflow Management                                         ║
-║  • PDF Report Generation for CAA Submission                                 ║
-║  • Role-Based Access Control                                                 ║
-║  • Complete Audit Trail                                                      ║
-║  • Real-time Dashboard Analytics                                             ║
-║  • Email Communication Tracking                                              ║
-║  • AI-Powered Analysis & Conclusions                                         ║
-║  • Geospatial Risk Mapping                                                   ║
-║  • IOSA Audit Compliance Tracking                                            ║
-║  • Management of Change (MoC) Workflow                                       ║
-║  • Emergency Response Plan (ERP) Mode                                        ║
-║  • Predictive Risk Analytics                                                 ║
-║                                                                              ║
-║  Copyright © 2024 Air Sial. All Rights Reserved.                            ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-"""
+# Air Sial SMS v3.0 - Configuration
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -850,8 +821,22 @@ def apply_custom_css():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def get_logo_path():
-    for path in ["logo.png", "./logo.png", "/mount/src/airops-pro/logo.png"]:
-        if os.path.exists(path): return path
+    """Check multiple locations for logo file."""
+    possible_paths = [
+        "logo.png",
+        "./logo.png",
+        "assets/logo.png",
+        "./assets/logo.png",
+        "images/logo.png",
+        "./images/logo.png",
+        "/mount/src/airops-pro/logo.png",
+        "/mount/src/airsial-sms/logo.png",
+        "static/logo.png",
+        "./static/logo.png"
+    ]
+    for path in possible_paths:
+        if os.path.exists(path): 
+            return path
     return None
 
 def render_header():
@@ -8754,60 +8739,218 @@ def process_nl_query(query):
 def render_login_page():
     """Render the login page."""
     
-    # Center the login form
+    # Initialize registration state
+    if 'show_register' not in st.session_state:
+        st.session_state['show_register'] = False
+    if 'show_forgot_password' not in st.session_state:
+        st.session_state['show_forgot_password'] = False
+    if 'registered_users' not in st.session_state:
+        st.session_state['registered_users'] = {
+            'admin': {'password': 'admin123', 'email': 'admin@airsial.com', 'role': 'Administrator'},
+            'safety': {'password': 'safety123', 'email': 'safety@airsial.com', 'role': 'Safety Officer'},
+            'viewer': {'password': 'viewer123', 'email': 'viewer@airsial.com', 'role': 'Viewer'},
+            'pilot': {'password': 'pilot123', 'email': 'pilot@airsial.com', 'role': 'Flight Crew'},
+            'engineer': {'password': 'engineer123', 'email': 'engineer@airsial.com', 'role': 'Maintenance'},
+            'manager': {'password': 'manager123', 'email': 'manager@airsial.com', 'role': 'Management'}
+        }
+    
+    # Center the form
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
+        # Logo section
         st.markdown("""
         <div style="text-align: center; padding: 30px 0;">
-            <div style="font-size: 4rem;">✈️</div>
-            <h1 style="color: #1e3c72; margin: 10px 0;">AIR SIAL</h1>
-            <h2 style="color: #666; font-weight: normal; font-size: 1.2rem;">
-                Safety Management System
+        """, unsafe_allow_html=True)
+        
+        # Try to load logo
+        logo_path = get_logo_path()
+        if logo_path:
+            try:
+                st.image(logo_path, width=150)
+            except:
+                st.markdown('<div style="font-size: 4rem;">✈️</div>', unsafe_allow_html=True)
+        else:
+            st.markdown('<div style="font-size: 4rem;">✈️</div>', unsafe_allow_html=True)
+        
+        st.markdown("""
+            <h1 style="color: #1e3c72; margin: 10px 0; font-size: 2.5rem;">AIR SIAL</h1>
+            <h2 style="color: #666; font-weight: normal; font-size: 1.1rem;">
+                Safety Management System v3.0
             </h2>
         </div>
         """, unsafe_allow_html=True)
         
-        st.markdown("""
-        <div style="background: white; padding: 30px; border-radius: 15px; 
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
-        """, unsafe_allow_html=True)
+        # Show appropriate form based on state
+        if st.session_state.get('show_register'):
+            render_register_form()
+        elif st.session_state.get('show_forgot_password'):
+            render_forgot_password_form()
+        else:
+            render_sign_in_form()
+
+
+def render_sign_in_form():
+    """Render the sign in form."""
+    st.markdown("""
+    <div style="background: white; padding: 30px; border-radius: 15px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
+    """, unsafe_allow_html=True)
+    
+    with st.form("login_form"):
+        st.markdown("### 🔐 Sign In")
         
-        with st.form("login_form"):
-            st.markdown("### 🔐 Sign In")
-            
-            username = st.text_input("Username", placeholder="Enter your username")
-            password = st.text_input("Password", type="password", placeholder="Enter your password")
-            
+        username = st.text_input("Username", placeholder="Enter your username")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        
+        col_rem, col_forgot = st.columns([1, 1])
+        with col_rem:
             remember_me = st.checkbox("Remember me")
-            
-            col_a, col_b = st.columns([2, 1])
-            with col_a:
-                login_btn = st.form_submit_button("Sign In", use_container_width=True)
-            
-            if login_btn:
-                if authenticate_user(username, password):
-                    st.session_state['authenticated'] = True
-                    st.session_state['username'] = username
-                    st.session_state['user_role'] = get_user_role(username)
-                    st.session_state['login_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    st.success("✅ Login successful!")
-                    time.sleep(0.5)
-                    st.rerun()
-                else:
-                    st.error("❌ Invalid username or password")
         
-        st.markdown("</div>", unsafe_allow_html=True)
+        login_btn = st.form_submit_button("Sign In", use_container_width=True, type="primary")
         
-        # Demo credentials hint
+        if login_btn:
+            users = st.session_state.get('registered_users', {})
+            if username.lower() in users and users[username.lower()]['password'] == password:
+                st.session_state['authenticated'] = True
+                st.session_state['username'] = username
+                st.session_state['user_role'] = users[username.lower()].get('role', 'Viewer')
+                st.session_state['login_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                st.success("✅ Login successful!")
+                time.sleep(0.5)
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Links for Register and Forgot Password
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_reg, col_forgot = st.columns(2)
+    with col_reg:
+        if st.button("📝 Create New Account", use_container_width=True):
+            st.session_state['show_register'] = True
+            st.session_state['show_forgot_password'] = False
+            st.rerun()
+    with col_forgot:
+        if st.button("🔑 Forgot Password?", use_container_width=True):
+            st.session_state['show_forgot_password'] = True
+            st.session_state['show_register'] = False
+            st.rerun()
+    
+    # Demo credentials
+    with st.expander("📋 Demo Credentials"):
         st.markdown("""
-        <div style="text-align: center; margin-top: 20px; color: #888; font-size: 0.9rem;">
-            <p><strong>Demo Credentials:</strong></p>
-            <p>Username: admin | Password: admin123</p>
-            <p>Username: safety | Password: safety123</p>
-            <p>Username: viewer | Password: viewer123</p>
-        </div>
-        """, unsafe_allow_html=True)
+        | Username | Password | Role |
+        |----------|----------|------|
+        | admin | admin123 | Administrator |
+        | safety | safety123 | Safety Officer |
+        | pilot | pilot123 | Flight Crew |
+        | viewer | viewer123 | Viewer |
+        """)
+
+
+def render_register_form():
+    """Render the registration form."""
+    st.markdown("""
+    <div style="background: white; padding: 30px; border-radius: 15px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
+    """, unsafe_allow_html=True)
+    
+    with st.form("register_form"):
+        st.markdown("### 📝 Create New Account")
+        
+        new_username = st.text_input("Username", placeholder="Choose a username")
+        new_email = st.text_input("Email", placeholder="your.email@airsial.com")
+        new_password = st.text_input("Password", type="password", placeholder="Create a password")
+        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm your password")
+        
+        role = st.selectbox("Role", options=[
+            "Viewer", "Flight Crew", "Maintenance", "Safety Officer", "Management"
+        ])
+        
+        employee_id = st.text_input("Employee ID", placeholder="e.g., EMP-001")
+        
+        agree_terms = st.checkbox("I agree to the Terms of Service and Privacy Policy")
+        
+        register_btn = st.form_submit_button("Create Account", use_container_width=True, type="primary")
+        
+        if register_btn:
+            users = st.session_state.get('registered_users', {})
+            
+            if not new_username or not new_email or not new_password:
+                st.error("❌ Please fill in all required fields")
+            elif new_username.lower() in users:
+                st.error("❌ Username already exists")
+            elif new_password != confirm_password:
+                st.error("❌ Passwords do not match")
+            elif len(new_password) < 6:
+                st.error("❌ Password must be at least 6 characters")
+            elif not agree_terms:
+                st.error("❌ Please agree to the Terms of Service")
+            else:
+                # Register the new user
+                users[new_username.lower()] = {
+                    'password': new_password,
+                    'email': new_email,
+                    'role': role,
+                    'employee_id': employee_id,
+                    'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                }
+                st.session_state['registered_users'] = users
+                st.success("✅ Account created successfully! Please sign in.")
+                time.sleep(1)
+                st.session_state['show_register'] = False
+                st.rerun()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Back to login
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("⬅️ Back to Sign In", use_container_width=True):
+        st.session_state['show_register'] = False
+        st.rerun()
+
+
+def render_forgot_password_form():
+    """Render the forgot password form."""
+    st.markdown("""
+    <div style="background: white; padding: 30px; border-radius: 15px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 20px;">
+    """, unsafe_allow_html=True)
+    
+    with st.form("forgot_password_form"):
+        st.markdown("### 🔑 Reset Password")
+        st.markdown("Enter your username or email to reset your password.")
+        
+        reset_input = st.text_input("Username or Email", placeholder="Enter your username or email")
+        
+        reset_btn = st.form_submit_button("Send Reset Link", use_container_width=True, type="primary")
+        
+        if reset_btn:
+            users = st.session_state.get('registered_users', {})
+            
+            # Check if user exists
+            user_found = False
+            for uname, udata in users.items():
+                if uname == reset_input.lower() or udata.get('email', '').lower() == reset_input.lower():
+                    user_found = True
+                    break
+            
+            if user_found:
+                st.success("✅ Password reset link sent to your email!")
+                st.info("📧 For demo purposes: Your temporary password is 'reset123'. Please change it after login.")
+                # In production, this would send an actual email
+            else:
+                st.error("❌ No account found with that username or email")
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Back to login
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("⬅️ Back to Sign In", use_container_width=True):
+        st.session_state['show_forgot_password'] = False
+        st.rerun()
 
 
 def authenticate_user(username, password):
