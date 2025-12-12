@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 # Configuration from your prompt
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USERNAME = "your-email@gmail.com"  # Replace with your actual Gmail
+SMTP_USERNAME = "zuberinoosha1@gmail.com"  # Replace with your actual Gmail
 SMTP_PASSWORD = "abcd efgh ijkl mnop"   # Replace with the 16-digit App Password (spaces are fine)
 
 def send_test_email():
