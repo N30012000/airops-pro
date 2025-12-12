@@ -7,7 +7,6 @@ Comprehensive safety reporting, analysis, and compliance management
 
 © 2024 Air Sial. All Rights Reserved.
 """
-
 # Standard library imports
 import base64
 import hashlib
