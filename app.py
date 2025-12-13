@@ -1652,7 +1652,7 @@ DEPARTMENTS = [
     "Flight Dispatch", "Ramp Operations", "Catering Services"
 ]
 
-AIRCRAFT_REGISTRATION = {
+AIRCRAFT_FLEET = {
     "AP-BMA": {"type": "ATR 72-600", "msn": "1234", "config": "70Y", "engines": "PW127M", "mtow": "23000"},
     "AP-BMB": {"type": "ATR 72-600", "msn": "1235", "config": "70Y", "engines": "PW127M", "mtow": "23000"},
     "AP-BMC": {"type": "ATR 72-600", "msn": "1236", "config": "70Y", "engines": "PW127M", "mtow": "23000"},
@@ -1927,7 +1927,7 @@ def get_airport_name(icao: str) -> str:
     return f"{airport['city']} ({icao})" if airport else icao
 
 def get_aircraft_info(registration: str) -> dict:
-    return AIRCRAFT_REGISTRATION.get(registration.upper(), {"type": "Unknown", "msn": "N/A", "config": "N/A", "engines": "N/A", "mtow": "N/A"})
+    return AIRCRAFT_FLEET.get(registration.upper(), {"type": "Unknown", "msn": "N/A", "config": "N/A", "engines": "N/A", "mtow": "N/A"})
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DYNAMIC STATISTICS FROM SESSION STATE - NO MOCK DATA
@@ -2026,7 +2026,7 @@ def get_recent_reports(limit: int = 5) -> list:
 def simulate_ocr_extraction(file_type: str, form_type: str) -> dict:
     random.seed(int(time.time()))
     flight_numbers = [f"PF-{random.randint(100, 999)}" for _ in range(5)]
-    aircraft_regs = list(AIRCRAFT_REGISTRATION.keys())
+    aircraft_regs = list(AIRCRAFT_FLEET.keys())
     
     if form_type == "bird_strike":
         return {
@@ -2426,17 +2426,17 @@ def render_bird_strike_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0 if not ocr_data.get('aircraft_reg') else (
-                    [a["registration"] for a in AIRCRAFT_REGISTRATION].index(ocr_data['aircraft_reg']) + 1 
-                    if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_REGISTRATION] else 0
+                    [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
+                    if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
                 )
             )
         with col3:
             # Auto-populate aircraft type based on registration
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True
             )
         
@@ -3023,16 +3023,16 @@ def render_laser_strike_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0 if not ocr_data.get('aircraft_reg') else (
-                    [a["registration"] for a in AIRCRAFT_REGISTRATION].index(ocr_data['aircraft_reg']) + 1 
-                    if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_REGISTRATION] else 0
+                    [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
+                    if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
                 )
             )
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True
             )
         
@@ -3582,14 +3582,14 @@ def render_tcas_report_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="tcas_reg"
             )
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True,
                 key="tcas_type"
             )
@@ -4257,21 +4257,21 @@ def render_incident_form():
         with col1:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="inc_reg"
             )
         with col2:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True,
                 key="inc_type"
             )
         with col3:
             msn = st.text_input(
                 "MSN (Manufacturer Serial Number)",
-                value=next((a["msn"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["msn"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True
             )
         
@@ -4279,7 +4279,7 @@ def render_incident_form():
         with col1:
             engine_type = st.text_input(
                 "Engine Type",
-                value=next((a["engines"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["engines"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True
             )
         with col2:
@@ -5178,7 +5178,7 @@ def render_hazard_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration",
-                options=["N/A"] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=["N/A"] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="haz_reg"
             )
@@ -5719,14 +5719,14 @@ def render_fsr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="fsr_reg"
             )
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True,
                 key="fsr_type"
             )
@@ -6284,14 +6284,14 @@ def render_captain_dbr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_REGISTRATION],
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="dbr_reg"
             )
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_REGISTRATION if a["registration"] == aircraft_reg), ""),
+                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
                 disabled=True,
                 key="dbr_type"
             )
