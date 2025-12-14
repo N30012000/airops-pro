@@ -9118,6 +9118,11 @@ def render_sidebar():
                 "icon": "📋",
                 "roles": ["all"]
             },
+            "⚡ Action Tracker": {
+                "page": "Action Tracker",
+                "icon": "⚡",
+                "roles": ["all"]
+            },
             "➕ Submit Reports": {
                 "submenu": {
                     "🦅 Bird Strike": "Bird Strike Report",
