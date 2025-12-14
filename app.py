@@ -8871,9 +8871,16 @@ def render_sidebar():
     
     with st.sidebar:
         # Logo and header
+        st.markdown('<div style="text-align: center; padding: 20px 0;">', unsafe_allow_html=True)
+        
+        # Display the logo image
+        # Ensure 'logo.png' is in the same folder as app.py
+        try:
+            st.image("logo.png", width=150) 
+        except:
+            st.warning("logo.png not found")
+            
         st.markdown("""
-        <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #eee;">
-            <div style="font-size: 2.5rem;">✈️</div>
             <h2 style="color: #1e3c72; margin: 5px 0;">AIR SIAL</h2>
             <p style="color: #666; font-size: 0.85rem; margin: 0;">Safety Management System</p>
             <p style="color: #888; font-size: 0.75rem;">v3.0</p>
