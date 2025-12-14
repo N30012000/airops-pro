@@ -7609,15 +7609,29 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
         st.error("❌ SMTP Credentials missing in secrets/env")
         return False
 
-    client = email_utils.SMTPClient(smtp_server, smtp_port, smtp_user, smtp_pass)
-    
-    recipients = [to]
-    if cc:
-        recipients.append(cc)
+    try:
+        # Initialize the client
+        client = email_utils.SMTPClient(smtp_server, smtp_port, smtp_user, smtp_pass)
         
-    # The utils handle the actual sending and logging to DB
-    result = client.send_email(report_id, subject, body, recipients, attachments)
-    return result.get("status") == "sent"
+        recipients = [to]
+        if cc:
+            recipients.append(cc)
+            
+        # Send the email
+        result = client.send_email(report_id, subject, body, recipients, attachments)
+        
+        # --- FIX: Handle both Boolean (True/False) and Dictionary return types ---
+        if isinstance(result, bool):
+            return result
+        elif isinstance(result, dict):
+            return result.get("status") == "sent"
+        else:
+            # Fallback for unexpected return types
+            return False
+            
+    except Exception as e:
+        st.error(f"Failed to send email: {str(e)}")
+        return False
 def render_action_tracker():
     """Render the AI-Powered Action Tracker Table"""
     
