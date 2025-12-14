@@ -9526,9 +9526,10 @@ def route_to_page():
     
     current_page = st.session_state.get('current_page', 'Dashboard')
     
-    page_routing = {
+   page_routing = {
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
+        'Action Tracker': render_action_tracker,  # <--- ADD THIS LINE HERE
         'Bird Strike Report': render_bird_strike_form,
         'Laser Strike Report': render_laser_strike_form,
         'TCAS Report': render_tcas_report_form,
