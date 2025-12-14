@@ -5433,7 +5433,6 @@ def render_dashboard():
     
     # Dashboard Header
     st.markdown("""
-    render_weather_widget()
     <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
                 padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
         <h1 style="margin: 0; font-size: 2.2rem;">📊 Safety Dashboard</h1>
@@ -5441,7 +5440,9 @@ def render_dashboard():
             Real-time safety metrics and performance indicators
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)  # <--- Make sure quotes end here!
+
+    render_weather_widget()       # <--- This must be on its own line, outside quotes
     
     # ==========================================================================
     # ROW 1: PRIMARY KPI CARDS
