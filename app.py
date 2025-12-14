@@ -5433,7 +5433,7 @@ def render_dashboard():
     
     # Dashboard Header
     st.markdown("""
-    render_weather_widget() 
+    render_weather_widget()
     <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
                 padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
         <h1 style="margin: 0; font-size: 2.2rem;">📊 Safety Dashboard</h1>
