@@ -2402,7 +2402,7 @@ def render_bird_strike_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                options=[""] + list(AIRCRAFT_FLEET.keys())
                 index=0 if not ocr_data.get('aircraft_reg') else (
                     [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
                     if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
@@ -2999,7 +2999,7 @@ def render_laser_strike_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                options=[""] + list(AIRCRAFT_FLEET.keys())
                 index=0 if not ocr_data.get('aircraft_reg') else (
                     [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
                     if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
@@ -3558,7 +3558,7 @@ def render_tcas_report_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                options=[""] + list(AIRCRAFT_FLEET.keys())
                 index=0,
                 key="tcas_reg"
             )
@@ -4233,7 +4233,7 @@ def render_incident_form():
         with col1:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                options=[""] + list(AIRCRAFT_FLEET.keys())
                 index=0,
                 key="inc_reg"
             )
@@ -5695,7 +5695,7 @@ def render_fsr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                options=[""] + list(AIRCRAFT_FLEET.keys())
                 index=0,
                 key="fsr_reg"
             )
@@ -6260,7 +6260,7 @@ def render_captain_dbr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                options=[""] + list(AIRCRAFT_FLEET.keys())
                 index=0,
                 key="dbr_reg"
             )
