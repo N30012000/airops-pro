@@ -2663,9 +2663,10 @@ def render_bird_strike_form():
         with col1:
             effect_on_flight = st.selectbox(
                 "Effect on Flight *",
-                options=EFFECT_ON_FLIGHT,
-                index=EFFECT_ON_FLIGHT.index(ocr_data.get('effect_on_flight', 'None')) if ocr_data.get('effect_on_flight') in EFFECT_ON_FLIGHT else 0
+                options=EFFECT_ON_FLIGHT_OPTIONS,
+                index=EFFECT_ON_FLIGHT_OPTIONS.index(ocr_data.get('effect_on_flight', 'None - Flight continued normally')) if ocr_data.get('effect_on_flight') in EFFECT_ON_FLIGHT_OPTIONS else 0
             )
+            
         with col2:
             precautionary_landing = st.selectbox(
                 "Precautionary Landing?",
