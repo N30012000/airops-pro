@@ -3747,19 +3747,21 @@ def render_hazard_form():
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("**Likelihood Assessment**")
-            likelihood_options_list = [
+           # --- FINAL FIX: UPDATED KEY ---
+            likelihood_options = [
                 ("1", "Extremely Improbable"),
                 ("2", "Improbable"),
                 ("3", "Remote"),
                 ("4", "Occasional"),
                 ("5", "Frequent")
             ]
-            safe_default = likelihood_options_list[2] 
+            
             likelihood = st.select_slider(
                 "Likelihood",
-                options=likelihood_options_list,
-                value=safe_default,
-                format_func=lambda x: f"{x[0]} - {x[1]}"
+                options=likelihood_options,
+                value=likelihood_options[2], # Defaults to ("3", "Remote")
+                format_func=lambda x: f"{x[0]} - {x[1]}",
+                key="hazard_likelihood_v2"  # <--- RENAMED KEY CLEARS THE CACHE
             )
             st.markdown(f"""
             <div style="font-size: 0.85rem; color: #64748B; padding: 0.5rem; background: #F8FAFC; border-radius: 4px;">
