@@ -1477,6 +1477,30 @@ def main():
         st.exception(e)
         
 
+"""
+Air Sial Safety Management System (SMS) v3.0
+Complete Aviation Safety Reporting Application
+
+Developed for Air Sial - Pakistan's Premium Airline
+Comprehensive safety reporting, analysis, and compliance management
+
+Features:
+- 7 Aviation Safety Report Forms with OCR Autofill
+- Interactive Dashboard with KPIs and Charts
+- AI-Powered Safety Analysis Assistant
+- Email Integration with SMTP Support
+- Geospatial Incident Mapping
+- IOSA Compliance Tracking
+- Ramp Safety Inspections
+- Audit Findings Management
+- Management of Change (MoC) Workflow
+- Predictive Safety Monitoring
+- Role-Based Access Control
+- Data Export/Import/Backup
+
+© 2024 Air Sial. All Rights Reserved.
+"""
+
 # Standard library imports
 import base64
 import hashlib
@@ -2402,7 +2426,7 @@ def render_bird_strike_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET]
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0 if not ocr_data.get('aircraft_reg') else (
                     [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
                     if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
@@ -2999,7 +3023,7 @@ def render_laser_strike_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET]
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0 if not ocr_data.get('aircraft_reg') else (
                     [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
                     if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
@@ -3558,7 +3582,7 @@ def render_tcas_report_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET]
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="tcas_reg"
             )
@@ -4233,7 +4257,7 @@ def render_incident_form():
         with col1:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET]
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="inc_reg"
             )
@@ -5695,7 +5719,7 @@ def render_fsr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET]
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="fsr_reg"
             )
@@ -6260,7 +6284,7 @@ def render_captain_dbr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET]
+                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
                 index=0,
                 key="dbr_reg"
             )
