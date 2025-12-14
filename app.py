@@ -2915,7 +2915,7 @@ def render_incident_form():
         with col1:
             incident_location = st.selectbox(
                 "Incident Location",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS] + ["En-route", "Over water", "Other"],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()] + ["En-route", "Over water", "Other"],
                 index=0
             )
         with col2:
@@ -3664,7 +3664,7 @@ def render_hazard_form():
         with col1:
             hazard_location = st.selectbox(
                 "Location *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS] + ["Aircraft", "Training Facility", "Office", "Other"],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()] + ["Aircraft", "Training Facility", "Office", "Other"],
                 index=0
             )
         with col2:
