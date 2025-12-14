@@ -7530,7 +7530,7 @@ def render_email_settings():
     
     smtp_server = st.text_input(
         "SMTP Server",
-        value=settings.get('smtp_server', 'smtp.airsial.com')
+        value=settings.get('smtp_server', 'smtp.gmail.com')
     )
     
     smtp_port = st.number_input(
@@ -7542,7 +7542,7 @@ def render_email_settings():
     
     smtp_user = st.text_input(
         "SMTP Username",
-        value=settings.get('smtp_user', 'sms@airsial.com')
+        value=settings.get('smtp_user', 'zuberinoosha1@gmail.com')
     )
     
     smtp_password = st.text_input(
@@ -7560,7 +7560,7 @@ def render_email_settings():
     
     from_address = st.text_input(
         "From Address",
-        value=settings.get('from_address', 'sms@airsial.com')
+        value=settings.get('from_address', 'zuberinoosha1@gmail.com')
     )
     
     from_name = st.text_input(
@@ -7570,7 +7570,7 @@ def render_email_settings():
     
     reply_to = st.text_input(
         "Reply-To Address",
-        value=settings.get('reply_to', 'safety@airsial.com')
+        value=settings.get('reply_to', 'zuberinoosha1@gmail.com')
     )
     
     # Save button
