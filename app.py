@@ -2442,7 +2442,7 @@ def render_bird_strike_form():
             # Auto-populate aircraft type based on registration
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True
             )
         
@@ -3043,7 +3043,7 @@ def render_laser_strike_form():
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True
             )
         
@@ -3607,7 +3607,7 @@ def render_tcas_report_form():
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True,
                 key="tcas_type"
             )
@@ -4289,7 +4289,7 @@ def render_incident_form():
         with col2:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True,
                 key="inc_type"
             )
@@ -5751,7 +5751,7 @@ def render_fsr_form():
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True,
                 key="fsr_type"
             )
@@ -6316,7 +6316,7 @@ def render_captain_dbr_form():
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
-                value=next((a["type"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True,
                 key="dbr_type"
             )
