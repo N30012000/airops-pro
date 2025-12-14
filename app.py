@@ -2424,14 +2424,20 @@ def render_bird_strike_form():
                 placeholder="e.g., PF-101"
             )
         with col2:
+            # Create a clean list of options first
+            fleet_options = [""] + list(AIRCRAFT_FLEET.keys())
+            
+            # Find the correct index safely
+            default_index = 0
+            if ocr_data.get('aircraft_reg') in fleet_options:
+                default_index = fleet_options.index(ocr_data['aircraft_reg'])
+
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
-                index=0 if not ocr_data.get('aircraft_reg') else (
-                    [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
-                    if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
-                )
+                options=fleet_options,
+                index=default_index
             )
+            
         with col3:
             # Auto-populate aircraft type based on registration
             aircraft_type = st.text_input(
@@ -3021,13 +3027,18 @@ def render_laser_strike_form():
                 placeholder="e.g., PF-101"
             )
         with col2:
+            # Create a clean list of options first
+            fleet_options = [""] + list(AIRCRAFT_FLEET.keys())
+            
+            # Find the correct index safely
+            default_index = 0
+            if ocr_data.get('aircraft_reg') in fleet_options:
+                default_index = fleet_options.index(ocr_data['aircraft_reg'])
+
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
-                index=0 if not ocr_data.get('aircraft_reg') else (
-                    [a["registration"] for a in AIRCRAFT_FLEET].index(ocr_data['aircraft_reg']) + 1 
-                    if ocr_data.get('aircraft_reg') in [a["registration"] for a in AIRCRAFT_FLEET] else 0
-                )
+                options=fleet_options,
+                index=default_index
             )
         with col3:
             aircraft_type = st.text_input(
@@ -3580,11 +3591,18 @@ def render_tcas_report_form():
                 key="tcas_flight"
             )
         with col2:
+            # Create a clean list of options first
+            fleet_options = [""] + list(AIRCRAFT_FLEET.keys())
+            
+            # Find the correct index safely
+            default_index = 0
+            if ocr_data.get('aircraft_reg') in fleet_options:
+                default_index = fleet_options.index(ocr_data['aircraft_reg'])
+
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
-                index=0,
-                key="tcas_reg"
+                options=fleet_options,
+                index=default_index
             )
         with col3:
             aircraft_type = st.text_input(
@@ -4255,11 +4273,18 @@ def render_incident_form():
         
         col1, col2, col3 = st.columns(3)
         with col1:
+            # Create a clean list of options first
+            fleet_options = [""] + list(AIRCRAFT_FLEET.keys())
+            
+            # Find the correct index safely
+            default_index = 0
+            if ocr_data.get('aircraft_reg') in fleet_options:
+                default_index = fleet_options.index(ocr_data['aircraft_reg'])
+
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
-                index=0,
-                key="inc_reg"
+                options=fleet_options,
+                index=default_index
             )
         with col2:
             aircraft_type = st.text_input(
