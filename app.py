@@ -3947,11 +3947,12 @@ def render_hazard_form():
         )
         
         # ========== SECTION H: MANAGEMENT REVIEW ==========
-        st.markdown("""<div class="form-section">
-            <div class="form-section-header">Section H: Management Review (For High/Extreme Risks)</div>
-        </div>""", unsafe_allow_html=True)
-        
+        # FIX: Only show this section if High/Extreme risk
         if risk_level in ["High", "Extreme"]:
+            st.markdown("""<div class="form-section">
+                <div class="form-section-header">Section H: Management Review (For High/Extreme Risks)</div>
+            </div>""", unsafe_allow_html=True)
+            
             st.warning("⚠️ This hazard has been assessed as HIGH or EXTREME risk and requires management review.")
             
             col1, col2 = st.columns(2)
@@ -3974,6 +3975,7 @@ def render_hazard_form():
                 height=60
             )
         else:
+            # Set default values if section is hidden so submission doesn't fail
             mgmt_review_required = "No - Not required"
             srm_board_referral = "No"
             mgmt_comments = ""
