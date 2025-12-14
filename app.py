@@ -740,7 +740,7 @@ def apply_custom_css():
     st.markdown("""
     <style>
     .stApp { background: #F8FAFC; }
-    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;}
     .risk-badge { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .risk-extreme { background: #FEE2E2; color: #DC2626; }
     .risk-high { background: #FFEDD5; color: #EA580C; }
