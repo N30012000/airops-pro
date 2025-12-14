@@ -2788,6 +2788,7 @@ def render_incident_form():
                 index=default_index
             )
         with col2:
+            # FIX: Direct dictionary lookup
             aircraft_type = st.text_input(
                 "Aircraft Type",
                 value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
@@ -2795,17 +2796,19 @@ def render_incident_form():
                 key="inc_type"
             )
         with col3:
+            # FIX: Direct dictionary lookup
             msn = st.text_input(
                 "MSN (Manufacturer Serial Number)",
-                value=next((a["msn"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("msn", ""),
                 disabled=True
             )
         
         col1, col2, col3 = st.columns(3)
         with col1:
+            # FIX: Direct dictionary lookup
             engine_type = st.text_input(
                 "Engine Type",
-                value=next((a["engines"] for a in AIRCRAFT_FLEET if a["registration"] == aircraft_reg), ""),
+                value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("engines", ""),
                 disabled=True
             )
         with col2:
@@ -3704,7 +3707,8 @@ def render_hazard_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration",
-                options=["N/A"] + [a["registration"] for a in AIRCRAFT_FLEET],
+                # FIX: Use keys directly
+                options=["N/A"] + list(AIRCRAFT_FLEET.keys()),
                 index=0,
                 key="haz_reg"
             )
@@ -4245,13 +4249,15 @@ def render_fsr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                # FIX: Use keys directly
+                options=[""] + list(AIRCRAFT_FLEET.keys()),
                 index=0,
                 key="fsr_reg"
             )
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
+                # FIX: Direct dictionary lookup
                 value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True,
                 key="fsr_type"
@@ -4810,13 +4816,15 @@ def render_captain_dbr_form():
         with col2:
             aircraft_reg = st.selectbox(
                 "Aircraft Registration *",
-                options=[""] + [a["registration"] for a in AIRCRAFT_FLEET],
+                # FIX: Use keys directly
+                options=[""] + list(AIRCRAFT_FLEET.keys()),
                 index=0,
                 key="dbr_reg"
             )
         with col3:
             aircraft_type = st.text_input(
                 "Aircraft Type",
+                # FIX: Direct dictionary lookup
                 value=AIRCRAFT_FLEET.get(aircraft_reg, {}).get("type", ""),
                 disabled=True,
                 key="dbr_type"
