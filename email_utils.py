@@ -1,13 +1,13 @@
 # email_utils.py
-# SMTP client, templates, and local SQLite email log
 import smtplib
 import sqlite3
 import json
 from email.message import EmailMessage
 from datetime import datetime
 from typing import List, Optional, Dict
-from config_loader import SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD
+import os
 
+# Create DB in a persistent location if possible, or local
 DB_PATH = "email_logs.db"
 
 def init_db():
@@ -19,6 +19,7 @@ def init_db():
         timestamp TEXT,
         direction TEXT,
         report_id TEXT,
+        sender TEXT,
         subject TEXT,
         body TEXT,
         recipients TEXT,
@@ -31,82 +32,79 @@ def init_db():
 
 _conn = init_db()
 
-EMAIL_TEMPLATES = {
-    "incident_report": {
-        "subject": "Air Sial Incident Report - {report_id}",
-        "body": "Dear {recipient_name},\n\nPlease find the incident report {report_id} attached.\n\nSummary:\n{summary}\n\nRegards,\nAir Sial Safety Team"
-    },
-    "ramp_inspection": {
-        "subject": "Ramp Inspection Report - {report_id}",
-        "body": "Dear {recipient_name},\n\nRamp inspection {report_id} details:\n{summary}\n\nRegards,\nAir Sial Safety Team"
-    },
-    "generic": {
-        "subject": "{subject}",
-        "body": "{body}"
-    }
-}
-
-def log_email(direction, report_id, subject, body, recipients, status, smtp_response=""):
-    ts = datetime.utcnow().isoformat()
+def log_email(direction, report_id, sender, subject, body, recipients, status, smtp_response=""):
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cur = _conn.cursor()
     cur.execute(
-        "INSERT INTO emails (timestamp,direction,report_id,subject,body,recipients,status,smtp_response) VALUES (?,?,?,?,?,?,?,?)",
-        (ts, direction, report_id, subject, body, json.dumps(recipients), status, smtp_response)
+        "INSERT INTO emails (timestamp, direction, report_id, sender, subject, body, recipients, status, smtp_response) VALUES (?,?,?,?,?,?,?,?,?)",
+        (ts, direction, report_id, sender, subject, body, json.dumps(recipients), status, smtp_response)
     )
     _conn.commit()
     return cur.lastrowid
 
-def get_email_logs(limit=200):
+def get_email_logs(report_id=None, limit=500):
     cur = _conn.cursor()
-    cur.execute("SELECT id,timestamp,direction,report_id,subject,body,recipients,status,smtp_response FROM emails ORDER BY id DESC LIMIT ?", (limit,))
+    if report_id:
+        cur.execute("SELECT * FROM emails WHERE report_id = ? ORDER BY id ASC", (str(report_id),))
+    else:
+        cur.execute("SELECT * FROM emails ORDER BY id DESC LIMIT ?", (limit,))
+    
     rows = cur.fetchall()
-    keys = ["id","timestamp","direction","report_id","subject","body","recipients","status","smtp_response"]
+    keys = ["id","timestamp","direction","report_id","sender","subject","body","recipients","status","smtp_response"]
     return [dict(zip(keys,row)) for row in rows]
 
+def get_unique_report_ids_with_emails():
+    cur = _conn.cursor()
+    cur.execute("SELECT DISTINCT report_id FROM emails WHERE report_id IS NOT NULL AND report_id != ''")
+    return [row[0] for row in cur.fetchall()]
+
 class SMTPClient:
-    def __init__(self, host=None, port=None, username=None, password=None, use_tls=True):
-        self.host = host or SMTP_SERVER
-        self.port = port or SMTP_PORT
-        self.username = username or SMTP_USERNAME
-        self.password = password or SMTP_PASSWORD
+    def __init__(self, host, port, username, password, use_tls=True):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
         self.use_tls = use_tls
 
-    def send_email(self, subject: str, body: str, recipients: List[str], attachments: Optional[List[Dict]] = None, report_id: Optional[str] = None):
+    def send_email(self, report_id, subject, body, recipients, attachments=None):
         msg = EmailMessage()
         msg["From"] = self.username
-        msg["To"] = ", ".join(recipients) if isinstance(recipients, (list,tuple)) else recipients
+        msg["To"] = ", ".join(recipients) if isinstance(recipients, list) else recipients
         msg["Subject"] = subject
         msg.set_content(body)
 
         if attachments:
             for att in attachments:
-                msg.add_attachment(att["content"], maintype=att.get("maintype","application"), subtype=att.get("subtype","octet-stream"), filename=att["filename"])
+                # Basic attachment handling - assumes tuple (filename, content_bytes, type)
+                try:
+                    msg.add_attachment(att[1], maintype='application', subtype='octet-stream', filename=att[0])
+                except:
+                    pass
 
+        status = "failed"
+        response = ""
+        
         try:
             if self.use_tls:
-                server = smtplib.SMTP(self.host, self.port, timeout=20)
-                server.ehlo()
+                server = smtplib.SMTP(self.host, self.port)
                 server.starttls()
-                if self.username and self.password:
-                    server.login(self.username, self.password)
             else:
-                server = smtplib.SMTP_SSL(self.host, self.port, timeout=20)
-                if self.username and self.password:
-                    server.login(self.username, self.password)
-
-            resp = server.send_message(msg)
+                server = smtplib.SMTP_SSL(self.host, self.port)
+            
+            server.login(self.username, self.password)
+            server.send_message(msg)
             server.quit()
             status = "sent"
-            smtp_response = str(resp)
+            response = "250 OK"
         except Exception as e:
-            status = "failed"
-            smtp_response = str(e)
+            response = str(e)
+            print(f"SMTP Error: {e}")
 
-        log_email("sent", report_id or "", subject, body, recipients, status, smtp_response)
-        return {"status": status, "smtp_response": smtp_response}
+        # Log the OUTGOING email
+        log_email("outbound", report_id, self.username, subject, body, recipients, status, response)
+        return status == "sent"
 
-def render_template(template_key: str, **kwargs):
-    tpl = EMAIL_TEMPLATES.get(template_key, EMAIL_TEMPLATES["generic"])
-    subject = tpl["subject"].format(**kwargs)
-    body = tpl["body"].format(**kwargs)
-    return subject, body
+    def log_reply(self, report_id, sender, body):
+        """Manually log an incoming reply for the chat view"""
+        log_email("inbound", report_id, sender, f"Re: Report {report_id}", body, [self.username], "received", "manual_entry")
+        return True
