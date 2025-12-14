@@ -5,31 +5,51 @@ from typing import List, Dict, Any
 from config_loader import AI_API_KEY
 
 class AIClient:
-    def __init__(self, api_key=None):
-        self.api_key = api_key or AI_API_KEY
+    def analyze_email_thread_for_action(self, email_history: List[Dict]) -> Dict:
+        """
+        Analyzes a list of emails to determine the current status and action taken.
+        """
+        if not email_history:
+            return {"date": "N/A", "concern": "No emails", "reply": "N/A", "action_taken": "None", "status": "No Data"}
 
-    def ask(self, prompt: str, max_tokens=512) -> Dict[str, Any]:
+        # Construct the conversation string
+        conversation = ""
+        for email in email_history:
+            role = "Support Team" if email['direction'] == 'outbound' else "Stakeholder/Sender"
+            conversation += f"[{email['timestamp']}] {role} ({email['sender']}): {email['body']}\n\n"
+
+        prompt = f"""
+        Analyze the following email thread regarding a safety report. 
+        Extract the following information into a JSON object:
+        1. "date": The date of the most recent interaction.
+        2. "concern": A 1-sentence summary of the main issue being discussed.
+        3. "reply": A 1-sentence summary of the latest response.
+        4. "action_taken": What concrete action has been promised or taken?
+        5. "status": Determine status (Open, In Progress, Resolved, Closed).
+
+        Email Thread:
+        {conversation}
         """
-        Placeholder implementation. Replace with actual API call to your LLM provider.
-        Returns dict: {"success": True, "answer": "..."} or {"success": False, "error": "..."}
-        """
+        
+        # Call your AI model (Using the existing ask method or generate_content)
+        # Adjust 'self.model.generate_content' if you are using the SafetyAI class from app.py
         try:
-            # TODO: Replace with real provider call (OpenAI, Google Gemini, etc.)
-            simulated = f"[Simulated AI] Summary: {prompt[:300]}"
-            return {"success": True, "answer": simulated}
+            # Assuming use of the SafetyAI style from app.py:
+            response = self.model.generate_content(prompt)
+            result_text = response.text
+            
+            # Clean up potential markdown code blocks from AI response
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0]
+            elif "```" in result_text:
+                result_text = result_text.split("```")[1].split("```")[0]
+                
+            return json.loads(result_text)
         except Exception as e:
-            return {"success": False, "error": str(e)}
-
-    def analyze_emails_for_actions(self, email_thread: List[Dict]) -> Dict:
-        prompt = "You are an aviation safety assistant. Read the following email thread and propose the next action, priority, and status.\n\n"
-        for e in email_thread:
-            prompt += f"Direction: {e.get('direction')}\nSubject: {e.get('subject')}\nBody: {e.get('body')}\n\n"
-        prompt += "\nReturn JSON with keys: action, priority (low/medium/high), status (open/in-progress/closed), rationale."
-        res = self.ask(prompt)
-        if res.get("success"):
-            return {"action": "Investigate and assign to MO", "priority":"high", "status":"in-progress", "rationale": res["answer"]}
-        return {"action":"unable_to_determine","priority":"low","status":"open","rationale":res.get("error","unknown")}
-
-    def analyze_document(self, text: str) -> Dict:
-        prompt = f"Analyze the following document for safety issues and produce a short summary and recommended actions:\n\n{text[:4000]}"
-        return self.ask(prompt)
+            return {
+                "date": datetime.now().strftime("%Y-%m-%d"), 
+                "concern": "Error parsing thread", 
+                "reply": "AI Error", 
+                "action_taken": "Manual review required", 
+                "status": "Unknown"
+            }
