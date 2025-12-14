@@ -3756,7 +3756,6 @@ def render_hazard_form():
                     ("4", "Occasional"),
                     ("5", "Frequent")
                 ],
-                # FIX: Value must match one of the options exactly
                 value=("3", "Remote"),
                 format_func=lambda x: f"{x[0]} - {x[1]}"
             )
