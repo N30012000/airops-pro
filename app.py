@@ -7266,12 +7266,15 @@ def render_email_center():
     </div>
     """, unsafe_allow_html=True)
     
-    tab_compose, tab_templates, tab_sent, tab_settings = st.tabs([
-        "✉️ Compose", "📋 Templates", "📤 Sent", "⚙️ Settings"
+    tab_compose, tab_inbox, tab_templates, tab_sent, tab_settings = st.tabs([
+        "✉️ Compose", "📥 Inbox (Logged)", "📋 Templates", "📤 Sent", "⚙️ Settings"
     ])
     
     with tab_compose:
         render_compose_email()
+
+    with tab_inbox:
+        render_inbox_emails()
     
     with tab_templates:
         render_email_templates()
@@ -7471,7 +7474,40 @@ Safety Management Team"""
     with col2:
         if st.button("✏️ Edit Template", use_container_width=True):
             st.info("Template editing would open here")
+def render_inbox_emails():
+    """View received/logged emails."""
+    st.markdown("### 📥 Inbox (Logged Replies)")
+    
+    try:
+        all_emails = email_utils.get_email_logs()
+        # Filter for 'inbound' or 'received'
+        inbox_emails = [e for e in all_emails if e['direction'] in ['inbound', 'received']]
+    except Exception as e:
+        st.error(f"Error loading inbox: {e}")
+        return
 
+    if not inbox_emails:
+        st.info("No incoming replies have been logged yet.")
+        st.caption("Tip: Go to a Report > Communications Tab to log an incoming reply.")
+        return
+
+    for email in inbox_emails:
+        st.markdown(f"""
+        <div style="background: #F8F9FA; padding: 15px; border-radius: 10px; 
+                    margin-bottom: 10px; border-left: 5px solid #007BFF; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between;">
+                <strong>From: {email.get('sender', 'Unknown')}</strong>
+                <span style="color: #666; font-size: 0.8rem;">{email.get('timestamp', '')}</span>
+            </div>
+            <div style="font-weight: bold; margin: 5px 0;">{email.get('subject', 'No Subject')}</div>
+            <div style="color: #333; white-space: pre-wrap;">{email.get('body', '')}</div>
+            <div style="margin-top: 8px;">
+                <span style="background: #E2E6EA; color: #333; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
+                    Report ID: {email.get('report_id', 'N/A')}
+                </span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def render_sent_emails():
     """View sent emails history from the database."""
