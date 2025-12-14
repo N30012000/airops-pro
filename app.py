@@ -7618,7 +7618,7 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
     # The utils handle the actual sending and logging to DB
     result = client.send_email(report_id, subject, body, recipients, attachments)
     return result.get("status") == "sent"
-    def render_action_tracker():
+def render_action_tracker():
     """Render the AI-Powered Action Tracker Table"""
     
     st.markdown("""
