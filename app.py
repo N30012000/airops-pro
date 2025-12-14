@@ -99,7 +99,6 @@ class SupabaseManager:
             if supabase_url and supabase_key and SUPABASE_AVAILABLE:
                 self.client = create_client(supabase_url, supabase_key)
                 self.connected = True
-                st.success("✅ Connected to Supabase Database")
             else:
                 st.warning("⚠️ Supabase not configured. Using session state storage.")
         except Exception as e:
@@ -190,7 +189,6 @@ class SafetyAI:
             if api_key and GEMINI_AVAILABLE:
                 genai.configure(api_key=api_key)
                 self.model = genai.GenerativeModel('gemini-pro')
-                st.success("✅ Gemini AI initialized")
         except Exception as e:
             st.error(f"❌ Gemini AI initialization failed: {str(e)}")
     
@@ -1476,30 +1474,6 @@ def main():
         st.error(f"Error rendering page: {str(e)}")
         st.exception(e)
         
-
-"""
-Air Sial Safety Management System (SMS) v3.0
-Complete Aviation Safety Reporting Application
-
-Developed for Air Sial - Pakistan's Premium Airline
-Comprehensive safety reporting, analysis, and compliance management
-
-Features:
-- 7 Aviation Safety Report Forms with OCR Autofill
-- Interactive Dashboard with KPIs and Charts
-- AI-Powered Safety Analysis Assistant
-- Email Integration with SMTP Support
-- Geospatial Incident Mapping
-- IOSA Compliance Tracking
-- Ramp Safety Inspections
-- Audit Findings Management
-- Management of Change (MoC) Workflow
-- Predictive Safety Monitoring
-- Role-Based Access Control
-- Data Export/Import/Backup
-
-© 2024 Air Sial. All Rights Reserved.
-"""
 
 # Standard library imports
 import base64
