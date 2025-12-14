@@ -11,3 +11,5 @@ google-generativeai>=0.3.0
 pytesseract>=0.3.10
 supabase>=2.3.0
 requests>=2.31.0
+apscheduler
+matplotlib
