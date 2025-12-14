@@ -3744,29 +3744,32 @@ def render_hazard_form():
         # Render visual risk matrix
         render_visual_risk_matrix()
         
+        # --- FIXED RISK ASSESSMENT SECTION ---
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("**Likelihood Assessment**")
-           # --- FINAL FIX: UPDATED KEY ---
-            likelihood_options = [
-                ("1", "Extremely Improbable"),
-                ("2", "Improbable"),
-                ("3", "Remote"),
-                ("4", "Occasional"),
-                ("5", "Frequent")
-            ]
+            # Define simple map for display
+            likelihood_map = {
+                1: "Extremely Improbable",
+                2: "Improbable",
+                3: "Remote",
+                4: "Occasional",
+                5: "Frequent"
+            }
             
+            # SLIDER FIX: Use simple integers [1, 2, 3, 4, 5] as options.
+            # This ensures 'value=3' works perfectly and never crashes.
             likelihood = st.select_slider(
                 "Likelihood",
-                options=likelihood_options,
-                value=likelihood_options[2], # Defaults to ("3", "Remote")
-                format_func=lambda x: f"{x[0]} - {x[1]}",
-                key="hazard_likelihood_v2"  # <--- RENAMED KEY CLEARS THE CACHE
+                options=[1, 2, 3, 4, 5],
+                value=3,
+                format_func=lambda x: f"{x} - {likelihood_map.get(x, '')}",
+                key="hazard_likelihood_final_v5" # Unique key to clear old errors
             )
+            
             st.markdown(f"""
             <div style="font-size: 0.85rem; color: #64748B; padding: 0.5rem; background: #F8FAFC; border-radius: 4px;">
-                <strong>Selected:</strong> {likelihood[0]} - {likelihood[1]}<br>
-                <em>Definition: {LIKELIHOOD_DEFINITIONS.get(likelihood[0], '')}</em>
+                <strong>Selected:</strong> {likelihood} - {likelihood_map.get(likelihood, '')}
             </div>
             """, unsafe_allow_html=True)
         
@@ -3782,19 +3785,26 @@ def render_hazard_form():
                     ("E", "Negligible - Little consequence")
                 ],
                 index=2,
-                format_func=lambda x: f"{x[0]} - {x[1].split(' - ')[0]}"
+                format_func=lambda x: f"{x[0]} - {x[1].split(' - ')[0]}",
+                key="hazard_severity_final_v5"
             )
+            
+            # Extract just the letter code (e.g., "A") safely
+            severity_code = severity[0]
+            
             st.markdown(f"""
             <div style="font-size: 0.85rem; color: #64748B; padding: 0.5rem; background: #F8FAFC; border-radius: 4px;">
-                <strong>Selected:</strong> {severity[0]} - {severity[1]}<br>
-                <em>Definition: {SEVERITY_DEFINITIONS.get(severity[0], '')}</em>
+                <strong>Selected:</strong> {severity_code}<br>
+                <em>Definition: {severity[1]}</em>
             </div>
             """, unsafe_allow_html=True)
         
         # Calculate risk level
-        risk_code = f"{likelihood[0]}{severity[0]}"
-        risk_level = calculate_risk_level(int(likelihood[0]), severity[0])
+        # Now 'likelihood' is already an integer (1-5), so we don't need int() or [0]
+        risk_code = f"{likelihood}{severity_code}"
+        risk_level = calculate_risk_level(likelihood, severity_code)
         risk_info = RISK_ACTIONS[risk_level]
+        # --- END FIX ---
         
         st.markdown(f"""
         <div style="background: {risk_info['color']}15; border: 2px solid {risk_info['color']}; border-radius: 12px; padding: 1.5rem; margin: 1rem 0; text-align: center;">
