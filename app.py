@@ -2450,13 +2450,13 @@ def render_bird_strike_form():
         with col1:
             origin_airport = st.selectbox(
                 "Origin Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0
             )
         with col2:
             destination_airport = st.selectbox(
                 "Destination Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0
             )
         with col3:
@@ -2475,7 +2475,7 @@ def render_bird_strike_form():
         with col1:
             strike_airport = st.selectbox(
                 "Airport/Location of Strike",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0
             )
         with col2:
@@ -3051,14 +3051,14 @@ def render_laser_strike_form():
         with col1:
             origin_airport = st.selectbox(
                 "Origin Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="ls_origin"
             )
         with col2:
             destination_airport = st.selectbox(
                 "Destination Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="ls_dest"
             )
@@ -3079,7 +3079,7 @@ def render_laser_strike_form():
         with col1:
             incident_airport = st.selectbox(
                 "Nearest Airport",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="ls_airport"
             )
@@ -3616,14 +3616,14 @@ def render_tcas_report_form():
         with col1:
             origin_airport = st.selectbox(
                 "Origin Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="tcas_origin"
             )
         with col2:
             destination_airport = st.selectbox(
                 "Destination Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="tcas_dest"
             )
@@ -4369,21 +4369,21 @@ def render_incident_form():
         with col1:
             origin_airport = st.selectbox(
                 "Origin Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="inc_origin"
             )
         with col2:
             destination_airport = st.selectbox(
                 "Destination Airport *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="inc_dest"
             )
         with col3:
             alternate_airport = st.selectbox(
                 "Alternate Airport",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0
             )
         
@@ -5760,14 +5760,14 @@ def render_fsr_form():
         with col1:
             origin = st.selectbox(
                 "Origin *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="fsr_origin"
             )
         with col2:
             destination = st.selectbox(
                 "Destination *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="fsr_dest"
             )
@@ -6325,14 +6325,14 @@ def render_captain_dbr_form():
         with col1:
             origin = st.selectbox(
                 "Origin *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="dbr_origin"
             )
         with col2:
             destination = st.selectbox(
                 "Destination *",
-                options=[""] + [f"{a['icao']} - {a['name']}" for a in AIRPORTS],
+                options=[""] + [f"{data['icao']} - {data['name']}" for data in AIRPORTS.values()],
                 index=0,
                 key="dbr_dest"
             )
