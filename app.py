@@ -6102,30 +6102,30 @@ def render_report_detail():
         'Medium': '#FFC107',
         'Low': '#28A745'
     }
-    risk_color = risk_colors.get(report['risk_level'], '#6C757D')
+    risk_color = risk_colors.get(report.get('risk_level'), '#6C757D')
     
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
                 padding: 30px; border-radius: 15px; margin: 20px 0; color: white;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <span style="font-size: 2.5rem;">{report['icon']}</span>
-                <h1 style="display: inline; margin-left: 15px; font-size: 2rem;">{report['id']}</h1>
-                <p style="margin: 10px 0 0 0; opacity: 0.9;">{report['type']}</p>
+                <span style="font-size: 2.5rem;">{report.get('icon', '📄')}</span>
+                <h1 style="display: inline; margin-left: 15px; font-size: 2rem;">{report.get('id', 'N/A')}</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">{report.get('type', 'Report')}</p>
             </div>
             <div style="text-align: right;">
                 <span style="background: {risk_color}; color: white; padding: 10px 25px; 
                             border-radius: 25px; font-size: 1.2rem; font-weight: bold;">
-                    {report['risk_level']} Risk
+                    {report.get('risk_level', 'Low')} Risk
                 </span>
-                <p style="margin: 10px 0 0 0; opacity: 0.9;">Status: {report['status']}</p>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Status: {report.get('status', 'Unknown')}</p>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Detail tabs
-   tab_details, tab_timeline, tab_comms, tab_actions = st.tabs([
+    # Detail tabs - THIS WAS THE LINE CAUSING YOUR ERROR
+    tab_details, tab_timeline, tab_comms, tab_actions = st.tabs([
         "📋 Details", "🕐 Timeline", "💬 Communications", "⚡ Actions"
     ])
     
@@ -6135,12 +6135,13 @@ def render_report_detail():
     with tab_timeline:
         render_report_timeline(report)
     
-    with tab_emails:
-        with tab_comms:
+    with tab_comms:
         st.markdown("### 💬 Communication History")
         
         # 1. Fetch Logs
-        email_logs = email_utils.get_email_logs(report['id'])
+        # Ensure 'id' exists, otherwise default to empty string to prevent errors
+        r_id = report.get('id', '')
+        email_logs = email_utils.get_email_logs(r_id) if r_id else []
         
         if not email_logs:
             st.info("No email history found.")
@@ -6150,16 +6151,17 @@ def render_report_detail():
                 alignment = "flex-end" if is_outbound else "flex-start"
                 bg_color = "#E3F2FD" if is_outbound else "#F5F5F5"
                 icon = "📤" if is_outbound else "📥"
-                sender_name = "Safety Team" if is_outbound else email['sender']
+                sender_name = "Safety Team" if is_outbound else email.get('sender', 'Unknown')
+                timestamp = email.get('timestamp', '')
                 
                 st.markdown(f"""
                 <div style="display: flex; justify-content: {alignment}; margin-bottom: 10px;">
                     <div style="background: {bg_color}; padding: 15px; border-radius: 15px; max-width: 80%; border: 1px solid #ddd;">
                         <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">
-                            {icon} <strong>{sender_name}</strong> • {email['timestamp']}
+                            {icon} <strong>{sender_name}</strong> • {timestamp}
                         </div>
-                        <div style="font-weight: bold; margin-bottom: 5px;">{email['subject']}</div>
-                        <div style="white-space: pre-wrap;">{email['body']}</div>
+                        <div style="font-weight: bold; margin-bottom: 5px;">{email.get('subject', 'No Subject')}</div>
+                        <div style="white-space: pre-wrap;">{email.get('body', '')}</div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -6167,25 +6169,33 @@ def render_report_detail():
         st.divider()
         
         # 2. Reply / Log Actions
-        action_type = st.radio("Action:", ["📧 Send Reply", "📥 Log Incoming Reply"], horizontal=True)
+        action_type = st.radio("Action:", ["📧 Send Reply", "📥 Log Incoming Reply"], horizontal=True, key=f"comm_action_{report.get('id')}")
         
         if action_type == "📧 Send Reply":
-            with st.form(f"reply_form_{report['id']}"):
-                to_addr = st.text_input("To:", value=report.get('reporter_contact', ''))
-                subj = st.text_input("Subject:", value=f"Re: Safety Report {report['id']}")
+            with st.form(f"reply_form_{report.get('id')}"):
+                # Try to find a reporter contact or email
+                default_to = report.get('reporter_contact') or report.get('reporter_email') or ""
+                to_addr = st.text_input("To:", value=default_to)
+                subj = st.text_input("Subject:", value=f"Re: Safety Report {report.get('id')}")
                 msg_body = st.text_area("Message:")
+                
                 if st.form_submit_button("Send Email"):
-                    if send_email(to_addr, None, subj, msg_body, report_id=report['id']):
+                    if send_email(to_addr, None, subj, msg_body, report_id=report.get('id')):
                         st.success("Email sent and logged!")
+                        time.sleep(1)
                         st.rerun()
+                    else:
+                        st.error("Failed to send.")
         else: 
-            with st.form(f"log_reply_form_{report['id']}"):
+            with st.form(f"log_reply_form_{report.get('id')}"):
                 sender = st.text_input("From (Sender Name/Email):")
                 msg_body = st.text_area("Message Content Received:")
                 if st.form_submit_button("💾 Log Reply"):
+                    # Use a temp client just to access the log function
                     dummy_client = email_utils.SMTPClient("","","","")
-                    dummy_client.log_reply(report['id'], sender, msg_body)
+                    dummy_client.log_reply(report.get('id'), sender, msg_body)
                     st.success("Reply logged successfully!")
+                    time.sleep(1)
                     st.rerun()
     
     with tab_actions:
@@ -7586,7 +7596,6 @@ def render_email_settings():
 
 # --- ADD THIS IMPORT AT THE TOP OF YOUR FILE OR RIGHT HERE ---
 import email_utils 
-
 def send_email(to, cc, subject, body, attachments=None, high_priority=False, report_id=None):
     """Send email via Real SMTP using email_utils"""
     
@@ -7607,8 +7616,8 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
         recipients.append(cc)
         
     # The utils handle the actual sending and logging to DB
-    return client.send_email(report_id, subject, body, recipients, attachments)
-
+    result = client.send_email(report_id, subject, body, recipients, attachments)
+    return result.get("status") == "sent"
     def render_action_tracker():
     """Render the AI-Powered Action Tracker Table"""
     st.markdown("""
@@ -7671,8 +7680,6 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
             use_container_width=True,
             height=600
         )
-        
-
 
 # =============================================================================
 # PDF GENERATION
