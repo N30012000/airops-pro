@@ -7620,7 +7620,6 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
     return result.get("status") == "sent"
     def render_action_tracker():
     """Render the AI-Powered Action Tracker Table"""
-    # ^^^ NOTE: This line and all lines below must be indented by 4 spaces
     
     st.markdown("""
     <div style="background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); 
