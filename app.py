@@ -7620,6 +7620,8 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
     return result.get("status") == "sent"
     def render_action_tracker():
     """Render the AI-Powered Action Tracker Table"""
+    # ^^^ NOTE: This line and all lines below must be indented by 4 spaces
+    
     st.markdown("""
     <div style="background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); 
                 padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
@@ -7635,14 +7637,18 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
         st.rerun()
 
     # Get reports that have email history
-    report_ids = email_utils.get_unique_report_ids_with_emails()
-    
-    tracker_data = []
-    
+    # Make sure email_utils is imported at the top of the file
+    try:
+        report_ids = email_utils.get_unique_report_ids_with_emails()
+    except Exception as e:
+        st.error(f"Database Error: {e}")
+        return
+
     if not report_ids:
         st.info("No email communications found to analyze.")
         return
 
+    tracker_data = []
     progress_bar = st.progress(0)
     
     for i, r_id in enumerate(report_ids):
@@ -7652,16 +7658,22 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
         emails = email_utils.get_email_logs(r_id)
         
         # Analyze with AI
-        # Note: Ensure 'safety_ai' is initialized in your main app block
-        analysis = safety_ai.analyze_email_thread_for_action(emails)
+        # Check if safety_ai is initialized, otherwise mock it or fail gracefully
+        if 'safety_ai' in globals() or 'safety_ai' in locals():
+             analysis = safety_ai.analyze_email_thread_for_action(emails)
+        else:
+             analysis = {
+                 "date": "N/A", "concern": "AI Not Connected", 
+                 "reply": "N/A", "action_taken": "N/A", "status": "Unknown"
+             }
         
         tracker_data.append({
             "Report ID": r_id,
-            "Latest Date": analysis.get("date"),
-            "Concern": analysis.get("concern"),
-            "Latest Reply": analysis.get("reply"),
-            "Action Taken": analysis.get("action_taken"),
-            "Status": analysis.get("status")
+            "Latest Date": analysis.get("date", "N/A"),
+            "Concern": analysis.get("concern", "N/A"),
+            "Latest Reply": analysis.get("reply", "N/A"),
+            "Action Taken": analysis.get("action_taken", "N/A"),
+            "Status": analysis.get("status", "Unknown")
         })
         
     progress_bar.empty()
@@ -7672,15 +7684,19 @@ def send_email(to, cc, subject, body, attachments=None, high_priority=False, rep
         # Style the dataframe for status
         def color_status(val):
             val = str(val)
-            color = 'red' if 'Open' in val else 'orange' if 'Progress' in val else 'green'
+            if 'Open' in val:
+                color = '#DC3545' # Red
+            elif 'Progress' in val:
+                color = '#FFC107' # Orange/Yellow
+            else:
+                color = '#28A745' # Green
             return f'color: {color}; font-weight: bold'
 
         st.dataframe(
-            df.style.applymap(color_status, subset=['Status']),
+            df.style.map(color_status, subset=['Status']),
             use_container_width=True,
             height=600
         )
-
 # =============================================================================
 # PDF GENERATION
 # =============================================================================
