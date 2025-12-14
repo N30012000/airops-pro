@@ -7474,45 +7474,50 @@ Safety Management Team"""
 
 
 def render_sent_emails():
-    """View sent emails history."""
+    """View sent emails history from the database."""
     
     st.markdown("### 📤 Sent Emails")
     
-    # Mock sent emails
-    sent_emails = [
-        {
-            'date': '2025-12-09 14:30',
-            'to': 'safety.manager@airsial.com',
-            'subject': '[Safety Alert] BS-2025-0042 - Bird Strike Report',
-            'status': 'Delivered'
-        },
-        {
-            'date': '2025-12-09 10:15',
-            'to': 'flight.ops@airsial.com',
-            'subject': '[Investigation Update] INC-2025-0018',
-            'status': 'Delivered'
-        },
-        {
-            'date': '2025-12-08 16:45',
-            'to': 'all_dept_heads@airsial.com',
-            'subject': '[Safety Summary] Week 49 - 2025',
-            'status': 'Delivered'
-        }
-    ]
-    
+    # 1. Fetch real emails from the database
+    # We filter for 'outbound' direction to show only sent items
+    try:
+        all_emails = email_utils.get_email_logs() # Gets all emails
+        sent_emails = [e for e in all_emails if e['direction'] == 'outbound']
+    except Exception as e:
+        st.error(f"Could not load emails: {e}")
+        return
+
+    if not sent_emails:
+        st.info("No sent emails found.")
+        return
+
+    # 2. Display them
     for email in sent_emails:
-        status_color = '#28A745' if email['status'] == 'Delivered' else '#FFC107'
-        
+        # Determine status color
+        status = email.get('status', 'unknown')
+        if status == 'sent':
+            status_color = '#28A745' # Green
+            status_text = "Sent"
+        elif status == 'failed':
+            status_color = '#DC3545' # Red
+            status_text = "Failed"
+        else:
+            status_color = '#FFC107' # Yellow
+            status_text = status.title()
+
         st.markdown(f"""
         <div style="background: white; padding: 15px; border-radius: 10px; 
                     margin-bottom: 10px; border: 1px solid #E0E0E0;">
             <div style="display: flex; justify-content: space-between;">
-                <strong>{email['subject']}</strong>
+                <strong>{email.get('subject', '(No Subject)')}</strong>
                 <span style="background: {status_color}; color: white; padding: 2px 10px; 
-                            border-radius: 10px; font-size: 0.8rem;">{email['status']}</span>
+                          border-radius: 10px; font-size: 0.8rem;">{status_text}</span>
             </div>
             <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
-                To: {email['to']} | {email['date']}
+                To: {email.get('recipients', 'Unknown')} | {email.get('timestamp', 'Unknown Date')}
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9rem; color: #333; border-top: 1px solid #eee; padding-top: 5px;">
+                {email.get('body', '')[:200]}... <em style="color:#888">(click Details to see full)</em>
             </div>
         </div>
         """, unsafe_allow_html=True)
