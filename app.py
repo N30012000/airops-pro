@@ -6125,8 +6125,8 @@ def render_report_detail():
     """, unsafe_allow_html=True)
     
     # Detail tabs
-    tab_details, tab_timeline, tab_emails, tab_actions = st.tabs([
-        "📋 Details", "🕐 Timeline", "📧 Email Trail", "⚡ Actions"
+   tab_details, tab_timeline, tab_comms, tab_actions = st.tabs([
+        "📋 Details", "🕐 Timeline", "💬 Communications", "⚡ Actions"
     ])
     
     with tab_details:
@@ -6136,7 +6136,57 @@ def render_report_detail():
         render_report_timeline(report)
     
     with tab_emails:
-        render_email_trail(report)
+        with tab_comms:
+        st.markdown("### 💬 Communication History")
+        
+        # 1. Fetch Logs
+        email_logs = email_utils.get_email_logs(report['id'])
+        
+        if not email_logs:
+            st.info("No email history found.")
+        else:
+            for email in email_logs:
+                is_outbound = email['direction'] == 'outbound'
+                alignment = "flex-end" if is_outbound else "flex-start"
+                bg_color = "#E3F2FD" if is_outbound else "#F5F5F5"
+                icon = "📤" if is_outbound else "📥"
+                sender_name = "Safety Team" if is_outbound else email['sender']
+                
+                st.markdown(f"""
+                <div style="display: flex; justify-content: {alignment}; margin-bottom: 10px;">
+                    <div style="background: {bg_color}; padding: 15px; border-radius: 15px; max-width: 80%; border: 1px solid #ddd;">
+                        <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">
+                            {icon} <strong>{sender_name}</strong> • {email['timestamp']}
+                        </div>
+                        <div style="font-weight: bold; margin-bottom: 5px;">{email['subject']}</div>
+                        <div style="white-space: pre-wrap;">{email['body']}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        st.divider()
+        
+        # 2. Reply / Log Actions
+        action_type = st.radio("Action:", ["📧 Send Reply", "📥 Log Incoming Reply"], horizontal=True)
+        
+        if action_type == "📧 Send Reply":
+            with st.form(f"reply_form_{report['id']}"):
+                to_addr = st.text_input("To:", value=report.get('reporter_contact', ''))
+                subj = st.text_input("Subject:", value=f"Re: Safety Report {report['id']}")
+                msg_body = st.text_area("Message:")
+                if st.form_submit_button("Send Email"):
+                    if send_email(to_addr, None, subj, msg_body, report_id=report['id']):
+                        st.success("Email sent and logged!")
+                        st.rerun()
+        else: 
+            with st.form(f"log_reply_form_{report['id']}"):
+                sender = st.text_input("From (Sender Name/Email):")
+                msg_body = st.text_area("Message Content Received:")
+                if st.form_submit_button("💾 Log Reply"):
+                    dummy_client = email_utils.SMTPClient("","","","")
+                    dummy_client.log_reply(report['id'], sender, msg_body)
+                    st.success("Reply logged successfully!")
+                    st.rerun()
     
     with tab_actions:
         render_report_actions(report)
@@ -7534,49 +7584,94 @@ def render_email_settings():
             st.success("✅ SMTP connection successful!")
 
 
-def send_email(to, cc, subject, body, attachments=None, high_priority=False):
-    """Send email via SMTP."""
+# --- ADD THIS IMPORT AT THE TOP OF YOUR FILE OR RIGHT HERE ---
+import email_utils 
+
+def send_email(to, cc, subject, body, attachments=None, high_priority=False, report_id=None):
+    """Send email via Real SMTP using email_utils"""
     
-    settings = st.session_state.get('email_settings', {})
+    # Get credentials from st.secrets or environment
+    smtp_server = st.secrets.get("SMTP_SERVER", "smtp.gmail.com")
+    smtp_port = int(st.secrets.get("SMTP_PORT", 587))
+    smtp_user = st.secrets.get("SMTP_USERNAME", "")
+    smtp_pass = st.secrets.get("SMTP_PASSWORD", "")
     
-    # For demo, just log and return success
-    # In production, this would use actual SMTP
+    if not smtp_user or not smtp_pass:
+        st.error("❌ SMTP Credentials missing in secrets/env")
+        return False
+
+    client = email_utils.SMTPClient(smtp_server, smtp_port, smtp_user, smtp_pass)
     
-    try:
+    recipients = [to]
+    if cc:
+        recipients.append(cc)
         
-        # Create message
-        msg = MIMEMultipart()
-        msg['From'] = f"{settings.get('from_name', 'SMS')} <{settings.get('from_address', 'sms@airsial.com')}>"
-        msg['To'] = to
-        if cc:
-            msg['Cc'] = cc
-        msg['Subject'] = subject
+    # The utils handle the actual sending and logging to DB
+    return client.send_email(report_id, subject, body, recipients, attachments)
+
+    def render_action_tracker():
+    """Render the AI-Powered Action Tracker Table"""
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); 
+                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
+        <h1 style="margin: 0; font-size: 2.2rem;">⚡ Action Tracker</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
+            AI-Driven Analysis of Ongoing Safety Actions
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.button("🔄 Refresh AI Analysis"):
+        st.cache_data.clear()
+        st.rerun()
+
+    # Get reports that have email history
+    report_ids = email_utils.get_unique_report_ids_with_emails()
+    
+    tracker_data = []
+    
+    if not report_ids:
+        st.info("No email communications found to analyze.")
+        return
+
+    progress_bar = st.progress(0)
+    
+    for i, r_id in enumerate(report_ids):
+        progress_bar.progress((i + 1) / len(report_ids))
         
-        if high_priority:
-            msg['X-Priority'] = '1'
-            msg['X-MSMail-Priority'] = 'High'
+        # Get emails
+        emails = email_utils.get_email_logs(r_id)
         
-        msg.attach(MIMEText(body, 'plain'))
+        # Analyze with AI
+        # Note: Ensure 'safety_ai' is initialized in your main app block
+        analysis = safety_ai.analyze_email_thread_for_action(emails)
         
-        # In production, would connect to SMTP and send
-        # For demo, we'll simulate success
-        
-        # Log the email
-        if 'sent_emails' not in st.session_state:
-            st.session_state['sent_emails'] = []
-        
-        st.session_state['sent_emails'].append({
-            'date': datetime.now().strftime('%Y-%m-%d %H:%M'),
-            'to': to,
-            'subject': subject,
-            'status': 'Delivered'
+        tracker_data.append({
+            "Report ID": r_id,
+            "Latest Date": analysis.get("date"),
+            "Concern": analysis.get("concern"),
+            "Latest Reply": analysis.get("reply"),
+            "Action Taken": analysis.get("action_taken"),
+            "Status": analysis.get("status")
         })
         
-        return True
+    progress_bar.empty()
+
+    if tracker_data:
+        df = pd.DataFrame(tracker_data)
         
-    except Exception as e:
-        st.error(f"Email error: {str(e)}")
-        return False
+        # Style the dataframe for status
+        def color_status(val):
+            val = str(val)
+            color = 'red' if 'Open' in val else 'orange' if 'Progress' in val else 'green'
+            return f'color: {color}; font-weight: bold'
+
+        st.dataframe(
+            df.style.applymap(color_status, subset=['Status']),
+            use_container_width=True,
+            height=600
+        )
+        
 
 
 # =============================================================================
