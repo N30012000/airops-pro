@@ -24,6 +24,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+import google.generativeai as genai
 from plotly.subplots import make_subplots
 
 # Optional pydeck for geospatial mapping
@@ -6533,6 +6534,67 @@ def generate_report_pdf(report):
 # - Communication management
 # =============================================================================
 
+def render_general_assistant():
+    """Render the General AI Assistant page"""
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%); 
+                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: #1e3c72;">
+        <h1 style="margin: 0; font-size: 2.2rem;">🧠 General Assistant</h1>
+        <p style="margin: 10px 0 0 0; font-weight: 500; font-size: 1.1rem;">
+            Ask me anything: Drafts, Summaries, Tips, or just a Chat!
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Configure Gemini
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
+        if api_key:
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-pro')
+        else:
+            st.error("❌ API Key not found. Please check your .env or secrets file.")
+            return
+    except Exception as e:
+        st.error(f"Error configuring AI: {e}")
+        return
+
+    # Initialize chat history
+    if 'general_chat_history' not in st.session_state:
+        st.session_state.general_chat_history = []
+
+    # Display chat history
+    for message in st.session_state.general_chat_history:
+        role_icon = "👤" if message["role"] == "user" else "🧠"
+        bg_color = "#FFFFFF" if message["role"] == "user" else "#F0F2F6"
+        
+        st.markdown(f"""
+        <div style="background: {bg_color}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #E0E0E0;">
+            <strong>{role_icon} {message['role'].title()}:</strong><br>
+            {message['content']}
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Chat Input
+    with st.form("general_chat_form", clear_on_submit=True):
+        user_input = st.text_area("Your Question:", height=100, placeholder="e.g., 'Write a synopsis for a bird strike incident' or 'Tell me a joke'")
+        submitted = st.form_submit_button("🚀 Send")
+
+    if submitted and user_input:
+        # 1. Save User Message
+        st.session_state.general_chat_history.append({"role": "user", "content": user_input})
+        
+        # 2. Get AI Response
+        with st.spinner("Thinking..."):
+            try:
+                response = model.generate_content(user_input)
+                ai_text = response.text
+            except Exception as e:
+                ai_text = f"I encountered an error: {str(e)}"
+        
+        # 3. Save AI Message
+        st.session_state.general_chat_history.append({"role": "assistant", "content": ai_text})
+        st.rerun()
 def render_ai_assistant():
     """AI Assistant for safety report analysis and insights."""
     
@@ -8932,6 +8994,11 @@ def render_sidebar():
                 "icon": "🤖",
                 "roles": ["all"]
             },
+            "🧠 General Assistant": {
+                "page": "General Assistant",
+                "icon": "🧠",
+                "roles": ["all"]
+            },
             "📧 Email Center": {
                 "page": "Email Center",
                 "icon": "📧",
@@ -9345,6 +9412,7 @@ def route_to_page():
         'Captain Debrief': render_captain_dbr_form,
         'Report Detail': render_report_detail,
         'AI Assistant': render_ai_assistant,
+        'General Assistant': render_general_assistant,
         'Email Center': render_email_center,
         'Geospatial Map': render_geospatial_map,
         'IOSA Compliance': render_iosa_compliance,
