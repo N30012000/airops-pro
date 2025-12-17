@@ -1483,7 +1483,7 @@ try:
     st.success(f"✅ Bird Strike Report Saved to Database! Ref: {incident_id}")
 except Exception as e:
     st.error(f"Database Error: {e}")
-# --------------------
+st.session_state['ocr_data_bird_strike'] = None
                 
                 # Clear OCR data
                 st.session_state['ocr_data_bird_strike'] = None
