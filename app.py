@@ -3499,7 +3499,6 @@ def render_incident_form():
                 
                 # Create report record
                 report_data = {
-                    'id': incident_id,
                     'type': 'Aircraft Incident',
                     'notification_type': notification_type,
                     'date': incident_date.isoformat(),
@@ -3593,16 +3592,24 @@ def render_incident_form():
                     'department': st.session_state.get('user_department', 'Safety Department')
                 }
                 
-                # Add to session state
-                # --- REPLACE WITH ---
-try:
-    # Ensure keys match your Supabase DB columns exactly
-    response = supabase.table('aircraft_incidents').insert(report_data).execute()
-    st.balloons()
-    st.success(f"✅ Aircraft Incident Report Saved to Database! Ref: {incident_id}")
-except Exception as e:
-    st.error(f"Database Error: {e}")
-# --------------------
+                # --- SUPABASE INSERTION BLOCK ---
+                try:
+                    report_data['report_number'] = incident_id
+                    response = supabase.table('aircraft_incidents').insert(report_data).execute()
+                    st.balloons()
+                    st.success(f"""
+                        ✅ **Incident Report Submitted Successfully!**
+                        
+                        **Reference:** {incident_id}  
+                        **Classification:** {notification_type}  
+                        **Risk Level:** {risk_level}  
+                        **Status:** {investigation_status}
+                        
+                        The report has been added to the system and is now visible in View Reports.
+                        {"⚠️ **IMPORTANT:** This incident requires immediate notification to PCAA." if notification_type in ["Accident", "Serious Incident"] else ""}
+                    """)
+                except Exception as e:
+                    st.error(f"Database Error: {e}")
                 
                 # Clear OCR data
                 st.session_state['ocr_data_incident_report'] = None
