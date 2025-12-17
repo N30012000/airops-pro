@@ -1477,7 +1477,6 @@ def render_bird_strike_form():
                 # Add to session state
                 # --- REPLACE WITH ---
 try:
-    # Ensure keys match your Supabase DB columns exactly
     response = supabase.table('bird_strikes').insert(report_data).execute()
     st.balloons()
     st.success(f"✅ Bird Strike Report Saved to Database! Ref: {incident_id}")
