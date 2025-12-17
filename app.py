@@ -1414,7 +1414,6 @@ def render_bird_strike_form():
                 
                 # Create report record
                 report_data = {
-                    'id': incident_id,
                     'type': 'Bird Strike',
                     'date': incident_date.isoformat(),
                     'time': incident_time.strftime('%H:%M'),
@@ -1474,15 +1473,20 @@ def render_bird_strike_form():
                     'department': st.session_state.get('user_department', 'Flight Operations')
                 }
                 
-                # Add to session state
-                # --- REPLACE WITH ---
-try:
-    response = supabase.table('bird_strikes').insert(report_data).execute()
-    st.balloons()
-    st.success(f"✅ Bird Strike Report Saved to Database! Ref: {incident_id}")
-except Exception as e:
-    st.error(f"Database Error: {e}")
-st.session_state['ocr_data_bird_strike'] = None
+                # --- SUPABASE INSERTION BLOCK (CLEAN) ---
+                try:
+                    # Note: We don't include 'id' in the insert if your DB auto-generates it. 
+                    # If you want to use your custom 'incident_id', ensure your DB 'id' column is text/varchar and not auto-increment int.
+                    report_data['report_number'] = incident_id # Store your custom ID in a specific column
+                    
+                    response = supabase.table('bird_strikes').insert(report_data).execute()
+                    st.balloons()
+                    st.success(f"✅ Bird Strike Report Saved to Database! Ref: {incident_id}")
+                except Exception as e:
+                    st.error(f"Database Error: {e}")
+
+                # Clear OCR data
+                st.session_state['ocr_data_bird_strike'] = None
                 
                 # Clear OCR data
                 st.session_state['ocr_data_bird_strike'] = None
