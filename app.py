@@ -1988,7 +1988,6 @@ def render_laser_strike_form():
                 
                 # Create report record
                 report_data = {
-                    'id': incident_id,
                     'type': 'Laser Strike',
                     'date': incident_date.isoformat(),
                     'time': incident_time.strftime('%H:%M'),
@@ -2041,17 +2040,16 @@ def render_laser_strike_form():
                     'department': st.session_state.get('user_department', 'Flight Operations')
                 }
                 
-                # Add to session state
-                # --- REPLACE WITH ---
-try:
-    # Ensure keys match your Supabase DB columns exactly
-    response = supabase.table('laser_strikes').insert(report_data).execute()
-    st.balloons()
-    st.success(f"✅ Laser Strike Report Saved to Database! Ref: {incident_id}")
-except Exception as e:
-    st.error(f"Database Error: {e}")
-# --------------------
-                
+                # --- SUPABASE INSERTION BLOCK ---
+                try:
+                    # Save to database
+                    report_data['report_number'] = incident_id
+                    response = supabase.table('laser_strikes').insert(report_data).execute()
+                    st.balloons()
+                    st.success(f"✅ Laser Strike Report Saved to Database! Ref: {incident_id}")
+                except Exception as e:
+                    st.error(f"Database Error: {e}")
+
                 # Clear OCR data
                 st.session_state['ocr_data_laser_strike'] = None
                 
