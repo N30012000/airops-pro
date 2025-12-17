@@ -3658,7 +3658,7 @@ narrative = st.text_area(
 ocr_data = st.session_state.get('ocr_data_hazard_report', {}) or {}
     
     # OCR Upload Section
-    with st.expander("📷 Upload Form Image for OCR Autofill", expanded=False):
+with st.expander("📷 Upload Form Image for OCR Autofill", expanded=False):
         extracted = render_ocr_uploader("hazard_report")
         if extracted:
             ocr_data = extracted
