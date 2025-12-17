@@ -3664,10 +3664,10 @@ with st.expander("📷 Upload Form Image for OCR Autofill", expanded=False):
             ocr_data = extracted
             st.session_state['ocr_data_hazard_report'] = extracted
     
-    if ocr_data:
+if ocr_data:
         st.info("✨ Form pre-filled with OCR extracted data. Please verify and correct any fields.")
     
-    with st.form("hazard_form", clear_on_submit=False):
+with st.form("hazard_form", clear_on_submit=False):
 
     # --- ADD THIS ---
 if st.button("🤖 Auto-Assess Risk"):
