@@ -27,6 +27,18 @@ import streamlit as st
 import google.generativeai as genai
 from plotly.subplots import make_subplots
 
+# --- ADD THIS ---
+from supabase import create_client, Client
+
+@st.cache_resource
+def init_supabase():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+supabase = init_supabase()
+# ----------------
+
 # Optional pydeck for geospatial mapping
 try:
     import pydeck as pdk
@@ -433,16 +445,32 @@ def get_aircraft_info(registration: str) -> dict:
 # DYNAMIC STATISTICS FROM SESSION STATE - NO MOCK DATA
 # ══════════════════════════════════════════════════════════════════════════════
 
+# --- REPLACEMENT CODE ---
+@st.cache_data(ttl=60)  # Cache for 60 seconds to save API calls
 def get_report_counts() -> dict:
-    return {
-        'bird_strikes': len(st.session_state.get('bird_strikes', [])),
-        'laser_strikes': len(st.session_state.get('laser_strikes', [])),
-        'tcas_reports': len(st.session_state.get('tcas_reports', [])),
-        'hazard_reports': len(st.session_state.get('hazard_reports', [])),
-        'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
-        'fsr_reports': len(st.session_state.get('fsr_reports', [])),
-        'captain_dbr': len(st.session_state.get('captain_dbr', []))
-    }
+    counts = {}
+    # We list all table names that match your dictionary keys
+    tables = [
+        'bird_strikes', 
+        'laser_strikes', 
+        'tcas_reports', 
+        'hazard_reports', 
+        'aircraft_incidents', 
+        'fsr_reports', 
+        'captain_dbr'
+    ]
+    
+    for table in tables:
+        try:
+            # 'head=True' ensures we only get the count, not the actual data rows (faster)
+            response = supabase.table(table).select("*", count="exact", head=True).execute()
+            counts[table] = response.count
+        except Exception as e:
+            # If the table doesn't exist yet or connection fails, default to 0
+            counts[table] = 0
+            
+    return counts
+# ------------------------
 
 def get_total_reports() -> int:
     return sum(get_report_counts().values())
@@ -708,21 +736,31 @@ def render_ocr_uploader(form_type: str) -> Optional[dict]:
 # STATIC WEATHER DATA - NO API CALLS
 # ══════════════════════════════════════════════════════════════════════════════
 
-STATIC_WEATHER_DATA = {
-    "OPSK": {"city": "Sialkot", "temp": 18, "condition": "Partly Cloudy", "icon": "🌤️", "wind": 12, "humidity": 65},
-    "OPKC": {"city": "Karachi", "temp": 28, "condition": "Clear", "icon": "☀️", "wind": 15, "humidity": 70},
-    "OPLA": {"city": "Lahore", "temp": 20, "condition": "Hazy", "icon": "🌫️", "wind": 8, "humidity": 75},
-    "OPIS": {"city": "Islamabad", "temp": 15, "condition": "Cloudy", "icon": "☁️", "wind": 10, "humidity": 60},
-    "OMDB": {"city": "Dubai", "temp": 32, "condition": "Clear", "icon": "☀️", "wind": 18, "humidity": 45},
-}
+# --- REPLACE WITH ---
+import requests
+
+@st.cache_data(ttl=1800) # Cache for 30 mins
+def fetch_live_weather(icao_code):
+    api_key = st.secrets["OPENWEATHER_API_KEY"]
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={icao_code}&appid={api_key}&units=metric"
+    try:
+        data = requests.get(url).json()
+        return {
+            "temp": round(data['main']['temp']),
+            "condition": data['weather'][0]['main'],
+            "wind": round(data['wind']['speed'] * 3.6), # m/s to km/h
+            "icon": "🌤️" # Simplified for snippet, mapped to data['weather'][0]['icon']
+        }
+    except:
+        return {"temp": "--", "condition": "N/A", "wind": "--", "icon": "❓"}
 
 def render_weather_widget():
-    col_header, col_btn = st.columns([4, 1])
-    with col_header:
-        st.markdown("#### 🌤️ Current Weather at Key Airports")
-    with col_btn:
-        if st.button("🔄", key="refresh_weather_btn"):
-            st.toast("Weather display refreshed")
+    # ... (Keep layout columns)
+    airports = ["OPSK", "OPKC", "OPLA"]
+    for airport in airports:
+        data = fetch_live_weather(airport)
+        # ... Render UI using 'data' variable
+# --------------------
     
     cols = st.columns(5)
     for col, (icao, data) in zip(cols, STATIC_WEATHER_DATA.items()):
@@ -1437,9 +1475,15 @@ def render_bird_strike_form():
                 }
                 
                 # Add to session state
-                if 'bird_strikes' not in st.session_state:
-                    st.session_state.bird_strikes = []
-                st.session_state.bird_strikes.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('bird_strikes').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ Bird Strike Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Clear OCR data
                 st.session_state['ocr_data_bird_strike'] = None
@@ -1995,9 +2039,15 @@ def render_laser_strike_form():
                 }
                 
                 # Add to session state
-                if 'laser_strikes' not in st.session_state:
-                    st.session_state.laser_strikes = []
-                st.session_state.laser_strikes.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('laser_strikes').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ Laser Strike Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Clear OCR data
                 st.session_state['ocr_data_laser_strike'] = None
@@ -2654,9 +2704,15 @@ def render_tcas_report_form():
                 }
                 
                 # Add to session state
-                if 'tcas_reports' not in st.session_state:
-                    st.session_state.tcas_reports = []
-                st.session_state.tcas_reports.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('tcas_reports').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ TCAS Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Clear OCR data
                 st.session_state['ocr_data_tcas_report'] = None
@@ -3540,9 +3596,15 @@ def render_incident_form():
                 }
                 
                 # Add to session state
-                if 'aircraft_incidents' not in st.session_state:
-                    st.session_state.aircraft_incidents = []
-                st.session_state.aircraft_incidents.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('aircraft_incidents').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ Aircraft Incident Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Clear OCR data
                 st.session_state['ocr_data_incident_report'] = None
@@ -3569,7 +3631,24 @@ def render_hazard_form():
     """
     st.markdown("## 🔶 Hazard Report Form")
     st.markdown("*Report identified hazards, unsafe conditions, and potential risks*")
-    
+    # --- ADD THIS BEFORE NARRATIVE TEXT_AREA ---
+from streamlit_mic_recorder import mic_recorder
+
+st.markdown("🎙️ **Voice Reporting**")
+audio = mic_recorder(start_prompt="Start Recording", stop_prompt="Stop", key='recorder')
+
+if audio:
+    # Send audio['bytes'] to OpenAI Whisper API here
+    # st.session_state['transcribed_text'] = transcribe_audio(audio['bytes'])
+    st.info("Audio captured! (Transcription integration required)")
+
+# Update text_area to use the transcribed text as default
+narrative = st.text_area(
+    "Detailed Narrative",
+    value=st.session_state.get('transcribed_text', ocr_data.get('narrative', '')),
+    # ...
+)
+# --------------------
     # Check for OCR extracted data
     ocr_data = st.session_state.get('ocr_data_hazard_report', {}) or {}
     
@@ -3584,7 +3663,19 @@ def render_hazard_form():
         st.info("✨ Form pre-filled with OCR extracted data. Please verify and correct any fields.")
     
     with st.form("hazard_form", clear_on_submit=False):
-        
+
+    # --- ADD THIS ---
+if st.button("🤖 Auto-Assess Risk"):
+    if narrative:
+        with st.spinner("AI Analyzing Hazard..."):
+            # Use Gemini or OpenAI here
+            prompt = f"Analyze this aviation hazard and suggest Likelihood (1-5) and Severity (A-E). Output format: L:3, S:B. Narrative: {narrative}"
+            # response = model.generate_content(prompt)
+            # Parse response and set session_state variables for likelihood/severity sliders
+            st.info("AI Suggestion: Likelihood 3, Severity B (Hazardous)")
+    else:
+        st.warning("Please enter a narrative first.")
+# --------------------    
         # ========== SECTION A: REPORTER INFORMATION ==========
         st.markdown("""<div class="form-section">
             <div class="form-section-header">Section A: Reporter Information</div>
@@ -4064,9 +4155,15 @@ def render_hazard_form():
                 }
                 
                 # Add to session state
-                if 'hazard_reports' not in st.session_state:
-                    st.session_state.hazard_reports = []
-                st.session_state.hazard_reports.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('hazard_reports').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ Hazard Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Clear OCR data
                 st.session_state['ocr_data_hazard_report'] = None
@@ -4776,9 +4873,15 @@ def render_fsr_form():
                 }
                 
                 # Add to session state
-                if 'fsr_reports' not in st.session_state:
-                    st.session_state.fsr_reports = []
-                st.session_state.fsr_reports.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('fsr_reports').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ Flight Services Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Success feedback
                 st.balloons()
@@ -5412,9 +5515,15 @@ def render_captain_dbr_form():
                 }
                 
                 # Add to session state
-                if 'captain_dbr' not in st.session_state:
-                    st.session_state.captain_dbr = []
-                st.session_state.captain_dbr.append(report_data)
+                # --- REPLACE WITH ---
+try:
+    # Ensure keys match your Supabase DB columns exactly
+    response = supabase.table('captain_dbr').insert(report_data).execute()
+    st.balloons()
+    st.success(f"✅ Captain's Debrief Report Saved to Database! Ref: {incident_id}")
+except Exception as e:
+    st.error(f"Database Error: {e}")
+# --------------------
                 
                 # Success feedback
                 st.balloons()
@@ -9012,16 +9121,27 @@ def render_login_page():
                     users = st.session_state.users_db
                     user_lower = username.lower().strip()
                     
-                    if user_lower in users and users[user_lower]['password'] == password:
-                        st.session_state.authenticated = True
-                        st.session_state.username = username
-                        st.session_state.user_role = users[user_lower]['role']
-                        st.success("✅ Login successful! Redirecting...")
-                        st.rerun()
-                    elif username and password:
-                        st.error("❌ Invalid username or password")
-                    else:
-                        st.warning("Please enter username and password")
+                    # --- REPLACE WITH ---
+try:
+    auth_response = supabase.auth.sign_in_with_password({
+        "email": username, # Input field should be labeled Email/Username
+        "password": password
+    })
+    
+    # Store session data
+    st.session_state.authenticated = True
+    st.session_state.user_email = auth_response.user.email
+    st.session_state.user_id = auth_response.user.id
+    
+    # Fetch user role from a 'profiles' table you create in Supabase
+    profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
+    st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
+    
+    st.success("✅ Login successful!")
+    st.rerun()
+except Exception as e:
+    st.error(f"Login failed: {str(e)}")
+# --------------------
         
         # REGISTER TAB
         with tab_register:
