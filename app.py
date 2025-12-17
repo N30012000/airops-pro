@@ -3636,10 +3636,10 @@ def render_hazard_form():
     """
     st.markdown("## 🔶 Hazard Report Form")
     st.markdown("*Report identified hazards, unsafe conditions, and potential risks*")
-
+    
     # 1. Initialize Data Sources FIRST
     ocr_data = st.session_state.get('ocr_data_hazard_report', {}) or {}
-
+    
     # 2. OCR Upload Section
     with st.expander("📷 Upload Form Image for OCR Autofill", expanded=False):
         extracted = render_ocr_uploader("hazard_report")
@@ -3647,10 +3647,10 @@ def render_hazard_form():
             ocr_data = extracted
             st.session_state['ocr_data_hazard_report'] = extracted
             st.rerun()
-
+    
     if ocr_data:
         st.info("✨ Form pre-filled with OCR extracted data. Please verify and correct any fields.")
-
+    
     # 3. Start the Form
     with st.form("hazard_form", clear_on_submit=False):
         
@@ -3804,7 +3804,12 @@ def render_hazard_form():
         # Calculate Risk
         risk_code = f"{likelihood}{severity_code}"
         risk_level = calculate_risk_level(likelihood, severity_code)
-        risk_info = RISK_ACTIONS[risk_level]
+        
+        # Safe lookup for risk actions using string keys
+        # Note: Ensure RISK_ACTIONS uses string keys ('Low', 'Medium' etc.) in this scope
+        risk_info = RISK_ACTIONS.get(risk_level, {
+            "color": "#16A34A", "action": "Review", "timeline": "Routine"
+        })
         
         st.markdown(f"""
         <div style="background: {risk_info['color']}15; border: 2px solid {risk_info['color']}; border-radius: 12px; padding: 1.5rem; text-align: center;">
@@ -3871,9 +3876,9 @@ def render_hazard_form():
             if not hazard_title or not hazard_location or not hazard_description or not suggested_actions:
                 st.error("❌ Please fill in all required fields (marked with *)")
             else:
-                # Prepare Data - ID IS INCLUDED HERE
+                # Prepare Data
                 report_data = {
-                    'id': hazard_id,  # <--- Added as requested
+                    'id': hazard_id,
                     'type': 'Hazard Report',
                     'report_date': report_date.isoformat(),
                     'reporter_name': "" if anonymous_report else reporter_name,
@@ -3918,6 +3923,7 @@ def render_hazard_form():
                 # --- SUPABASE INSERTION BLOCK ---
                 try:
                     # Insert data
+                    # NOTE: Ensure 'supabase' is initialized at top of app.py
                     response = supabase.table('hazard_reports').insert(report_data).execute()
                     
                     st.balloons()
