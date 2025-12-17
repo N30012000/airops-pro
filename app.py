@@ -2641,7 +2641,6 @@ def render_tcas_report_form():
                 
                 # Create report record
                 report_data = {
-                    'id': incident_id,
                     'type': 'TCAS Report',
                     'date': incident_date.isoformat(),
                     'time': incident_time.strftime('%H:%M'),
@@ -2704,16 +2703,14 @@ def render_tcas_report_form():
                     'department': st.session_state.get('user_department', 'Flight Operations')
                 }
                 
-                # Add to session state
-                # --- REPLACE WITH ---
-try:
-    # Ensure keys match your Supabase DB columns exactly
-    response = supabase.table('tcas_reports').insert(report_data).execute()
-    st.balloons()
-    st.success(f"✅ TCAS Report Saved to Database! Ref: {incident_id}")
-except Exception as e:
-    st.error(f"Database Error: {e}")
-# --------------------
+                # --- SUPABASE INSERTION BLOCK ---
+                try:
+                    report_data['report_number'] = incident_id
+                    response = supabase.table('tcas_reports').insert(report_data).execute()
+                    st.balloons()
+                    st.success(f"✅ TCAS Report Submitted Successfully! Ref: {incident_id}")
+                except Exception as e:
+                    st.error(f"Database Error: {e}")
                 
                 # Clear OCR data
                 st.session_state['ocr_data_tcas_report'] = None
