@@ -8871,7 +8871,8 @@ def render_login_page():
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
                 
                 if submitted:
-                    # --- REPLACEMENT BLOCK ---
+                     users = st.session_state.users_db
+                     user_lower = username.lower().strip()
                     try:
                         # Authenticate with Supabase
                         auth_response = supabase.auth.sign_in_with_password({
