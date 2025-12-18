@@ -8873,8 +8873,6 @@ def render_login_page():
                 if submitted:
                     users = st.session_state.users_db
                     user_lower = username.lower().strip()
-                    
-                    # --- REPLACE WITH ---
                    try:
                         auth_response = supabase.auth.sign_in_with_password({
                             "email": username, 
