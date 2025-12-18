@@ -8875,28 +8875,28 @@ def render_login_page():
                     user_lower = username.lower().strip()
                     
                     # --- REPLACE WITH ---
-try:
-    auth_response = supabase.auth.sign_in_with_password({
-        "email": username, # Input field should be labeled Email/Username
-        "password": password
-    })
-    
-    # Store session data
-    st.session_state.authenticated = True
-    st.session_state.user_email = auth_response.user.email
-    st.session_state.user_id = auth_response.user.id
-    
-    # Fetch user role from a 'profiles' table you create in Supabase
-    profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
-    st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
-    
-    st.success("✅ Login successful!")
-    st.rerun()
-except Exception as e:
-    st.error(f"Login failed: {str(e)}")
-# --------------------
+                   try:
+                        auth_response = supabase.auth.sign_in_with_password({
+                            "email": username, 
+                            "password": password
+                        })
+                        
+                        # Store session data
+                        st.session_state.authenticated = True
+                        st.session_state.user_email = auth_response.user.email
+                        st.session_state.user_id = auth_response.user.id
+                        
+                        # Fetch user role from a 'profiles' table
+                        profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
+                        st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
+                        
+                        st.success("✅ Login successful!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Login failed: {str(e)}")
+                    # -----------------------------
         
-        # REGISTER TAB
+        # REGISTER TAB (This must align with 'with tab_signin')
         with tab_register:
             with st.form("register_form", clear_on_submit=True):
                 st.markdown("### Create New Account")
