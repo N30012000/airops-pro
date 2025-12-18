@@ -8927,13 +8927,47 @@ def render_login_page():
                     elif not agree:
                         st.error("Please agree to Terms of Service")
                     else:
-                        st.session_state.users_db[new_username.lower()] = {
-                            'password': new_password,
-                            'role': new_role,
-                            'email': new_email,
-                            'employee_id': employee_id
-                        }
-                        st.success(f"✅ Account created for {new_username}! Please sign in.")
+                        # --- SUPABASE REGISTRATION ---
+                        try:
+                            # 1. Create User in Supabase Auth
+                            auth_response = supabase.auth.sign_up({
+                                "email": new_email,
+                                "password": new_password,
+                                "options": {
+                                    "data": {
+                                        "username": new_username,
+                                        "role": new_role,
+                                        "employee_id": employee_id
+                                    }
+                                }
+                            })
+
+                            # 2. Check if creation was successful
+                            if auth_response.user:
+                                # 3. Insert into 'profiles' table (Optional but recommended)
+                                # This ensures the role is saved permanently in your database
+                                try:
+                                    supabase.table('profiles').insert({
+                                        "id": auth_response.user.id,
+                                        "username": new_username,
+                                        "role": new_role,
+                                        "email": new_email,
+                                        "employee_id": employee_id
+                                    }).execute()
+                                except Exception as profile_error:
+                                    # If profile creation fails, we just log it (user is still created)
+                                    print(f"Profile creation warning: {profile_error}")
+
+                                st.success(f"✅ Account created for {new_username}!")
+                                st.info("📧 Please check your email to confirm your account before logging in.")
+                            else:
+                                st.error("❌ Account creation failed. Please try again.")
+
+                        except Exception as e:
+                            st.error(f"Error creating account: {str(e)}")
+                            # Common error: User already exists
+                            if "already registered" in str(e):
+                                st.warning("This email is already in use.")
         
         # FORGOT PASSWORD TAB
         with tab_forgot:
