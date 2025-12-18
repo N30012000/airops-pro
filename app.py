@@ -4626,13 +4626,14 @@ def render_fsr_form():
                 
                 # Add to session state
                 # --- REPLACE WITH ---
-try:
-    # Ensure keys match your Supabase DB columns exactly
-    response = supabase.table('fsr_reports').insert(report_data).execute()
-    st.balloons()
-    st.success(f"✅ Flight Services Report Saved to Database! Ref: {incident_id}")
-except Exception as e:
-    st.error(f"Database Error: {e}")
+                try:
+                    # Ensure keys match your Supabase DB columns exactly
+                    # Note: Changed 'incident_id' to 'report_id' to match the FSR form variable
+                    response = supabase.table('fsr_reports').insert(report_data).execute()
+                    st.balloons()
+                    st.success(f"✅ Flight Services Report Saved to Database! Ref: {report_id}")
+                except Exception as e:
+                    st.error(f"Database Error: {e}")
 # --------------------
                 
                 # Success feedback
