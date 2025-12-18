@@ -8871,9 +8871,9 @@ def render_login_page():
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
                 
                 if submitted:
-                    users = st.session_state.users_db
-                    user_lower = username.lower().strip()
-                   try:
+                    # --- REPLACEMENT BLOCK ---
+                    try:
+                        # Authenticate with Supabase
                         auth_response = supabase.auth.sign_in_with_password({
                             "email": username, 
                             "password": password
@@ -8884,15 +8884,22 @@ def render_login_page():
                         st.session_state.user_email = auth_response.user.email
                         st.session_state.user_id = auth_response.user.id
                         
-                        # Fetch user role from a 'profiles' table
-                        profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
-                        st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
+                        # Fetch user role from 'profiles' table
+                        # Note: This query assumes you have a 'profiles' table. 
+                        # If not, it will fail. You can default to "Viewer" if needed.
+                        try:
+                            profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
+                            st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
+                        except:
+                            st.session_state.user_role = "Viewer" # Fallback role
                         
                         st.success("✅ Login successful!")
                         st.rerun()
+                        
                     except Exception as e:
                         st.error(f"Login failed: {str(e)}")
-                    # -----------------------------
+                        st.error("Check your email/password or internet connection.")
+                    # -------------------------
         
         # REGISTER TAB (This must align with 'with tab_signin')
         with tab_register:
