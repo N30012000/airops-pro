@@ -9517,6 +9517,7 @@ def route_to_page():
     
     current_page = st.session_state.get('current_page', 'Dashboard')
     
+    # --- UPDATED PAGE ROUTING ---
     page_routing = {
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
@@ -9530,7 +9531,7 @@ def route_to_page():
         'Captain Debrief': render_captain_dbr_form,
         'Report Detail': render_report_detail,
         'AI Assistant': render_ai_assistant,
-        'General Assistant': render_general_assistant,
+        'General Assistant': render_general_assistant,  # <--- Added this
         'Email Center': render_email_center,
         'Geospatial Map': render_geospatial_map,
         'IOSA Compliance': render_iosa_compliance,
@@ -9542,6 +9543,7 @@ def route_to_page():
         'NL Query': render_nl_query,
         'Settings': render_settings
     }
+    # ----------------------------
     
     # Get the render function
     render_func = page_routing.get(current_page, render_dashboard)
@@ -9551,7 +9553,7 @@ def route_to_page():
         render_func()
     except Exception as e:
         st.error(f"Error rendering {current_page}: {str(e)}")
-        st.exception(e)
+        # st.exception(e) # Uncomment to see full traceback in UI
 
 
 def main():
