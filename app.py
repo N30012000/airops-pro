@@ -8824,32 +8824,25 @@ def process_nl_query(query):
 def render_login_page():
     """Render the login page with Sign In, Register, and Forgot Password."""
     
+    # --- 1. HANDLE EMAIL VERIFICATION RETURN ---
+    # When user clicks email link, they return with a '?code=...' parameter
+    if "code" in st.query_params:
+        st.toast("✅ Email Verified Successfully! Please log in.", icon="🎉")
+        st.success("✅ Email Verified! You can now log in with your credentials.")
+
     # Initialize states
     if 'login_mode' not in st.session_state:
         st.session_state.login_mode = 'signin'
-    
-    # Demo users database
-    if 'users_db' not in st.session_state:
-        st.session_state.users_db = {
-            'admin': {'password': 'admin123', 'role': 'Administrator', 'email': 'admin@airsial.com'},
-            'safety': {'password': 'safety123', 'role': 'Safety Officer', 'email': 'safety@airsial.com'},
-            'viewer': {'password': 'viewer123', 'role': 'Viewer', 'email': 'viewer@airsial.com'},
-            'pilot': {'password': 'pilot123', 'role': 'Flight Crew', 'email': 'pilot@airsial.com'},
-            'engineer': {'password': 'engineer123', 'role': 'Maintenance', 'email': 'engineer@airsial.com'},
-            'manager': {'password': 'manager123', 'role': 'Management', 'email': 'manager@airsial.com'}
-        }
-    
+
     # Center layout
     col1, col2, col3 = st.columns([1, 2, 1])
-    
+
     with col2:
         # Logo and Header
         logo_path = get_logo_path()
         if logo_path:
-            try:
-                st.image(logo_path, width=150)
-            except:
-                st.markdown("# ✈️")
+            try: st.image(logo_path, width=150)
+            except: st.markdown("# ✈️")
         else:
             st.markdown("# ✈️")
         
@@ -8857,80 +8850,80 @@ def render_login_page():
         st.markdown("#### Safety Management System v3.0")
         st.divider()
         
-        # Mode selection tabs
+        # Tabs
         tab_signin, tab_register, tab_forgot = st.tabs(["🔐 Sign In", "📝 Register", "🔑 Forgot Password"])
         
-        # SIGN IN TAB
+        # --- SIGN IN TAB ---
         with tab_signin:
             with st.form("signin_form", clear_on_submit=False):
-                st.markdown("### Sign In to Your Account")
-                username = st.text_input("Username", placeholder="Enter username")
-                password = st.text_input("Password", type="password", placeholder="Enter password")
+                st.markdown("### Sign In")
+                username = st.text_input("Username / Email", placeholder="admin or you@airsial.com")
+                password = st.text_input("Password", type="password")
                 remember = st.checkbox("Remember me")
                 
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
                 
                 if submitted:
-                    # --- REPLACEMENT BLOCK ---
-                    try:
-                        # Authenticate with Supabase
-                        auth_response = supabase.auth.sign_in_with_password({
-                            "email": username, 
-                            "password": password
-                        })
-                        
-                        # Store session data
-                        st.session_state.authenticated = True
-                        st.session_state.user_email = auth_response.user.email
-                        st.session_state.user_id = auth_response.user.id
-                        
-                        # Fetch user role from 'profiles' table
-                        # Note: This query assumes you have a 'profiles' table. 
-                        # If not, it will fail. You can default to "Viewer" if needed.
+                    user_input = username.strip()
+                    # A. CHECK DEMO USERS (Local)
+                    if 'users_db' in st.session_state and user_input.lower() in st.session_state.users_db:
+                        # ... (Existing demo logic) ...
+                        user_data = st.session_state.users_db[user_input.lower()]
+                        if user_data['password'] == password:
+                            st.session_state.authenticated = True
+                            st.session_state.username = user_input
+                            st.session_state.user_role = user_data['role']
+                            st.success(f"✅ Login successful! (Demo: {user_data['role']})")
+                            st.rerun()
+                        else:
+                            st.error("❌ Invalid demo password")
+
+                    # B. CHECK SUPABASE (Real)
+                    else:
                         try:
-                            profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
-                            st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
-                        except:
-                            st.session_state.user_role = "Viewer" # Fallback role
-                        
-                        st.success("✅ Login successful!")
-                        st.rerun()
-                        
-                    except Exception as e:
-                        st.error(f"Login failed: {str(e)}")
-                        st.error("Check your email/password or internet connection.")
-                    # -------------------------
+                            auth_response = supabase.auth.sign_in_with_password({
+                                "email": user_input,
+                                "password": password
+                            })
+                            
+                            # Success!
+                            st.session_state.authenticated = True
+                            st.session_state.user_email = auth_response.user.email
+                            st.session_state.user_id = auth_response.user.id
+                            
+                            # Get Role
+                            try:
+                                profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
+                                st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
+                            except:
+                                st.session_state.user_role = "Viewer"
+
+                            st.success("✅ Login successful!")
+                            st.rerun()
+
+                        except Exception as e:
+                            st.error("❌ Login failed. Please check your credentials.")
+                            if "Email not confirmed" in str(e):
+                                st.warning("⚠️ You must click the link in your email to activate your account first.")
         
-        # REGISTER TAB (This must align with 'with tab_signin')
+        # --- REGISTER TAB ---
         with tab_register:
             with st.form("register_form", clear_on_submit=True):
-                st.markdown("### Create New Account")
-                new_username = st.text_input("Choose Username", placeholder="username")
-                new_email = st.text_input("Email Address", placeholder="you@airsial.com")
-                new_password = st.text_input("Create Password", type="password")
-                confirm_password = st.text_input("Confirm Password", type="password")
-                new_role = st.selectbox("Select Role", ["Viewer", "Flight Crew", "Maintenance", "Safety Officer"])
-                employee_id = st.text_input("Employee ID", placeholder="EMP-XXXX")
-                agree = st.checkbox("I agree to the Terms of Service")
+                st.markdown("### Create Account")
+                new_username = st.text_input("Username")
+                new_email = st.text_input("Email Address")
+                new_password = st.text_input("Password", type="password")
+                new_role = st.selectbox("Role", ["Viewer", "Flight Crew", "Maintenance", "Safety Officer"])
+                employee_id = st.text_input("Employee ID")
                 
                 reg_submitted = st.form_submit_button("Create Account", type="primary", use_container_width=True)
                 
                 if reg_submitted:
-                    if not all([new_username, new_email, new_password, confirm_password]):
-                        st.error("Please fill all required fields")
-                    elif new_username.lower() in st.session_state.users_db:
-                        st.error("Username already exists")
-                    elif new_password != confirm_password:
-                        st.error("Passwords don't match")
-                    elif len(new_password) < 6:
-                        st.error("Password must be at least 6 characters")
-                    elif not agree:
-                        st.error("Please agree to Terms of Service")
+                    if not new_email or not new_password:
+                        st.error("Email and Password are required.")
                     else:
-                        # --- SUPABASE REGISTRATION ---
                         try:
-                            # 1. Sign Up (Send data to Supabase)
-                            # The SQL Trigger we added will handle the 'profiles' table automatically
+                            # 1. Sign up with Supabase
                             auth_response = supabase.auth.sign_up({
                                 "email": new_email,
                                 "password": new_password,
@@ -8940,69 +8933,28 @@ def render_login_page():
                                         "role": new_role,
                                         "employee_id": employee_id
                                     },
-                                    # Ensure the link redirects to your live app, not localhost
-                                    # Replace with your actual URL if needed, or rely on the Dashboard Site URL
-                                    # "email_redirect_to": "https://your-app-url.streamlit.app" 
+                                    # Ensure this redirects to YOUR app, not localhost
+                                    # "email_redirect_to": "https://your-app.streamlit.app"
                                 }
                             })
 
+                            # 2. Feedback
                             if auth_response.user:
-                                st.success(f"✅ Account created for {new_username}!")
-                                st.info("📧 CONFIRMATION SENT: Please check your email and click the link to activate your account.")
-                                st.warning("Note: You cannot log in until you click the link in your email.")
-                            else:
-                                st.error("❌ Account creation failed. Please try again.")
-
+                                # Check if identity exists (means not a duplicate)
+                                if auth_response.user.identities and len(auth_response.user.identities) > 0:
+                                    st.success(f"✅ Account created for {new_username}!")
+                                    st.info(f"📧 WE SENT A LINK TO {new_email.upper()}")
+                                    st.markdown("### ⚠️ Action Required")
+                                    st.warning("You must go to your inbox and click the confirmation link to finish.")
+                                else:
+                                    st.warning("User already exists. Please check your email for the login link or sign in.")
+                            
                         except Exception as e:
-                            st.error(f"Error creating account: {str(e)}")
-                            if "already registered" in str(e):
-                                st.warning("This email is already in use.")
+                            st.error(f"Error: {e}")
 
-                                st.success(f"✅ Account created for {new_username}!")
-                                st.info("📧 Please check your email to confirm your account before logging in.")
-                            else:
-                                st.error("❌ Account creation failed. Please try again.")
-
-                        except Exception as e:
-                            st.error(f"Error creating account: {str(e)}")
-                            # Common error: User already exists
-                            if "already registered" in str(e):
-                                st.warning("This email is already in use.")
-        
-        # FORGOT PASSWORD TAB
+        # --- FORGOT PASSWORD TAB ---
         with tab_forgot:
-            with st.form("forgot_form", clear_on_submit=True):
-                st.markdown("### Reset Your Password")
-                st.markdown("Enter your username or email to receive a password reset link.")
-                reset_input = st.text_input("Username or Email", placeholder="Enter username or email")
-                
-                forgot_submitted = st.form_submit_button("Send Reset Link", type="primary", use_container_width=True)
-                
-                if forgot_submitted and reset_input:
-                    # Check if user exists
-                    found = False
-                    for uname, udata in st.session_state.users_db.items():
-                        if uname == reset_input.lower() or udata.get('email', '').lower() == reset_input.lower():
-                            found = True
-                            break
-                    
-                    if found:
-                        st.success("✅ Password reset link sent to your email!")
-                        st.info("📧 Demo: Your temporary password is 'reset123'")
-                    else:
-                        st.error("No account found with that username or email")
-        
-        # Demo credentials expander
-        st.divider()
-        with st.expander("📋 Demo Credentials"):
-            st.markdown("""
-            | Username | Password | Role |
-            |----------|----------|------|
-            | admin | admin123 | Administrator |
-            | safety | safety123 | Safety Officer |
-            | pilot | pilot123 | Flight Crew |
-            | viewer | viewer123 | Viewer |
-            """)
+             st.info("Please contact IT support to reset your password.")
 
 
 def authenticate_user(username, password):
