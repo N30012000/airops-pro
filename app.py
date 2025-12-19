@@ -9046,13 +9046,10 @@ def render_sidebar():
     with st.sidebar:
         # Logo and header
         st.markdown('<div style="text-align: center; padding: 20px 0;">', unsafe_allow_html=True)
-        
-        # Display the logo image
-        # Ensure 'logo.png' is in the same folder as app.py
-        try:
-            st.image("logo.png", width=150) 
-        except:
-            st.warning("logo.png not found")
+        logo_path = get_logo_path()
+        if logo_path:
+            try: st.image(logo_path, width=150) 
+            except: st.warning("logo.png not found")
             
         st.markdown("""
             <h2 style="color: #1e3c72; margin: 5px 0;">AIR SIAL</h2>
@@ -9079,21 +9076,9 @@ def render_sidebar():
         
         # Define menu structure
         menu_items = {
-            "📊 Dashboard": {
-                "page": "Dashboard",
-                "icon": "📊",
-                "roles": ["all"]
-            },
-            "📋 View Reports": {
-                "page": "View Reports",
-                "icon": "📋",
-                "roles": ["all"]
-            },
-            "⚡ Action Tracker": {
-                "page": "Action Tracker",
-                "icon": "⚡",
-                "roles": ["all"]
-            },
+            "📊 Dashboard": {"page": "Dashboard", "roles": ["all"]},
+            "📋 View Reports": {"page": "View Reports", "roles": ["all"]},
+            "⚡ Action Tracker": {"page": "Action Tracker", "roles": ["all"]},
             "➕ Submit Reports": {
                 "submenu": {
                     "🦅 Bird Strike": "Bird Strike Report",
@@ -9106,70 +9091,23 @@ def render_sidebar():
                 },
                 "roles": ["Administrator", "Safety Officer", "Flight Crew", "Maintenance"]
             },
-            "🤖 AI Assistant": {
-                "page": "AI Assistant",
-                "icon": "🤖",
-                "roles": ["all"]
-            },
-            "🧠 General Assistant": {
-                "page": "General Assistant",
-                "icon": "🧠",
-                "roles": ["all"]
-            },
-            "📧 Email Center": {
-                "page": "Email Center",
-                "icon": "📧",
-                "roles": ["Administrator", "Safety Officer", "Management"]
-            },
-            "🗺️ Geospatial Map": {
-                "page": "Geospatial Map",
-                "icon": "🗺️",
-                "roles": ["all"]
-            },
-            "✈️ IOSA Compliance": {
-                "page": "IOSA Compliance",
-                "icon": "✈️",
-                "roles": ["Administrator", "Safety Officer", "Management"]
-            },
-            "🛬 Ramp Inspections": {
-                "page": "Ramp Inspections",
-                "icon": "🛬",
-                "roles": ["Administrator", "Safety Officer"]
-            },
-            "🔍 Audit Findings": {
-                "page": "Audit Findings",
-                "icon": "🔍",
-                "roles": ["Administrator", "Safety Officer", "Management"]
-            },
-            "🔄 Management of Change": {
-                "page": "MoC Workflow",
-                "icon": "🔄",
-                "roles": ["Administrator", "Safety Officer", "Management"]
-            },
-            "🔮 Predictive Monitor": {
-                "page": "Predictive Monitor",
-                "icon": "🔮",
-                "roles": ["Administrator", "Safety Officer"]
-            },
-            "💾 Data Management": {
-                "page": "Data Management",
-                "icon": "💾",
-                "roles": ["Administrator"]
-            },
-            "🔍 NL Query": {
-                "page": "NL Query",
-                "icon": "🔍",
-                "roles": ["all"]
-            },
-            "⚙️ Settings": {
-                "page": "Settings",
-                "icon": "⚙️",
-                "roles": ["Administrator", "Safety Officer"]
-            }
+            "🤖 AI Assistant": {"page": "AI Assistant", "roles": ["all"]},
+            "🧠 General Assistant": {"page": "General Assistant", "roles": ["all"]}, # <--- Added
+            "📧 Email Center": {"page": "Email Center", "roles": ["Administrator", "Safety Officer"]},
+            "🗺️ Geospatial Map": {"page": "Geospatial Map", "roles": ["all"]},
+            "✈️ IOSA Compliance": {"page": "IOSA Compliance", "roles": ["Administrator", "Safety Officer"]},
+            "🛬 Ramp Inspections": {"page": "Ramp Inspections", "roles": ["Administrator", "Safety Officer"]},
+            "🔍 Audit Findings": {"page": "Audit Findings", "roles": ["Administrator", "Safety Officer"]},
+            "🔄 MoC Workflow": {"page": "MoC Workflow", "roles": ["Administrator", "Safety Officer"]},
+            "🔮 Predictive Monitor": {"page": "Predictive Monitor", "roles": ["Administrator"]},
+            "💾 Data Management": {"page": "Data Management", "roles": ["Administrator"]},
+            "🔍 NL Query": {"page": "NL Query", "roles": ["all"]},
+            "⚙️ Settings": {"page": "Settings", "roles": ["Administrator"]}
         }
         
         user_role = st.session_state.get('user_role', 'Viewer')
         
+        # Render Buttons
         for menu_label, menu_config in menu_items.items():
             # Check role access
             allowed_roles = menu_config.get('roles', ['all'])
@@ -9187,6 +9125,71 @@ def render_sidebar():
                     st.session_state['current_page'] = menu_config['page']
                     st.rerun()
         
+        st.markdown("---")
+        
+        # Logout button
+        if st.button("🚪 Logout", use_container_width=True):
+            logout_user()
+
+def route_to_page():
+    """Route to the appropriate page based on current_page state."""
+    
+    current_page = st.session_state.get('current_page', 'Dashboard')
+    
+    # Page Routing Dictionary
+    page_routing = {
+        'Dashboard': render_dashboard,
+        'View Reports': render_view_reports,
+        'Action Tracker': render_action_tracker,
+        'Bird Strike Report': render_bird_strike_form,
+        'Laser Strike Report': render_laser_strike_form,
+        'TCAS Report': render_tcas_report_form,
+        'Aircraft Incident Report': render_incident_form,
+        'Hazard Report': render_hazard_form,
+        'FSR Report': render_fsr_form,
+        'Captain Debrief': render_captain_dbr_form,
+        'Report Detail': render_report_detail,
+        'AI Assistant': render_ai_assistant,
+        'General Assistant': render_general_assistant, # <--- Must match key in sidebar
+        'Email Center': render_email_center,
+        'Geospatial Map': render_geospatial_map,
+        'IOSA Compliance': render_iosa_compliance,
+        'Ramp Inspections': render_ramp_inspection,
+        'Audit Findings': render_audit_findings,
+        'MoC Workflow': render_moc_workflow,
+        'Predictive Monitor': render_predictive_monitor,
+        'Data Management': render_data_management,
+        'NL Query': render_nl_query,
+        'Settings': render_settings
+    }
+    
+    # Get the render function, default to Dashboard if not found
+    render_func = page_routing.get(current_page, render_dashboard)
+    
+    try:
+        render_func()
+    except Exception as e:
+        st.error(f"Error rendering {current_page}: {str(e)}")
+
+def main():
+    """Main application entry point."""
+    st.set_page_config(page_title="Air Sial SMS v3.0", page_icon="✈️", layout="wide")
+    
+    try:
+        initialize_session_state()
+        apply_custom_css()
+        
+        if not st.session_state.get('authenticated', False):
+            render_login_page()
+            return
+        
+        render_sidebar()
+        render_header()
+        route_to_page()
+        render_footer()
+        
+    except Exception as e:
+        st.error(f"Application Error: {str(e)}")
         st.markdown("---")
         
         # Quick stats
