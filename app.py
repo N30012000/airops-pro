@@ -6549,7 +6549,8 @@ def render_general_assistant():
         api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
         if api_key:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-pro')
+            # --- FIX: CHANGED MODEL NAME TO CURRENT VERSION ---
+            model = genai.GenerativeModel('gemini-1.5-flash') 
         else:
             st.error("❌ API Key not found. Please check your .env or secrets file.")
             return
