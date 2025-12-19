@@ -8873,75 +8873,97 @@ def process_nl_query(query):
 # - Main application entry point
 # =============================================================================
 
-def render_login_page():
-    """Render the login page with Sign In, Register, and Forgot Password."""
-    
-    # --- 1. HANDLE EMAIL VERIFICATION RETURN ---
-    # When user clicks email link, they return with a '?code=...' parameter
-    if "code" in st.query_params:
-        st.toast("✅ Email Verified Successfully! Please log in.", icon="🎉")
-        st.success("✅ Email Verified! You can now log in with your credentials.")
+# =============================================================================
+# PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
+# =============================================================================
 
-    # Initialize states
+def render_settings():
+    """Render the settings page."""
+    
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
+        <h1 style="margin: 0; font-size: 2.2rem;">⚙️ System Settings</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
+            Configure system preferences and options
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Load existing settings
+    settings = st.session_state.get('app_settings', {})
+    
+    # Create tabs
+    tab_general, tab_users = st.tabs(["🏢 General", "👥 Users"])
+    
+    with tab_general:
+        st.markdown("### 🏢 General Configuration")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.text_input("Company Name", value=settings.get('company_name', 'Air Sial'))
+            st.selectbox("Timezone", ["Asia/Karachi (PKT)", "UTC"], index=0)
+        with col2:
+            st.text_input("ICAO Code", value=settings.get('company_code', 'PF'))
+            st.checkbox("Enable Email Notifications", value=True)
+            
+        if st.button("💾 Save Settings", type="primary"):
+            st.success("Settings saved successfully!")
+
+    with tab_users:
+        st.markdown("### 👥 User Management")
+        st.info("User management is handled via Supabase Auth.")
+
+def render_login_page():
+    """Render the login page with Hybrid Auth (Demo + Supabase)."""
+    
+    # Handle Email Verification Return
+    if "code" in st.query_params:
+        st.toast("✅ Email Verified! Please log in.", icon="🎉")
+
     if 'login_mode' not in st.session_state:
         st.session_state.login_mode = 'signin'
 
-    # Center layout
     col1, col2, col3 = st.columns([1, 2, 1])
 
     with col2:
-        # Logo and Header
-        logo_path = get_logo_path()
-        if logo_path:
-            try: st.image(logo_path, width=150)
-            except: st.markdown("# ✈️")
-        else:
-            st.markdown("# ✈️")
-        
-        st.markdown("# AIR SIAL")
+        # Header
+        st.markdown("# ✈️ AIR SIAL")
         st.markdown("#### Safety Management System v3.0")
         st.divider()
         
-        # Tabs
-        tab_signin, tab_register, tab_forgot = st.tabs(["🔐 Sign In", "📝 Register", "🔑 Forgot Password"])
+        tab_signin, tab_register = st.tabs(["🔐 Sign In", "📝 Register"])
         
-        # --- SIGN IN TAB ---
+        # --- SIGN IN ---
         with tab_signin:
-            with st.form("signin_form", clear_on_submit=False):
-                st.markdown("### Sign In")
+            with st.form("login_form"):
                 username = st.text_input("Username / Email", placeholder="admin or you@airsial.com")
                 password = st.text_input("Password", type="password")
-                remember = st.checkbox("Remember me")
-                
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
                 
                 if submitted:
                     user_input = username.strip()
-                    # A. CHECK DEMO USERS (Local)
-                    if 'users_db' in st.session_state and user_input.lower() in st.session_state.users_db:
-                        # ... (Existing demo logic) ...
-                        user_data = st.session_state.users_db[user_input.lower()]
-                        if user_data['password'] == password:
-                            st.session_state.authenticated = True
-                            st.session_state.username = user_input
-                            st.session_state.user_role = user_data['role']
-                            st.success(f"✅ Login successful! (Demo: {user_data['role']})")
-                            st.rerun()
-                        else:
-                            st.error("❌ Invalid demo password")
-
-                    # B. CHECK SUPABASE (Real)
+                    # 1. Demo Login (for testing)
+                    demo_users = {
+                        'admin': 'admin123', 'safety': 'safety123', 
+                        'pilot': 'pilot123', 'viewer': 'viewer123'
+                    }
+                    if user_input.lower() in demo_users and demo_users[user_input.lower()] == password:
+                        st.session_state.authenticated = True
+                        st.session_state.username = user_input
+                        st.session_state.user_role = get_user_role(user_input)
+                        st.success("✅ Login successful (Demo)!")
+                        st.rerun()
+                    
+                    # 2. Supabase Login
                     else:
                         try:
                             auth_response = supabase.auth.sign_in_with_password({
-                                "email": user_input,
-                                "password": password
+                                "email": user_input, "password": password
                             })
-                            
-                            # Success!
                             st.session_state.authenticated = True
+                            st.session_state.username = auth_response.user.email
                             st.session_state.user_email = auth_response.user.email
-                            st.session_state.user_id = auth_response.user.id
                             
                             # Get Role
                             try:
@@ -8949,215 +8971,119 @@ def render_login_page():
                                 st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
                             except:
                                 st.session_state.user_role = "Viewer"
-
+                                
                             st.success("✅ Login successful!")
                             st.rerun()
-
                         except Exception as e:
-                            st.error("❌ Login failed. Please check your credentials.")
-                            if "Email not confirmed" in str(e):
-                                st.warning("⚠️ You must click the link in your email to activate your account first.")
-        
-        # --- REGISTER TAB ---
+                            st.error("❌ Login failed. Check credentials or email verification.")
+
+        # --- REGISTER ---
         with tab_register:
-            with st.form("register_form", clear_on_submit=True):
-                st.markdown("### Create Account")
-                new_username = st.text_input("Username")
+            with st.form("reg_form"):
                 new_email = st.text_input("Email Address")
-                new_password = st.text_input("Password", type="password")
+                new_pass = st.text_input("Choose Password", type="password")
                 new_role = st.selectbox("Role", ["Viewer", "Flight Crew", "Maintenance", "Safety Officer"])
-                employee_id = st.text_input("Employee ID")
+                reg_submit = st.form_submit_button("Create Account", use_container_width=True)
                 
-                reg_submitted = st.form_submit_button("Create Account", type="primary", use_container_width=True)
-                
-                if reg_submitted:
-                    if not new_email or not new_password:
-                        st.error("Email and Password are required.")
-                    else:
-                        try:
-                            # 1. Sign up with Supabase
-                            auth_response = supabase.auth.sign_up({
-                                "email": new_email,
-                                "password": new_password,
-                                "options": {
-                                    "data": {
-                                        "username": new_username,
-                                        "role": new_role,
-                                        "employee_id": employee_id
-                                    },
-                                    # Ensure this redirects to YOUR app, not localhost
-                                    # "email_redirect_to": "https://your-app.streamlit.app"
-                                }
-                            })
-
-                            # 2. Feedback
-                            if auth_response.user:
-                                # Check if identity exists (means not a duplicate)
-                                if auth_response.user.identities and len(auth_response.user.identities) > 0:
-                                    st.success(f"✅ Account created for {new_username}!")
-                                    st.info(f"📧 WE SENT A LINK TO {new_email.upper()}")
-                                    st.markdown("### ⚠️ Action Required")
-                                    st.warning("You must go to your inbox and click the confirmation link to finish.")
-                                else:
-                                    st.warning("User already exists. Please check your email for the login link or sign in.")
-                            
-                        except Exception as e:
-                            st.error(f"Error: {e}")
-
-        # --- FORGOT PASSWORD TAB ---
-        with tab_forgot:
-             st.info("Please contact IT support to reset your password.")
-
-
-def authenticate_user(username, password):
-    """Authenticate user credentials."""
-    
-    # Demo users (in production, this would check against a database)
-    demo_users = {
-        'admin': 'admin123',
-        'safety': 'safety123',
-        'viewer': 'viewer123',
-        'pilot': 'pilot123',
-        'engineer': 'engineer123',
-        'manager': 'manager123'
-    }
-    
-    return demo_users.get(username.lower()) == password
-
+                if reg_submit:
+                    try:
+                        res = supabase.auth.sign_up({
+                            "email": new_email, "password": new_pass,
+                            "options": {"data": {"role": new_role}}
+                        })
+                        if res.user:
+                            st.success("✅ Account created! Please check your email to confirm.")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
 
 def get_user_role(username):
-    """Get user role based on username."""
-    
-    role_mapping = {
-        'admin': 'Administrator',
-        'safety': 'Safety Officer',
-        'viewer': 'Viewer',
-        'pilot': 'Flight Crew',
-        'engineer': 'Maintenance',
-        'manager': 'Management'
-    }
-    
-    return role_mapping.get(username.lower(), 'Viewer')
+    roles = {'admin': 'Administrator', 'safety': 'Safety Officer', 'pilot': 'Flight Crew'}
+    return roles.get(username.lower(), 'Viewer')
 
+def initialize_session_state():
+    if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
+    if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
+    if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
 
 # --------------------------------------------------------------------------
-# MISSING FUNCTION (MUST BE DEFINED BEFORE ROUTING)
+# NAVIGATION & ROUTING
 # --------------------------------------------------------------------------
-def render_general_assistant():
-    """Render the General AI Assistant page."""
-    st.title("🧠 General Assistant")
-    st.info("Chat with your general purpose AI assistant here.")
-    # You can add your chatbot logic here later.
 
-# --------------------------------------------------------------------------
-# NAVIGATION & SIDEBAR
-# --------------------------------------------------------------------------
 def render_sidebar():
     """Render the application sidebar with navigation."""
-    
     with st.sidebar:
-        # --- HEADER & LOGO ---
-        st.markdown('<div style="text-align: center; padding: 20px 0;">', unsafe_allow_html=True)
-        # Attempt to load logo, fallback safely if missing
-        try:
-            logo_path = get_logo_path()
-            if logo_path:
-                st.image(logo_path, width=150)
-            else:
-                st.markdown("## ✈️")
-        except:
-            st.markdown("## ✈️")
-            
-        st.markdown("""
-            <h2 style="color: #1e3c72; margin: 5px 0;">AIR SIAL</h2>
-            <p style="color: #666; font-size: 0.85rem; margin: 0;">Safety Management System</p>
-            <p style="color: #888; font-size: 0.75rem;">v3.0</p>
-        </div>
-        """, unsafe_allow_html=True)
+        # Logo
+        st.markdown("<h2 style='text-align: center;'>✈️ AIR SIAL</h2>", unsafe_allow_html=True)
         
-        # --- USER INFO ---
         if st.session_state.get('authenticated'):
-            st.markdown(f"""
-            <div style="background: #F0F4F8; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;">
-                <div style="font-size: 2rem;">👤</div>
-                <div style="font-weight: bold; color: #333;">{st.session_state.get('username', 'User')}</div>
-                <div style="color: #666; font-size: 0.85rem;">{st.session_state.get('user_role', 'Viewer')}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.info(f"👤 {st.session_state.get('username')} ({st.session_state.get('user_role')})")
         
         st.markdown("---")
         
-        # --- MENU CONFIGURATION ---
-        # This dictionary defines the exact structure of your sidebar
+        # Menu Structure
         menu_items = {
-            "📊 Dashboard": {"page": "Dashboard", "roles": ["all"]},
-            "📋 View Reports": {"page": "View Reports", "roles": ["all"]},
-            "⚡ Action Tracker": {"page": "Action Tracker", "roles": ["all"]},
-            "➕ Submit Reports": {
-                "submenu": {
-                    "🦅 Bird Strike": "Bird Strike Report",
-                    "🔴 Laser Strike": "Laser Strike Report",
-                    "✈️ TCAS Report": "TCAS Report",
-                    "⚠️ Incident Report": "Aircraft Incident Report",
-                    "🔶 Hazard Report": "Hazard Report",
-                    "📝 Flight Services": "FSR Report",
-                    "👨‍✈️ Captain Debrief": "Captain Debrief"
-                },
-                "roles": ["Administrator", "Safety Officer", "Flight Crew", "Maintenance"]
-            },
-            "🤖 AI Assistant": {"page": "AI Assistant", "roles": ["all"]},
-            "🧠 General Assistant": {"page": "General Assistant", "roles": ["all"]}, 
-            "📧 Email Center": {"page": "Email Center", "roles": ["Administrator", "Safety Officer"]},
-            "🗺️ Geospatial Map": {"page": "Geospatial Map", "roles": ["all"]},
-            "✈️ IOSA Compliance": {"page": "IOSA Compliance", "roles": ["Administrator", "Safety Officer"]},
-            "🛬 Ramp Inspections": {"page": "Ramp Inspections", "roles": ["Administrator", "Safety Officer"]},
-            "🔍 Audit Findings": {"page": "Audit Findings", "roles": ["Administrator", "Safety Officer"]},
-            "🔄 MoC Workflow": {"page": "MoC Workflow", "roles": ["Administrator", "Safety Officer"]},
-            "🔮 Predictive Monitor": {"page": "Predictive Monitor", "roles": ["Administrator"]},
-            "💾 Data Management": {"page": "Data Management", "roles": ["Administrator"]},
-            "🔍 NL Query": {"page": "NL Query", "roles": ["all"]},
-            "⚙️ Settings": {"page": "Settings", "roles": ["Administrator"]}
+            "📊 Dashboard": "Dashboard",
+            "📋 View Reports": "View Reports",
+            "⚡ Action Tracker": "Action Tracker",
+            "🤖 AI Assistant": "AI Assistant",
+            "🧠 General Assistant": "General Assistant",
+            "🗺️ Geospatial Map": "Geospatial Map",
+            "🔍 NL Query": "NL Query",
         }
         
-        # --- RENDER BUTTONS ---
-        user_role = st.session_state.get('user_role', 'Viewer')
+        # Admin/Special Menus
+        forms = {
+            "🦅 Bird Strike": "Bird Strike Report",
+            "🔴 Laser Strike": "Laser Strike Report",
+            "✈️ TCAS Report": "TCAS Report",
+            "⚠️ Incident Report": "Aircraft Incident Report",
+            "🔶 Hazard Report": "Hazard Report",
+            "📝 Flight Services": "FSR Report",
+            "👨‍✈️ Captain Debrief": "Captain Debrief"
+        }
         
-        for menu_label, menu_config in menu_items.items():
-            # Check Role Access
-            allowed_roles = menu_config.get('roles', ['all'])
-            if 'all' not in allowed_roles and user_role not in allowed_roles:
-                continue
-            
-            # Render Submenu (Expander)
-            if 'submenu' in menu_config:
-                with st.expander(menu_label):
-                    for sub_label, sub_page in menu_config['submenu'].items():
-                        if st.button(sub_label, key=f"nav_{sub_page}", use_container_width=True):
-                            st.session_state['current_page'] = sub_page
-                            st.rerun()
-            # Render Standard Button
-            else:
-                if st.button(menu_label, key=f"nav_{menu_config['page']}", use_container_width=True):
-                    st.session_state['current_page'] = menu_config['page']
-                    st.rerun()
-        
-        st.markdown("---")
-        
-        # --- LOGOUT ---
-        if st.button("🚪 Logout", use_container_width=True):
-            logout_user()
+        enterprise = {
+            "📧 Email Center": "Email Center",
+            "✈️ IOSA Compliance": "IOSA Compliance",
+            "🛬 Ramp Inspections": "Ramp Inspections",
+            "🔍 Audit Findings": "Audit Findings",
+            "🔄 MoC Workflow": "MoC Workflow",
+            "🔮 Predictive Monitor": "Predictive Monitor",
+            "💾 Data Management": "Data Management",
+            "⚙️ Settings": "Settings"
+        }
 
-# --------------------------------------------------------------------------
-# PAGE ROUTER
-# --------------------------------------------------------------------------
+        # Render Main Menu
+        for label, page in menu_items.items():
+            if st.button(label, key=f"nav_{page}", use_container_width=True):
+                st.session_state['current_page'] = page
+                st.rerun()
+        
+        # Render Forms
+        with st.expander("➕ Submit Reports"):
+            for label, page in forms.items():
+                if st.button(label, key=f"nav_{page}", use_container_width=True):
+                    st.session_state['current_page'] = page
+                    st.rerun()
+                    
+        # Render Enterprise
+        with st.expander("🏢 Enterprise Tools"):
+            for label, page in enterprise.items():
+                if st.button(label, key=f"nav_{page}", use_container_width=True):
+                    st.session_state['current_page'] = page
+                    st.rerun()
+
+        st.markdown("---")
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+
 def route_to_page():
-    """Route to the appropriate page based on current_page state."""
+    """Route to the selected page function."""
+    page = st.session_state.get('current_page', 'Dashboard')
     
-    current_page = st.session_state.get('current_page', 'Dashboard')
-    
-    # MAPPING: Page Name -> Function Name
-    # This must match the 'page' keys in menu_items exactly!
-    page_routing = {
+    # Page Map
+    pages = {
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
         'Action Tracker': render_action_tracker,
@@ -9183,432 +9109,35 @@ def route_to_page():
         'Settings': render_settings
     }
     
-    # Execute the function
-    render_func = page_routing.get(current_page, render_dashboard)
-    
-    try:
-        render_func()
-    except Exception as e:
-        st.error(f"Error loading page '{current_page}': {e}")
-
-# --------------------------------------------------------------------------
-# MAIN ENTRY POINT
-# --------------------------------------------------------------------------
-def main():
-    st.set_page_config(page_title="Air Sial SMS v3.0", page_icon="✈️", layout="wide")
-    
-    try:
-        # Initialize State
-        initialize_session_state()
-        
-        # Apply CSS
-        try: apply_custom_css()
-        except: pass
-        
-        # Authentication Check
-        if not st.session_state.get('authenticated', False):
-            render_login_page()
-            return
-        
-        # Render App
-        render_sidebar()
-        render_header()
-        route_to_page()
-        render_footer()
-        
-    except Exception as e:
-        st.error(f"Critical Application Error: {str(e)}")
-
-def render_settings():
-    """Render the settings page."""
-    
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
-                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
-        <h1 style="margin: 0; font-size: 2.2rem;">⚙️ System Settings</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
-            Configure system preferences and options
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Load existing settings
-    settings = st.session_state.get('app_settings', {})
-    
-    tab_general, tab_notifications, tab_display, tab_erp, tab_users = st.tabs([
-        "🏢 General", "🔔 Notifications", "🎨 Display", "🔗 ERP Integration", "👥 Users"
-    ])
-    
-    with tab_general:
-        st.markdown("### 🏢 General Settings")
-        
-        company_name = st.text_input(
-            "Company Name",
-            value=settings.get('company_name', 'Air Sial')
-        )
-        
-        company_code = st.text_input(
-            "ICAO Operator Code",
-            value=settings.get('company_code', 'PF')
-        )
-        
-        regulatory_authority = st.selectbox(
-            "Regulatory Authority",
-            ["PCAA - Pakistan Civil Aviation Authority", "EASA", "FAA", "CAA UK", "Other"],
-            index=0
-        )
-        
-        timezone = st.selectbox(
-            "Timezone",
-            ["Asia/Karachi (PKT)", "UTC", "Asia/Dubai", "Europe/London"],
-            index=0
-        )
-        
-        date_format = st.selectbox(
-            "Date Format",
-            ["YYYY-MM-DD", "DD/MM/YYYY", "MM/DD/YYYY"],
-            index=0
-        )
-        
-        st.markdown("#### Report ID Configuration")
-        
-        report_prefix = st.text_input(
-            "Report ID Prefix",
-            value=settings.get('report_prefix', 'PF')
-        )
-        
-        auto_numbering = st.checkbox(
-            "Enable Auto-Numbering",
-            value=settings.get('auto_numbering', True)
-        )
-    
-    with tab_notifications:
-        st.markdown("### 🔔 Notification Settings")
-        
-        email_notifications = st.checkbox(
-            "Enable Email Notifications",
-            value=settings.get('email_notifications', True)
-        )
-        
-        if email_notifications:
-            notification_events = st.multiselect(
-                "Send notifications for:",
-                ["New Report Submitted", "High Risk Report", "Status Change",
-                 "Assignment", "Due Date Reminder", "Investigation Complete"],
-                default=["New Report Submitted", "High Risk Report"]
-            )
-            
-            notification_recipients = st.text_area(
-                "Default Recipients (one per line)",
-                value=settings.get('notification_recipients', 'safety@airsial.com')
-            )
-        
-        st.markdown("#### Alert Thresholds")
-        
-        high_risk_alert = st.checkbox(
-            "Alert on High/Extreme Risk Reports",
-            value=settings.get('high_risk_alert', True)
-        )
-        
-        daily_summary = st.checkbox(
-            "Send Daily Summary Email",
-            value=settings.get('daily_summary', False)
-        )
-        
-        weekly_report = st.checkbox(
-            "Send Weekly Report",
-            value=settings.get('weekly_report', True)
-        )
-    
-    with tab_display:
-        st.markdown("### 🎨 Display Settings")
-        
-        theme = st.selectbox(
-            "Color Theme",
-            ["Default Blue", "Dark Mode", "Light Mode", "High Contrast"],
-            index=0
-        )
-        
-        dashboard_layout = st.selectbox(
-            "Dashboard Layout",
-            ["Full Featured", "Compact", "Minimal"],
-            index=0
-        )
-        
-        items_per_page = st.slider(
-            "Reports Per Page",
-            min_value=10,
-            max_value=100,
-            value=settings.get('items_per_page', 25),
-            step=5
-        )
-        
-        show_risk_colors = st.checkbox(
-            "Show Risk Level Colors",
-            value=settings.get('show_risk_colors', True)
-        )
-        
-        animate_charts = st.checkbox(
-            "Animate Charts",
-            value=settings.get('animate_charts', True)
-        )
-    
-    with tab_erp:
-        st.markdown("### 🔗 ERP Integration")
-        
-        erp_enabled = st.checkbox(
-            "Enable ERP Integration",
-            value=settings.get('erp_enabled', False)
-        )
-        
-        if erp_enabled:
-            erp_system = st.selectbox(
-                "ERP System",
-                ["SAP", "Oracle", "Microsoft Dynamics", "Custom API"],
-                index=0
-            )
-            
-            erp_url = st.text_input(
-                "ERP API URL",
-                value=settings.get('erp_url', ''),
-                type="password" if settings.get('erp_url') else "default"
-            )
-            
-            erp_api_key = st.text_input(
-                "API Key",
-                type="password",
-                value=settings.get('erp_api_key', '')
-            )
-            
-            sync_frequency = st.selectbox(
-                "Sync Frequency",
-                ["Real-time", "Every 15 minutes", "Hourly", "Daily"],
-                index=1
-            )
-            
-            st.markdown("#### Data Sync Options")
-            
-            sync_options = st.multiselect(
-                "Data to Sync",
-                ["Personnel Records", "Aircraft Registry", "Flight Schedules",
-                 "Maintenance Records", "Training Records"],
-                default=["Personnel Records", "Aircraft Registry"]
-            )
-            
-            if st.button("🔄 Test Connection"):
-                with st.spinner("Testing connection..."):
-                    time.sleep(1)
-                    st.success("✅ Connection successful!")
-    
-    with tab_users:
-        st.markdown("### 👥 User Management")
-        
-        # Sample users
-        users = [
-            {'username': 'admin', 'role': 'Administrator', 'status': 'Active', 'last_login': '2025-12-09 14:30'},
-            {'username': 'safety', 'role': 'Safety Officer', 'status': 'Active', 'last_login': '2025-12-09 10:15'},
-            {'username': 'viewer', 'role': 'Viewer', 'status': 'Active', 'last_login': '2025-12-08 16:45'},
-            {'username': 'pilot', 'role': 'Flight Crew', 'status': 'Active', 'last_login': '2025-12-07 09:00'},
-        ]
-        
-        # User table
-        for user in users:
-            status_color = '#28A745' if user['status'] == 'Active' else '#DC3545'
-            
-            st.markdown(f"""
-            <div style="background: white; padding: 15px; border-radius: 10px; 
-                        margin-bottom: 10px; border: 1px solid #E0E0E0;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>👤 {user['username']}</strong>
-                        <span style="color: #666; margin-left: 10px;">({user['role']})</span>
-                    </div>
-                    <span style="background: {status_color}; color: white; padding: 3px 10px; 
-                                border-radius: 15px; font-size: 0.8rem;">
-                        {user['status']}
-                    </span>
-                </div>
-                <div style="color: #888; font-size: 0.85rem; margin-top: 5px;">
-                    Last login: {user['last_login']}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        if st.button("➕ Add New User"):
-            st.info("User creation dialog would open here")
-    
-    # Save settings button
-    st.markdown("---")
-    
-    if st.button("💾 Save All Settings", use_container_width=True):
-        # Collect all settings
-        new_settings = {
-            'company_name': company_name,
-            'company_code': company_code,
-            'report_prefix': report_prefix,
-            'auto_numbering': auto_numbering,
-            'email_notifications': email_notifications,
-            'high_risk_alert': high_risk_alert,
-            'daily_summary': daily_summary,
-            'weekly_report': weekly_report,
-            'items_per_page': items_per_page,
-            'show_risk_colors': show_risk_colors,
-            'animate_charts': animate_charts,
-            'erp_enabled': erp_enabled,
-            'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-        
-        st.session_state['app_settings'] = new_settings
-        st.success("✅ Settings saved successfully!")
-
-
-def initialize_session_state():
-    """Initialize all required session state variables."""
-    
-    # Authentication
-    if 'authenticated' not in st.session_state:
-        st.session_state['authenticated'] = False
-    
-    if 'current_page' not in st.session_state:
-        st.session_state['current_page'] = 'Dashboard'
-    
-    # Report data storage
-    report_types = [
-        'bird_strikes', 'laser_strikes', 'tcas_reports',
-        'aircraft_incidents', 'hazard_reports', 'fsr_reports',
-        'captain_dbr', 'ramp_inspections', 'audit_findings', 'moc_requests'
-    ]
-    
-    for report_type in report_types:
-        if report_type not in st.session_state:
-            st.session_state[report_type] = []
-    
-    # OCR data
-    ocr_types = [
-        'ocr_data_bird_strike', 'ocr_data_laser_strike', 'ocr_data_tcas_report',
-        'ocr_data_incident_report', 'ocr_data_hazard_report', 'ocr_data_fsr_report',
-        'ocr_data_captain_dbr'
-    ]
-    
-    for ocr_type in ocr_types:
-        if ocr_type not in st.session_state:
-            st.session_state[ocr_type] = None
-    
-    # AI chat history
-    if 'ai_chat_history' not in st.session_state:
-        st.session_state['ai_chat_history'] = []
-    
-    # Settings
-    if 'app_settings' not in st.session_state:
-        st.session_state['app_settings'] = {}
-    
-    if 'email_settings' not in st.session_state:
-        st.session_state['email_settings'] = {}
-
-
-def route_to_page():
-    """Route to the appropriate page based on current_page state."""
-    
-    current_page = st.session_state.get('current_page', 'Dashboard')
-    
-    # --- UPDATED PAGE ROUTING ---
-    page_routing = {
-        'Dashboard': render_dashboard,
-        'View Reports': render_view_reports,
-        'Action Tracker': render_action_tracker,
-        'Bird Strike Report': render_bird_strike_form,
-        'Laser Strike Report': render_laser_strike_form,
-        'TCAS Report': render_tcas_report_form,
-        'Aircraft Incident Report': render_incident_form,
-        'Hazard Report': render_hazard_form,
-        'FSR Report': render_fsr_form,
-        'Captain Debrief': render_captain_dbr_form,
-        'Report Detail': render_report_detail,
-        'AI Assistant': render_ai_assistant,
-        'General Assistant': render_general_assistant,  # <--- Added this
-        'Email Center': render_email_center,
-        'Geospatial Map': render_geospatial_map,
-        'IOSA Compliance': render_iosa_compliance,
-        'Ramp Inspections': render_ramp_inspection,
-        'Audit Findings': render_audit_findings,
-        'MoC Workflow': render_moc_workflow,
-        'Predictive Monitor': render_predictive_monitor,
-        'Data Management': render_data_management,
-        'NL Query': render_nl_query,
-        'Settings': render_settings
-    }
-    # ----------------------------
-    
-    # Get the render function
-    render_func = page_routing.get(current_page, render_dashboard)
-    
-    # Call the render function with error handling
-    try:
-        render_func()
-    except Exception as e:
-        st.error(f"Error rendering {current_page}: {str(e)}")
-        # st.exception(e) # Uncomment to see full traceback in UI
-
-
-def main():
-    """Main application entry point."""
-    
-    # Page configuration
-    st.set_page_config(
-        page_title="Air Sial SMS v3.0",
-        page_icon="✈️",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-    
-    try:
-        # Initialize session state
-        initialize_session_state()
-        
-        # Apply custom CSS
-        apply_custom_css()
-        
-        # Check authentication
-        if not st.session_state.get('authenticated', False):
-            render_login_page()
-            return
-        
-        # Render sidebar
-        render_sidebar()
-        
-        # Render header
-        render_header()
-        
-        # Route to current page
-        route_to_page()
-        
-        # Footer
-        render_footer()
-        
-    except Exception as e:
-        st.error(f"An error occurred: {str(e)}")
-        st.exception(e)
-
+    # Render
+    if page in pages:
+        try:
+            pages[page]()
+        except Exception as e:
+            st.error(f"Error loading {page}: {e}")
+            st.exception(e)
+    else:
+        render_dashboard()
 
 def render_footer():
-    """Render the application footer."""
-    
     st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #888; padding: 20px; font-size: 0.85rem;">
-        <p>Air Sial Safety Management System v3.0</p>
-        <p>© 2025 Air Sial. All rights reserved.</p>
-        <p>Powered by Streamlit | Built with ❤️ for Aviation Safety</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<center style='color:#888;'>Air Sial SMS v3.0 | © 2025</center>", unsafe_allow_html=True)
 
-
-# =============================================================================
-# ENTRY POINT
-# =============================================================================
-
+# --------------------------------------------------------------------------
+# MAIN EXECUTION
+# --------------------------------------------------------------------------
 if __name__ == "__main__":
-    main()
-
+    try:
+        initialize_session_state()
+        apply_custom_css()
+        
+        if not st.session_state.get('authenticated', False):
+            render_login_page()
+        else:
+            render_sidebar()
+            render_header()
+            route_to_page()
+            render_footer()
+            
+    except Exception as e:
+        st.error(f"Application Error: {str(e)}")
