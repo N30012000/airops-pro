@@ -737,38 +737,65 @@ def render_ocr_uploader(form_type: str) -> Optional[dict]:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # --- REPLACE WITH ---
+# ══════════════════════════════════════════════════════════════════════════════
+# WEATHER WIDGET (CORRECTED)
+# ══════════════════════════════════════════════════════════════════════════════
+
 import requests
 
 @st.cache_data(ttl=1800) # Cache for 30 mins
 def fetch_live_weather(icao_code):
-    api_key = st.secrets["OPENWEATHER_API_KEY"]
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={icao_code}&appid={api_key}&units=metric"
+    """Fetch weather data safely. Returns placeholders if API key is missing."""
+    
+    # 1. Check if API Key exists
+    if "OPENWEATHER_API_KEY" not in st.secrets:
+        return {"temp": "--", "condition": "No Key", "wind": "--", "icon": "⚠️"}
+
+    # 2. Try Fetching Data
     try:
-        data = requests.get(url).json()
-        return {
-            "temp": round(data['main']['temp']),
-            "condition": data['weather'][0]['main'],
-            "wind": round(data['wind']['speed'] * 3.6), # m/s to km/h
-            "icon": "🌤️" # Simplified for snippet, mapped to data['weather'][0]['icon']
-        }
-    except:
-        return {"temp": "--", "condition": "N/A", "wind": "--", "icon": "❓"}
+        api_key = st.secrets["OPENWEATHER_API_KEY"]
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={icao_code}&appid={api_key}&units=metric"
+        
+        response = requests.get(url, timeout=5)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "temp": round(data['main']['temp']),
+                "condition": data['weather'][0]['main'],
+                "wind": round(data['wind']['speed'] * 3.6), # Convert m/s to km/h
+                "icon": "🌤️" if data['weather'][0]['main'] == "Clear" else "☁️"
+            }
+        else:
+            return {"temp": "--", "condition": "Error", "wind": "--", "icon": "❌"}
+            
+    except Exception:
+        return {"temp": "--", "condition": "Error", "wind": "--", "icon": "❌"}
 
 def render_weather_widget():
-    # ... (Keep layout columns)
-    airports = ["OPSK", "OPKC", "OPLA"]
-    for airport in airports:
-        data = fetch_live_weather(airport)
-        # ... Render UI using 'data' variable
-# --------------------
+    """Render the weather dashboard widget."""
+    st.markdown("### 🌤️ Weather Operations")
     
-    cols = st.columns(5)
-    for col, (icao, data) in zip(cols, STATIC_WEATHER_DATA.items()):
+    # Define which airports to show
+    target_airports = ["OPSK", "OPKC", "OPLA", "OPIS", "OMDB"]
+    
+    # Create columns dynamically
+    cols = st.columns(len(target_airports))
+    
+    for col, icao in zip(cols, target_airports):
         with col:
-            st.markdown(f"""<div style="background: white; border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            # Fetch data
+            data = fetch_live_weather(icao)
+            
+            # Get City Name (Safely)
+            city_name = AIRPORTS.get(icao, {}).get("city", icao)
+            
+            # Render Card
+            st.markdown(f"""
+            <div style="background: white; border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="font-size: 2rem;">{data['icon']}</div>
                 <div style="font-size: 1.5rem; font-weight: 700; color: #1E40AF;">{data['temp']}°C</div>
-                <div style="color: #64748B; font-size: 0.85rem; font-weight: 500;">{data['city']}</div>
+                <div style="color: #64748B; font-size: 0.85rem; font-weight: 500;">{city_name}</div>
                 <div style="font-size: 0.75rem; color: #94A3B8;">💨 {data['wind']} km/h</div>
             </div>""", unsafe_allow_html=True)
 # ══════════════════════════════════════════════════════════════════════════════
