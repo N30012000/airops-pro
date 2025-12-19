@@ -8929,7 +8929,8 @@ def render_login_page():
                     else:
                         # --- SUPABASE REGISTRATION ---
                         try:
-                            # 1. Create User in Supabase Auth
+                            # 1. Sign Up (Send data to Supabase)
+                            # The SQL Trigger we added will handle the 'profiles' table automatically
                             auth_response = supabase.auth.sign_up({
                                 "email": new_email,
                                 "password": new_password,
@@ -8938,25 +8939,24 @@ def render_login_page():
                                         "username": new_username,
                                         "role": new_role,
                                         "employee_id": employee_id
-                                    }
+                                    },
+                                    # Ensure the link redirects to your live app, not localhost
+                                    # Replace with your actual URL if needed, or rely on the Dashboard Site URL
+                                    # "email_redirect_to": "https://your-app-url.streamlit.app" 
                                 }
                             })
 
-                            # 2. Check if creation was successful
                             if auth_response.user:
-                                # 3. Insert into 'profiles' table (Optional but recommended)
-                                # This ensures the role is saved permanently in your database
-                                try:
-                                    supabase.table('profiles').insert({
-                                        "id": auth_response.user.id,
-                                        "username": new_username,
-                                        "role": new_role,
-                                        "email": new_email,
-                                        "employee_id": employee_id
-                                    }).execute()
-                                except Exception as profile_error:
-                                    # If profile creation fails, we just log it (user is still created)
-                                    print(f"Profile creation warning: {profile_error}")
+                                st.success(f"✅ Account created for {new_username}!")
+                                st.info("📧 CONFIRMATION SENT: Please check your email and click the link to activate your account.")
+                                st.warning("Note: You cannot log in until you click the link in your email.")
+                            else:
+                                st.error("❌ Account creation failed. Please try again.")
+
+                        except Exception as e:
+                            st.error(f"Error creating account: {str(e)}")
+                            if "already registered" in str(e):
+                                st.warning("This email is already in use.")
 
                                 st.success(f"✅ Account created for {new_username}!")
                                 st.info("📧 Please check your email to confirm your account before logging in.")
