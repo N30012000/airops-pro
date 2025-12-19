@@ -9040,16 +9040,33 @@ def get_user_role(username):
     return role_mapping.get(username.lower(), 'Viewer')
 
 
+# --------------------------------------------------------------------------
+# MISSING FUNCTION (MUST BE DEFINED BEFORE ROUTING)
+# --------------------------------------------------------------------------
+def render_general_assistant():
+    """Render the General AI Assistant page."""
+    st.title("🧠 General Assistant")
+    st.info("Chat with your general purpose AI assistant here.")
+    # You can add your chatbot logic here later.
+
+# --------------------------------------------------------------------------
+# NAVIGATION & SIDEBAR
+# --------------------------------------------------------------------------
 def render_sidebar():
     """Render the application sidebar with navigation."""
     
     with st.sidebar:
-        # Logo and header
+        # --- HEADER & LOGO ---
         st.markdown('<div style="text-align: center; padding: 20px 0;">', unsafe_allow_html=True)
-        logo_path = get_logo_path()
-        if logo_path:
-            try: st.image(logo_path, width=150) 
-            except: st.warning("logo.png not found")
+        # Attempt to load logo, fallback safely if missing
+        try:
+            logo_path = get_logo_path()
+            if logo_path:
+                st.image(logo_path, width=150)
+            else:
+                st.markdown("## ✈️")
+        except:
+            st.markdown("## ✈️")
             
         st.markdown("""
             <h2 style="color: #1e3c72; margin: 5px 0;">AIR SIAL</h2>
@@ -9058,11 +9075,10 @@ def render_sidebar():
         </div>
         """, unsafe_allow_html=True)
         
-        # User info
+        # --- USER INFO ---
         if st.session_state.get('authenticated'):
             st.markdown(f"""
-            <div style="background: #F0F4F8; padding: 15px; border-radius: 10px; 
-                        margin: 15px 0; text-align: center;">
+            <div style="background: #F0F4F8; padding: 15px; border-radius: 10px; margin: 15px 0; text-align: center;">
                 <div style="font-size: 2rem;">👤</div>
                 <div style="font-weight: bold; color: #333;">{st.session_state.get('username', 'User')}</div>
                 <div style="color: #666; font-size: 0.85rem;">{st.session_state.get('user_role', 'Viewer')}</div>
@@ -9071,10 +9087,8 @@ def render_sidebar():
         
         st.markdown("---")
         
-        # Navigation menu
-        st.markdown("### 📍 Navigation")
-        
-        # Define menu structure
+        # --- MENU CONFIGURATION ---
+        # This dictionary defines the exact structure of your sidebar
         menu_items = {
             "📊 Dashboard": {"page": "Dashboard", "roles": ["all"]},
             "📋 View Reports": {"page": "View Reports", "roles": ["all"]},
@@ -9092,7 +9106,7 @@ def render_sidebar():
                 "roles": ["Administrator", "Safety Officer", "Flight Crew", "Maintenance"]
             },
             "🤖 AI Assistant": {"page": "AI Assistant", "roles": ["all"]},
-            "🧠 General Assistant": {"page": "General Assistant", "roles": ["all"]}, # <--- Added
+            "🧠 General Assistant": {"page": "General Assistant", "roles": ["all"]}, 
             "📧 Email Center": {"page": "Email Center", "roles": ["Administrator", "Safety Officer"]},
             "🗺️ Geospatial Map": {"page": "Geospatial Map", "roles": ["all"]},
             "✈️ IOSA Compliance": {"page": "IOSA Compliance", "roles": ["Administrator", "Safety Officer"]},
@@ -9105,21 +9119,23 @@ def render_sidebar():
             "⚙️ Settings": {"page": "Settings", "roles": ["Administrator"]}
         }
         
+        # --- RENDER BUTTONS ---
         user_role = st.session_state.get('user_role', 'Viewer')
         
-        # Render Buttons
         for menu_label, menu_config in menu_items.items():
-            # Check role access
+            # Check Role Access
             allowed_roles = menu_config.get('roles', ['all'])
             if 'all' not in allowed_roles and user_role not in allowed_roles:
                 continue
             
+            # Render Submenu (Expander)
             if 'submenu' in menu_config:
                 with st.expander(menu_label):
                     for sub_label, sub_page in menu_config['submenu'].items():
                         if st.button(sub_label, key=f"nav_{sub_page}", use_container_width=True):
                             st.session_state['current_page'] = sub_page
                             st.rerun()
+            # Render Standard Button
             else:
                 if st.button(menu_label, key=f"nav_{menu_config['page']}", use_container_width=True):
                     st.session_state['current_page'] = menu_config['page']
@@ -9127,16 +9143,20 @@ def render_sidebar():
         
         st.markdown("---")
         
-        # Logout button
+        # --- LOGOUT ---
         if st.button("🚪 Logout", use_container_width=True):
             logout_user()
 
+# --------------------------------------------------------------------------
+# PAGE ROUTER
+# --------------------------------------------------------------------------
 def route_to_page():
     """Route to the appropriate page based on current_page state."""
     
     current_page = st.session_state.get('current_page', 'Dashboard')
     
-    # Page Routing Dictionary
+    # MAPPING: Page Name -> Function Name
+    # This must match the 'page' keys in menu_items exactly!
     page_routing = {
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
@@ -9150,7 +9170,7 @@ def route_to_page():
         'Captain Debrief': render_captain_dbr_form,
         'Report Detail': render_report_detail,
         'AI Assistant': render_ai_assistant,
-        'General Assistant': render_general_assistant, # <--- Must match key in sidebar
+        'General Assistant': render_general_assistant,
         'Email Center': render_email_center,
         'Geospatial Map': render_geospatial_map,
         'IOSA Compliance': render_iosa_compliance,
@@ -9163,68 +9183,41 @@ def route_to_page():
         'Settings': render_settings
     }
     
-    # Get the render function, default to Dashboard if not found
+    # Execute the function
     render_func = page_routing.get(current_page, render_dashboard)
     
     try:
         render_func()
     except Exception as e:
-        st.error(f"Error rendering {current_page}: {str(e)}")
+        st.error(f"Error loading page '{current_page}': {e}")
 
+# --------------------------------------------------------------------------
+# MAIN ENTRY POINT
+# --------------------------------------------------------------------------
 def main():
-    """Main application entry point."""
     st.set_page_config(page_title="Air Sial SMS v3.0", page_icon="✈️", layout="wide")
     
     try:
+        # Initialize State
         initialize_session_state()
-        apply_custom_css()
         
+        # Apply CSS
+        try: apply_custom_css()
+        except: pass
+        
+        # Authentication Check
         if not st.session_state.get('authenticated', False):
             render_login_page()
             return
         
+        # Render App
         render_sidebar()
         render_header()
         route_to_page()
         render_footer()
         
     except Exception as e:
-        st.error(f"Application Error: {str(e)}")
-        st.markdown("---")
-        
-        # Quick stats
-        st.markdown("### 📈 Quick Stats")
-        total = get_total_reports()
-        high_risk = get_high_risk_count()
-        
-        st.markdown(f"""
-        <div style="background: #F0F4F8; padding: 15px; border-radius: 10px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <span>Total Reports</span>
-                <strong>{total}</strong>
-            </div>
-            <div style="display: flex; justify-content: space-between;">
-                <span>High Risk</span>
-                <strong style="color: #DC3545;">{high_risk}</strong>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # Logout button
-        if st.button("🚪 Logout", use_container_width=True):
-            logout_user()
-
-
-def logout_user():
-    """Log out the current user."""
-    
-    st.session_state['authenticated'] = False
-    st.session_state['username'] = None
-    st.session_state['user_role'] = None
-    st.rerun()
-
+        st.error(f"Critical Application Error: {str(e)}")
 
 def render_settings():
     """Render the settings page."""
