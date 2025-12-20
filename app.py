@@ -6549,7 +6549,7 @@ def render_general_assistant():
         api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
         if api_key:
             genai.configure(api_key=api_key)
-            # Use the 1.5 Flash model (Requires google-generativeai >= 0.8.3)
+            # This model requires the new library version (0.8.3+)
             model = genai.GenerativeModel('gemini-1.5-flash')
         else:
             st.error("❌ API Key not found. Please check your .env or secrets file.")
