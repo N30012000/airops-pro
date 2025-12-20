@@ -13,5 +13,4 @@ requests>=2.31.0
 apscheduler
 matplotlib
 streamlit-mic-recorder
-google-generativeai==0.8.3
-# Force rebuild 1
+google-generativeai>=0.8.3
