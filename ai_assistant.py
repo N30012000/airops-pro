@@ -2,108 +2,105 @@
 import google.generativeai as genai
 import streamlit as st
 import json
-import io
-from datetime import datetime
 
-# Configure AI (Safe Fallback)
 def get_ai_assistant():
     return SafetyAIAssistant()
 
 class SafetyAIAssistant:
     def __init__(self):
-        # Try to get key from secrets, handle missing keys gracefully
         try:
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
             if self.api_key:
                 genai.configure(api_key=self.api_key)
-                # Use the new Flash model
                 self.model = genai.GenerativeModel('gemini-1.5-flash')
+                self.active_model_name = 'gemini-1.5-flash'
             else:
                 self.model = None
         except Exception as e:
             print(f"AI Init Error: {e}")
             self.model = None
 
-    def chat(self, user_query):
-        """General Chatbot Logic"""
+    def _generate(self, prompt, parts=None):
+        """ robust generation with auto-fallback to available models """
         if not self.model:
-            return "⚠️ AI System is offline (API Key missing)."
+            return None, "⚠️ AI System is offline (API Key missing)."
+            
+        # List of models to try in order of preference
+        fallback_models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.0-pro', 'gemini-pro']
         
-        system_instruction = "You are an Aviation Safety Management System (SMS) Expert for Air Sial. Answer efficiently."
+        def attempt_gen(model_obj):
+            if parts:
+                return model_obj.generate_content(parts)
+            return model_obj.generate_content(prompt)
+
+        # 1. Try with current model
         try:
-            response = self.model.generate_content(f"{system_instruction}\n\nUser: {user_query}")
-            return response.text
+            return attempt_gen(self.model), None
         except Exception as e:
-            return f"AI Error: {str(e)}"
+            # 2. If 404 (Not Found) or 400 (Bad Request), try cycling models
+            error_str = str(e).lower()
+            if "404" in error_str or "not found" in error_str or "400" in error_str:
+                for model_name in fallback_models:
+                    if model_name == self.active_model_name: continue
+                    try:
+                        # Switch model and retry
+                        print(f"Switching AI model to: {model_name}")
+                        new_model = genai.GenerativeModel(model_name)
+                        result = attempt_gen(new_model)
+                        
+                        # If successful, save this as the new default
+                        self.model = new_model
+                        self.active_model_name = model_name
+                        return result, None
+                    except:
+                        continue
+            
+            # If all attempts fail
+            return None, f"AI Error: {str(e)}"
+
+    def chat(self, user_query):
+        response, error = self._generate(f"You are an Aviation Safety Expert. Answer briefly.\n\nUser: {user_query}")
+        if error: return error
+        return response.text
 
     def analyze_risk_from_narrative(self, narrative, report_type="General"):
-        """Analyzes text to determine Risk Level (ICAO 5x5)"""
-        if not self.model:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Offline"}
-
         prompt = f"""
         Act as a Safety Officer. Analyze this aviation safety narrative ({report_type}).
         Determine the Likelihood (1-5) and Severity (A-E) based on ICAO Annex 19.
-        
         Narrative: "{narrative}"
-        
-        Return ONLY a JSON string like this:
-        {{"likelihood": 3, "severity": "C", "risk_level": "Medium", "justification": "..."}}
+        Return ONLY a JSON string: {{"likelihood": 3, "severity": "C", "risk_level": "Medium", "justification": "..."}}
         """
+        response, error = self._generate(prompt)
+        if error or not response:
+            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "Analysis Failed"}
         try:
-            response = self.model.generate_content(prompt)
-            # Clean up response to ensure valid JSON
             clean_text = response.text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_text)
         except:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "Analysis Failed"}
+            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Parsing Error"}
 
     def transcribe_audio_narrative(self, audio_bytes):
-        """Converts Voice Recording to Text using Gemini"""
-        if not self.model:
-            return "AI Offline - Cannot transcribe."
-        
-        try:
-            # Gemini 1.5 Flash can process audio directly
-            prompt = "Transcribe this audio recording of a safety report exactly. Do not add commentary."
-            response = self.model.generate_content([prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
-            return response.text
-        except Exception as e:
-            return f"Transcription Failed: {str(e)}"
+        prompt = "Transcribe this aviation safety report audio exactly."
+        response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
+        if error: return f"Transcription Failed: {error}"
+        return response.text
 
     def generate_predictive_insights(self, reports_list):
-        """Generates dashboard insights from DB data"""
-        if not self.model or not reports_list:
-            return {"alerts": [], "trends": ["Insufficient Data"]}
-            
-        # Summarize data for AI (don't send huge payload)
-        summary = str(reports_list[:20]) # Limit to last 20 reports
-        
+        if not reports_list: return {"alerts": [], "trends": ["Insufficient Data"]}
+        summary = str(reports_list[:15]) 
         prompt = f"""
-        Analyze these recent safety reports and identify 3 key trends and 1 predictive alert.
-        Return JSON: {{ "trends": ["trend1", "trend2"], "alerts": [{{ "title": "...", "confidence": 85, "recommendation": "..." }}] }}
+        Analyze these safety reports. Identify 3 trends and 1 predictive alert.
+        Return JSON: {{ "trends": ["t1", "t2"], "alerts": [{{ "title": "...", "confidence": 85, "recommendation": "..." }}] }}
         Data: {summary}
         """
+        response, error = self._generate(prompt)
+        if error: return {"alerts": [], "trends": ["AI Error"]}
         try:
-            response = self.model.generate_content(prompt)
-            clean_text = response.text.replace("```json", "").replace("```", "").strip()
-            return json.loads(clean_text)
+            return json.loads(response.text.replace("```json", "").replace("```", "").strip())
         except:
-            return {"alerts": [], "trends": ["AI Analysis Error"]}
+            return {"alerts": [], "trends": ["Parsing Error"]}
 
 class DataGeocoder:
     @staticmethod
-    def geocode_location(location_name):
-        """Simple lookup for key airports to avoid API costs"""
-        # You can expand this list or use geopy if needed
-        locations = {
-            "sialkot": (32.5353, 74.3636), "opsk": (32.5353, 74.3636),
-            "karachi": (24.9060, 67.1600), "opkc": (24.9060, 67.1600),
-            "lahore": (31.5216, 74.4036), "opla": (31.5216, 74.4036),
-            "islamabad": (33.5490, 73.0169), "opis": (33.5490, 73.0169),
-            "dubai": (25.2532, 55.3657), "omdb": (25.2532, 55.3657),
-        }
-        for key in locations:
-            if key in location_name.lower():
-                return locations[key]
+    def geocode_location(loc):
         return None, None
