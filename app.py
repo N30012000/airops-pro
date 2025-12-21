@@ -1,6 +1,5 @@
-
-
-# Standard library imports
+# Add this with your other imports
+from ai_assistant import get_ai_assistant, DataGeocoder
 import base64
 import hashlib
 import io
@@ -3790,23 +3789,22 @@ def render_hazard_form():
             flight_phase = st.selectbox("Phase of Flight", options=["N/A"] + FLIGHT_PHASES, index=0, key="haz_phase")
         
         # --- Voice Reporting ---
-        st.markdown("🎙️ **Voice Reporting**")
-        try:
-            from streamlit_mic_recorder import mic_recorder
-            audio = mic_recorder(start_prompt="Start Recording", stop_prompt="Stop", key='recorder')
-            if audio:
-                st.info("Audio captured! (Connect Whisper API to transcribe)")
-        except ImportError:
-            st.warning("Voice recorder not installed.")
-
-        # Narrative Input
-        default_narrative = st.session_state.get('transcribed_text', ocr_data.get('description', ''))
-        hazard_description = st.text_area(
-            "Detailed Hazard Description *",
-            value=default_narrative,
-            placeholder="Describe the hazard in detail...",
-            height=150
-        )
+# --- VOICE INPUT SECTION ---
+    st.write("🎙️ **Voice Narrative**")
+    audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
+    
+    if audio_bytes:
+        ai = st.session_state.get('ai_assistant')
+        if ai:
+            with st.spinner("Transcribing..."):
+                text = ai.transcribe_audio_narrative(audio_bytes['bytes'])
+                st.info(f"Transcribed: {text}")
+                # Save to session state so it can be used in the text area
+                st.session_state['transcribed_hazard'] = text
+    # ---------------------------
+    
+    # Update your existing text_area to look like this:
+    narrative = st.text_area("Narrative", value=st.session_state.get('transcribed_hazard', ''))
 
         # --- AI Auto-Assess ---
         if st.form_submit_button("🤖 Auto-Assess Risk"):
@@ -6534,65 +6532,34 @@ def generate_report_pdf(report):
 
 def render_general_assistant():
     """Render the General AI Assistant page"""
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%); 
-                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: #1e3c72;">
-        <h1 style="margin: 0; font-size: 2.2rem;">🧠 General Assistant</h1>
-        <p style="margin: 10px 0 0 0; font-weight: 500; font-size: 1.1rem;">
-            Ask me anything: Drafts, Summaries, Tips, or just a Chat!
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("## 🧠 General Safety Assistant")
+    
+    if 'general_chat' not in st.session_state:
+        st.session_state.general_chat = []
 
-    # Configure Gemini
-    try:
-        api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
-        if api_key:
-            genai.configure(api_key=api_key)
-            # Use 1.5 Flash (Required library version >= 0.8.3)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-        else:
-            st.error("❌ API Key not found. Please check your .env or secrets file.")
-            return
-    except Exception as e:
-        st.error(f"Error configuring AI: {e}")
-        return
-
-    # Initialize chat history
-    if 'general_chat_history' not in st.session_state:
-        st.session_state.general_chat_history = []
-
-    # Display chat history
-    for message in st.session_state.general_chat_history:
-        role_icon = "👤" if message["role"] == "user" else "🧠"
-        bg_color = "#FFFFFF" if message["role"] == "user" else "#F0F2F6"
-        
-        st.markdown(f"""
-        <div style="background: {bg_color}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #E0E0E0;">
-            <strong>{role_icon} {message['role'].title()}:</strong><br>
-            {message['content']}
-        </div>
-        """, unsafe_allow_html=True)
+    # Display Chat
+    for msg in st.session_state.general_chat:
+        role = "👤 You" if msg['role'] == 'user' else "🧠 AI"
+        bg = "#F0F2F6" if msg['role'] == 'user' else "#E8F0FE"
+        st.markdown(f"**{role}:**")
+        st.markdown(f"<div style='background:{bg};padding:10px;border-radius:10px;'>{msg['content']}</div>", unsafe_allow_html=True)
 
     # Chat Input
-    with st.form("general_chat_form", clear_on_submit=True):
-        user_input = st.text_area("Your Question:", height=100, placeholder="e.g., 'Write a synopsis for a bird strike incident' or 'Tell me a joke'")
-        submitted = st.form_submit_button("🚀 Send")
-
-    if submitted and user_input:
-        # 1. Save User Message
-        st.session_state.general_chat_history.append({"role": "user", "content": user_input})
+    with st.form("chat_input"):
+        user_text = st.text_input("Ask a question...")
+        submitted = st.form_submit_button("Send")
+    
+    if submitted and user_text:
+        st.session_state.general_chat.append({'role': 'user', 'content': user_text})
         
-        # 2. Get AI Response
-        with st.spinner("Thinking..."):
-            try:
-                response = model.generate_content(user_input)
-                ai_text = response.text
-            except Exception as e:
-                ai_text = f"I encountered an error: {str(e)}"
-        
-        # 3. Save AI Message
-        st.session_state.general_chat_history.append({"role": "assistant", "content": ai_text})
+        # Call the new AI Brain
+        ai = st.session_state.get('ai_assistant')
+        if ai:
+            with st.spinner("Thinking..."):
+                response = ai.chat(user_text)
+                st.session_state.general_chat.append({'role': 'assistant', 'content': response})
+        else:
+            st.error("AI System not initialized. Check API Keys.")
         st.rerun()
         
 def render_ai_assistant():
@@ -9006,6 +8973,9 @@ def initialize_session_state():
     if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
     if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
     if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
+    # Add this inside initialize_session_state():
+    if 'ai_assistant' not in st.session_state:
+        st.session_state.ai_assistant = get_ai_assistant()
 
 # --------------------------------------------------------------------------
 # NAVIGATION & ROUTING
