@@ -9,95 +9,35 @@ def get_ai_assistant():
 class SafetyAIAssistant:
     def __init__(self):
         try:
+            # 1. Load API Key
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
+            
             if self.api_key:
                 genai.configure(api_key=self.api_key)
-                # We don't hardcode the model here anymore.
-                # We find the best available one in _get_model()
-                self.model = None
-                self.active_model_name = None
+                
+                # 2. FORCE 'gemini-pro'. This model is stable and works everywhere.
+                self.model = genai.GenerativeModel('gemini-pro')
             else:
                 self.model = None
+                print("⚠️ No API Key found.")
         except Exception as e:
             print(f"AI Init Error: {e}")
             self.model = None
 
-    def _get_model(self, require_audio=False):
-        """
-        Finds a working model. 
-        If audio is required, it prioritizes 1.5 Flash/Pro.
-        """
-        # If we already have a working model and it supports what we need, return it
-        if self.model:
-            # If we need audio, make sure we aren't using legacy Pro (1.0)
-            if require_audio and 'gemini-pro' in self.active_model_name and '1.5' not in self.active_model_name:
-                pass # We need to switch to a 1.5 model
-            else:
-                return self.model
-
-        # Priority list for Audio/Multimodal
-        # We try specific versions (-001) first as they are more stable than aliases
-        multimodal_candidates = [
-            'gemini-1.5-flash-001', 
-            'gemini-1.5-flash',
-            'gemini-1.5-flash-latest',
-            'gemini-1.5-pro-001',
-            'gemini-1.5-pro'
-        ]
+    def _generate(self, prompt):
+        """Simple, text-only generation."""
+        if not self.model:
+            return "⚠️ AI Offline (Check API Key)"
         
-        # Fallback for text-only
-        text_candidates = ['gemini-pro']
-
-        candidates = multimodal_candidates if require_audio else (multimodal_candidates + text_candidates)
-
-        for name in candidates:
-            try:
-                # Attempt to initialize and ping the model
-                model = genai.GenerativeModel(name)
-                model.generate_content("Test")
-                
-                # If successful, save and return
-                self.model = model
-                self.active_model_name = name
-                print(f"✅ Connected to AI Model: {name}")
-                return model
-            except Exception as e:
-                # print(f"Failed to connect to {name}: {e}") # Debug only
-                continue
-        
-        return None
-
-    def _generate(self, prompt, parts=None):
-        """Generates content, automatically finding a model that works."""
-        # Check if this request needs audio/image support
-        need_multimodal = parts is not None
-        
-        model = self._get_model(require_audio=need_multimodal)
-        
-        if not model:
-            return None, "⚠️ AI Service Unavailable. No compatible model found for this request."
-
         try:
-            if parts:
-                return model.generate_content(parts), None
-            return model.generate_content(prompt), None
+            # gemini-pro does NOT support 'parts' parameter for images/audio well in this context
+            response = self.model.generate_content(prompt)
+            return response.text
         except Exception as e:
-            # If it fails, try to re-acquire a model one last time
-            self.model = None 
-            model = self._get_model(require_audio=need_multimodal)
-            if model:
-                try:
-                    if parts:
-                        return model.generate_content(parts), None
-                    return model.generate_content(prompt), None
-                except Exception as e2:
-                    return None, f"AI Error: {str(e2)}"
-            return None, f"AI Error: {str(e)}"
+            return f"AI Error: {str(e)}"
 
     def chat(self, user_query):
-        response, error = self._generate(f"You are an Aviation Safety Expert. Answer briefly.\n\nUser: {user_query}")
-        if error: return error
-        return response.text
+        return self._generate(f"You are an Aviation Safety Expert. Answer briefly.\n\nUser: {user_query}")
 
     def analyze_risk_from_narrative(self, narrative, report_type="General"):
         prompt = f"""
@@ -106,34 +46,37 @@ class SafetyAIAssistant:
         Narrative: "{narrative}"
         Return ONLY a JSON string: {{"likelihood": 3, "severity": "C", "risk_level": "Medium", "justification": "..."}}
         """
-        response, error = self._generate(prompt)
-        if error or not response:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "Analysis Failed"}
+        response_text = self._generate(prompt)
+        
+        if "AI Error" in response_text or "Offline" in response_text:
+             return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Offline"}
+
         try:
-            clean_text = response.text.replace("```json", "").replace("```", "").strip()
+            # Clean JSON
+            clean_text = response_text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_text)
         except:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Parsing Error"}
+            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "Parsing Error"}
 
     def transcribe_audio_narrative(self, audio_bytes):
-        prompt = "Transcribe this aviation safety report audio exactly."
-        # We explicitly pass the audio parts here
-        response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
-        if error: return f"Transcription Failed: {error}"
-        return response.text
+        # 3. DISABLE AUDIO. gemini-pro cannot handle audio bytes.
+        return "⚠️ Voice transcription is disabled in Stable Mode (gemini-pro)."
 
     def generate_predictive_insights(self, reports_list):
         if not reports_list: return {"alerts": [], "trends": ["Insufficient Data"]}
-        summary = str(reports_list[:15]) 
+        
+        summary = str(reports_list[:10]) 
         prompt = f"""
         Analyze these safety reports. Identify 3 trends and 1 predictive alert.
         Return JSON: {{ "trends": ["t1", "t2"], "alerts": [{{ "title": "...", "confidence": 85, "recommendation": "..." }}] }}
         Data: {summary}
         """
-        response, error = self._generate(prompt)
-        if error: return {"alerts": [], "trends": ["AI Error"]}
+        response_text = self._generate(prompt)
+        
+        if "AI Error" in response_text: return {"alerts": [], "trends": ["AI Error"]}
+        
         try:
-            return json.loads(response.text.replace("```json", "").replace("```", "").strip())
+            return json.loads(response_text.replace("```json", "").replace("```", "").strip())
         except:
             return {"alerts": [], "trends": ["Parsing Error"]}
 
