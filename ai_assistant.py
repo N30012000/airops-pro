@@ -12,6 +12,7 @@ class SafetyAIAssistant:
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
             if self.api_key:
                 genai.configure(api_key=self.api_key)
+                # Initialize with a default, but _generate will handle fallbacks
                 self.model = genai.GenerativeModel('gemini-1.5-flash')
                 self.active_model_name = 'gemini-1.5-flash'
             else:
@@ -21,7 +22,7 @@ class SafetyAIAssistant:
             self.model = None
 
     def _generate(self, prompt, parts=None):
-        """ robust generation with auto-fallback to available models """
+        """Robust generation with auto-fallback to available models"""
         if not self.model:
             return None, "⚠️ AI System is offline (API Key missing)."
             
@@ -43,11 +44,8 @@ class SafetyAIAssistant:
                 for model_name in fallback_models:
                     if model_name == self.active_model_name: continue
                     try:
-                        # Switch model and retry
-                        print(f"Switching AI model to: {model_name}")
                         new_model = genai.GenerativeModel(model_name)
                         result = attempt_gen(new_model)
-                        
                         # If successful, save this as the new default
                         self.model = new_model
                         self.active_model_name = model_name
@@ -55,7 +53,6 @@ class SafetyAIAssistant:
                     except:
                         continue
             
-            # If all attempts fail
             return None, f"AI Error: {str(e)}"
 
     def chat(self, user_query):
@@ -99,8 +96,3 @@ class SafetyAIAssistant:
             return json.loads(response.text.replace("```json", "").replace("```", "").strip())
         except:
             return {"alerts": [], "trends": ["Parsing Error"]}
-
-class DataGeocoder:
-    @staticmethod
-    def geocode_location(loc):
-        return None, None
