@@ -6613,31 +6613,27 @@ def render_ai_assistant():
     # Main chat area
     chat_container = st.container()
     
+    # ... inside render_ai_assistant ...
     with chat_container:
         # Display chat history
         for message in st.session_state.ai_chat_history:
             if message['role'] == 'user':
                 st.markdown(f"""
-                <div style="display: flex; justify-content: flex-end; margin: 15px 0;">
-                    <div style="background: #667eea; color: white; padding: 15px 20px; 
-                                border-radius: 20px 20px 5px 20px; max-width: 70%;">
-                        {message['content']}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+<div style="display: flex; justify-content: flex-end; margin: 15px 0;">
+    <div style="background: #667eea; color: white; padding: 15px 20px; border-radius: 20px 20px 5px 20px; max-width: 70%;">
+        {message['content']}
+    </div>
+</div>
+""", unsafe_allow_html=True)
             else:
                 st.markdown(f"""
-                <div style="display: flex; justify-content: flex-start; margin: 15px 0;">
-                    <div style="background: #F8F9FA; color: #333; padding: 15px 20px; 
-                                border-radius: 20px 20px 20px 5px; max-width: 80%;
-                                border: 1px solid #E0E0E0;">
-                        <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">
-                            🤖 AI Assistant
-                        </div>
-                        {message['content']}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+<div style="display: flex; justify-content: flex-start; margin: 15px 0;">
+    <div style="background: #F8F9FA; color: #333; padding: 15px 20px; border-radius: 20px 20px 20px 5px; max-width: 80%; border: 1px solid #E0E0E0;">
+        <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">🤖 AI Assistant</div>
+        {message['content']}
+    </div>
+</div>
+""", unsafe_allow_html=True)
     
     # Input area
     st.markdown("---")
