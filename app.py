@@ -3785,11 +3785,10 @@ def render_hazard_form():
             flight_number = st.text_input("Flight Number", value=ocr_data.get('flight_number', ''), key="haz_flight")
         with col2:
             aircraft_reg = st.selectbox("Aircraft Registration", options=["N/A"] + list(AIRCRAFT_FLEET.keys()), index=0, key="haz_reg")
-# ... [Previous code for Location/Flight Phase etc.] ...
         with col3:
             flight_phase = st.selectbox("Phase of Flight", options=["N/A"] + FLIGHT_PHASES, index=0, key="haz_phase")
         
-        # --- VOICE INPUT SECTION (Corrected Indentation) ---
+        # --- VOICE INPUT SECTION (CORRECTED INDENTATION) ---
         st.write("🎙️ **Voice Narrative**")
         audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
         
@@ -3803,7 +3802,7 @@ def render_hazard_form():
                     st.session_state['transcribed_hazard'] = text
         # ---------------------------
         
-        # Text Area (Renamed to 'hazard_description' to match validation logic)
+        # Text Area
         hazard_description = st.text_area(
             "Hazard Description *", 
             value=st.session_state.get('transcribed_hazard', ocr_data.get('hazard_description', '')),
@@ -3816,13 +3815,9 @@ def render_hazard_form():
             if hazard_description:
                 with st.spinner("AI Analyzing Hazard..."):
                     time.sleep(1) # Mock delay
-                    # In a real scenario, you would call the AI here to get likelihood/severity
                     st.info("💡 **AI Suggestion:** Based on your narrative, this appears to be a **Medium Risk** event (Likelihood: 3, Severity: C).")
             else:
                 st.warning("Please enter a description first.")
-
-        # ========== SECTION C: RISK ASSESSMENT ==========
-        # ... [Rest of the code] ...
 
         # ========== SECTION C: RISK ASSESSMENT ==========
         st.markdown("""<div class="form-section">
@@ -3864,8 +3859,7 @@ def render_hazard_form():
         risk_code = f"{likelihood}{severity_code}"
         risk_level = calculate_risk_level(likelihood, severity_code)
         
-        # Safe lookup for risk actions using string keys
-        # Note: Ensure RISK_ACTIONS uses string keys ('Low', 'Medium' etc.) in this scope
+        # Safe lookup for risk actions
         risk_info = RISK_ACTIONS.get(risk_level, {
             "color": "#16A34A", "action": "Review", "timeline": "Routine"
         })
@@ -3982,7 +3976,6 @@ def render_hazard_form():
                 # --- SUPABASE INSERTION BLOCK ---
                 try:
                     # Insert data
-                    # NOTE: Ensure 'supabase' is initialized at top of app.py
                     response = supabase.table('hazard_reports').insert(report_data).execute()
                     
                     st.balloons()
@@ -3992,8 +3985,7 @@ def render_hazard_form():
                     st.session_state['ocr_data_hazard_report'] = None
                     
                 except Exception as e:
-                    st.error(f"Database Error: {e}")
-# Risk Matrix Definitions
+                    st.error(f"Database Error: {e}")# Risk Matrix Definitions
 LIKELIHOOD_DEFINITIONS = {
     "1": "Extremely Improbable - Almost inconceivable that the event will occur",
     "2": "Improbable - Very unlikely to occur",
