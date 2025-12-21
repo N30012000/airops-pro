@@ -16,10 +16,12 @@ class SafetyAIAssistant:
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
             if self.api_key:
                 genai.configure(api_key=self.api_key)
-                
                 # Try to use Flash, but allow fallback if not available
                 self.model_name = 'gemini-1.5-flash-latest'
-                self.model = genai.GenerativeModel(self.model_name)
+                try:
+                    self.model = genai.GenerativeModel(self.model_name)
+                except:
+                    self.model = genai.GenerativeModel('gemini-pro')
             else:
                 self.model = None
         except Exception as e:
@@ -36,12 +38,13 @@ class SafetyAIAssistant:
                 return self.model.generate_content(parts), None
             return self.model.generate_content(prompt), None
         except Exception as e:
-            # Fallback for 404 or other model errors
+            # Fallback logic for 404 or other model errors
             if "404" in str(e) or "not found" in str(e).lower():
                 try:
-                    # Fallback to Pro model
+                    # Switch to gemini-pro if Flash fails
                     fallback_model = genai.GenerativeModel('gemini-pro')
                     if parts:
+                        # Note: gemini-pro might not support audio/images in the same way, but it handles text
                         return fallback_model.generate_content(parts), None
                     return fallback_model.generate_content(prompt), None
                 except Exception as e2:
@@ -83,7 +86,6 @@ class SafetyAIAssistant:
     def transcribe_audio_narrative(self, audio_bytes):
         """Converts Voice Recording to Text using Gemini"""
         prompt = "Transcribe this audio recording of a safety report exactly. Do not add commentary."
-        # Note: Fallback model (gemini-pro) does NOT support audio, so this might fail if Flash is down
         response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
         
         if error:
@@ -95,7 +97,6 @@ class SafetyAIAssistant:
         if not reports_list:
             return {"alerts": [], "trends": ["Insufficient Data"]}
             
-        # Summarize data for AI (don't send huge payload)
         summary = str(reports_list[:20]) # Limit to last 20 reports
         
         prompt = f"""
