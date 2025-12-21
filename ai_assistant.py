@@ -12,57 +12,30 @@ class SafetyAIAssistant:
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
             if self.api_key:
                 genai.configure(api_key=self.api_key)
-                # We start with None to force the _generate method to find a working model
-                self.model = None 
-                self.active_model_name = None
+                # SWITCHING TO GEMINI-PRO (STABLE) TO FIX 404 ERRORS
+                self.model = genai.GenerativeModel('gemini-pro')
             else:
                 self.model = None
         except Exception as e:
             print(f"AI Init Error: {e}")
             self.model = None
 
-    def _get_working_model(self):
-        """Finds a model that works with your API key"""
-        # List of models to try (Flash is faster, Pro is more compatible)
-        candidates = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.0-pro', 'gemini-pro']
-        
-        for model_name in candidates:
-            try:
-                model = genai.GenerativeModel(model_name)
-                # Test the model with a simple prompt
-                model.generate_content("Test")
-                print(f"✅ AI Connected using: {model_name}")
-                self.active_model_name = model_name
-                return model
-            except Exception:
-                continue
-        return None
-
     def _generate(self, prompt, parts=None):
-        """Robust generation that finds a working model first"""
-        if not self.api_key:
-            return None, "⚠️ AI System is offline (API Key missing)."
-
-        # If we don't have a working model yet, find one
+        """Simple generation with error handling"""
         if not self.model:
-            self.model = self._get_working_model()
-            if not self.model:
-                return None, "⚠️ AI Error: Could not connect to any Gemini model. Check API Key."
-
+            return None, "⚠️ AI System is offline (API Key missing)."
+            
         try:
+            # gemini-pro handles text-only prompts best
             if parts:
-                return self.model.generate_content(parts), None
+                # If parts contains images/audio, we try our best or fail gracefully
+                try:
+                    return self.model.generate_content(parts), None
+                except:
+                    return None, "⚠️ This AI model cannot process images/audio."
+            
             return self.model.generate_content(prompt), None
         except Exception as e:
-            # If the current model fails, try to find a new one
-            self.model = self._get_working_model()
-            if self.model:
-                try:
-                    if parts:
-                        return self.model.generate_content(parts), None
-                    return self.model.generate_content(prompt), None
-                except Exception as e2:
-                    return None, f"AI Error: {str(e2)}"
             return None, f"AI Error: {str(e)}"
 
     def chat(self, user_query):
@@ -87,10 +60,8 @@ class SafetyAIAssistant:
             return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Parsing Error"}
 
     def transcribe_audio_narrative(self, audio_bytes):
-        prompt = "Transcribe this aviation safety report audio exactly."
-        response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
-        if error: return f"Transcription Failed: {error}"
-        return response.text
+        # gemini-pro cannot do audio, so we return a placeholder to prevent crashes
+        return "⚠️ Audio transcription requires gemini-1.5-flash (currently unavailable). Please type the narrative."
 
     def generate_predictive_insights(self, reports_list):
         if not reports_list: return {"alerts": [], "trends": ["Insufficient Data"]}
