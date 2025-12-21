@@ -3785,33 +3785,7 @@ def render_hazard_form():
             flight_number = st.text_input("Flight Number", value=ocr_data.get('flight_number', ''), key="haz_flight")
         with col2:
             aircraft_reg = st.selectbox("Aircraft Registration", options=["N/A"] + list(AIRCRAFT_FLEET.keys()), index=0, key="haz_reg")
-        with col3:
-            flight_phase = st.selectbox("Phase of Flight", options=["N/A"] + FLIGHT_PHASES, index=0, key="haz_phase")
-        
-        # --- VOICE INPUT SECTION (CORRECTED INDENTATION) ---
-        st.write("🎙️ **Voice Narrative**")
-        audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
-        
-        if audio_bytes:
-            ai = st.session_state.get('ai_assistant')
-            if ai:
-                with st.spinner("Transcribing..."):
-                    text = ai.transcribe_audio_narrative(audio_bytes['bytes'])
-                    st.info(f"Transcribed: {text}")
-                    # Save to session state so it can be used in the text area
-                    st.session_state['transcribed_hazard'] = text
-        # ---------------------------
-        
-        # Text Area
-        hazard_description = st.text_area(
-            "Hazard Description *", 
-            value=st.session_state.get('transcribed_hazard', ocr_data.get('hazard_description', '')),
-            height=150,
-            placeholder="Describe the hazard in detail..."
-        )
-
-        # --- AI Auto-Assess ---
-        if st.form_submit_button("🤖 Auto-Assess Risk"):
+        render_hazard_form
             if hazard_description:
                 with st.spinner("AI Analyzing Hazard..."):
                     time.sleep(1) # Mock delay
