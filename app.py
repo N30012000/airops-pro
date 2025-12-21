@@ -3752,7 +3752,7 @@ def render_hazard_form():
         with col3:
             flight_phase = st.selectbox("Phase of Flight", options=["N/A"] + FLIGHT_PHASES)
         
-        # --- VOICE INPUT SECTION (Correctly Indented) ---
+        # --- VOICE INPUT SECTION ---
         st.write("🎙️ **Voice Narrative**")
         audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
         
@@ -3771,7 +3771,7 @@ def render_hazard_form():
             height=150
         )
 
-        # --- AI Auto-Assess (Correctly Indented) ---
+        # --- AI Auto-Assess ---
         if st.form_submit_button("🤖 Auto-Assess Risk"):
             if hazard_description:
                 with st.spinner("AI Analyzing Hazard..."):
@@ -3820,9 +3820,9 @@ def render_hazard_form():
         
         safety_comments = st.text_area("Safety Comments")
         
-        # Management Review Logic
+        # Management Review
         if risk_level in ["High", "Extreme"]:
-            mgmt_review_required = "Yes"
+            mgmt_review_required = "Yes - Pending"
             srm_board_referral = st.selectbox("Refer to Safety Board?", options=["Yes", "No"])
             mgmt_comments = st.text_area("Mgmt Comments")
         else:
