@@ -16,32 +16,49 @@ class SafetyAIAssistant:
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
             if self.api_key:
                 genai.configure(api_key=self.api_key)
-                # Use the new Flash model
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
-                self.vision_model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # Try to use Flash, but allow fallback if not available
+                self.model_name = 'gemini-1.5-flash-latest'
+                self.model = genai.GenerativeModel(self.model_name)
             else:
                 self.model = None
         except Exception as e:
             print(f"AI Init Error: {e}")
             self.model = None
 
+    def _generate(self, prompt, parts=None):
+        """Helper to handle generation with fallback"""
+        if not self.model:
+            return None, "⚠️ AI System is offline (API Key missing)."
+            
+        try:
+            if parts:
+                return self.model.generate_content(parts), None
+            return self.model.generate_content(prompt), None
+        except Exception as e:
+            # Fallback for 404 or other model errors
+            if "404" in str(e) or "not found" in str(e).lower():
+                try:
+                    # Fallback to Pro model
+                    fallback_model = genai.GenerativeModel('gemini-pro')
+                    if parts:
+                        return fallback_model.generate_content(parts), None
+                    return fallback_model.generate_content(prompt), None
+                except Exception as e2:
+                    return None, f"AI Error (Fallback failed): {str(e2)}"
+            return None, f"AI Error: {str(e)}"
+
     def chat(self, user_query):
         """General Chatbot Logic"""
-        if not self.model:
-            return "⚠️ AI System is offline (API Key missing)."
-        
         system_instruction = "You are an Aviation Safety Management System (SMS) Expert for Air Sial. Answer efficiently."
-        try:
-            response = self.model.generate_content(f"{system_instruction}\n\nUser: {user_query}")
-            return response.text
-        except Exception as e:
-            return f"AI Error: {str(e)}"
+        response, error = self._generate(f"{system_instruction}\n\nUser: {user_query}")
+        
+        if error:
+            return error
+        return response.text
 
     def analyze_risk_from_narrative(self, narrative, report_type="General"):
         """Analyzes text to determine Risk Level (ICAO 5x5)"""
-        if not self.model:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Offline"}
-
         prompt = f"""
         Act as a Safety Officer. Analyze this aviation safety narrative ({report_type}).
         Determine the Likelihood (1-5) and Severity (A-E) based on ICAO Annex 19.
@@ -51,30 +68,31 @@ class SafetyAIAssistant:
         Return ONLY a JSON string like this:
         {{"likelihood": 3, "severity": "C", "risk_level": "Medium", "justification": "..."}}
         """
+        response, error = self._generate(prompt)
+        
+        if error or not response:
+            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "Analysis Failed"}
+            
         try:
-            response = self.model.generate_content(prompt)
             # Clean up response to ensure valid JSON
             clean_text = response.text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_text)
         except:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "Analysis Failed"}
+            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Parsing Error"}
 
     def transcribe_audio_narrative(self, audio_bytes):
         """Converts Voice Recording to Text using Gemini"""
-        if not self.model:
-            return "AI Offline - Cannot transcribe."
+        prompt = "Transcribe this audio recording of a safety report exactly. Do not add commentary."
+        # Note: Fallback model (gemini-pro) does NOT support audio, so this might fail if Flash is down
+        response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
         
-        try:
-            # Gemini 1.5 Flash can process audio directly
-            prompt = "Transcribe this audio recording of a safety report exactly. Do not add commentary."
-            response = self.model.generate_content([prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
-            return response.text
-        except Exception as e:
-            return f"Transcription Failed: {str(e)}"
+        if error:
+            return f"Transcription Failed: {error}"
+        return response.text
 
     def generate_predictive_insights(self, reports_list):
         """Generates dashboard insights from DB data"""
-        if not self.model or not reports_list:
+        if not reports_list:
             return {"alerts": [], "trends": ["Insufficient Data"]}
             
         # Summarize data for AI (don't send huge payload)
@@ -85,18 +103,21 @@ class SafetyAIAssistant:
         Return JSON: {{ "trends": ["trend1", "trend2"], "alerts": [{{ "title": "...", "confidence": 85, "recommendation": "..." }}] }}
         Data: {summary}
         """
+        response, error = self._generate(prompt)
+        
+        if error or not response:
+            return {"alerts": [], "trends": ["AI Analysis Error"]}
+            
         try:
-            response = self.model.generate_content(prompt)
             clean_text = response.text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_text)
         except:
-            return {"alerts": [], "trends": ["AI Analysis Error"]}
+            return {"alerts": [], "trends": ["AI Parsing Error"]}
 
 class DataGeocoder:
     @staticmethod
     def geocode_location(location_name):
         """Simple lookup for key airports to avoid API costs"""
-        # You can expand this list or use geopy if needed
         locations = {
             "sialkot": (32.5353, 74.3636), "opsk": (32.5353, 74.3636),
             "karachi": (24.9060, 67.1600), "opkc": (24.9060, 67.1600),
