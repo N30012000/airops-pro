@@ -3793,7 +3793,6 @@ def render_hazard_form():
         with col1:
             likelihood = st.select_slider("Likelihood", options=[1, 2, 3, 4, 5], value=3)
         with col2:
-            # We must define 'severity' tuple and 'severity_code' string here
             severity_option = st.selectbox("Severity", options=[("A", "Catastrophic"), ("B", "Hazardous"), ("C", "Major"), ("D", "Minor"), ("E", "Negligible")], index=2, format_func=lambda x: f"{x[0]} - {x[1]}")
             severity_code = severity_option[0]
 
