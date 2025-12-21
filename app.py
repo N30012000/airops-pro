@@ -6563,7 +6563,106 @@ def render_general_assistant():
             st.error("AI System not initialized. Check API Keys.")
         st.rerun()
         
-def render_ai_assistant()
+def render_ai_assistant():
+    """AI Assistant for safety report analysis and insights."""
+    
+    # Initialize chat history
+    if 'ai_chat_history' not in st.session_state:
+        st.session_state.ai_chat_history = []
+    
+    # Fixed HTML formatting (removed indentation to prevent "DIV" text issue)
+    st.markdown("""
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
+    <h1 style="margin: 0; font-size: 2.2rem;">🤖 AI Safety Assistant</h1>
+    <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
+        Intelligent analysis and insights for safety management
+    </p>
+</div>
+""", unsafe_allow_html=True)
+    
+    # Sidebar with quick actions
+    with st.sidebar:
+        st.markdown("### 🎯 Quick Analysis")
+        
+        if st.button("📊 Analyze Trends", use_container_width=True):
+            add_ai_response("trend_analysis")
+        
+        if st.button("⚠️ Risk Summary", use_container_width=True):
+            add_ai_response("risk_summary")
+        
+        if st.button("📈 Performance Report", use_container_width=True):
+            add_ai_response("performance_report")
+        
+        if st.button("🔮 Predictive Insights", use_container_width=True):
+            add_ai_response("predictive_insights")
+        
+        st.markdown("---")
+        
+        if st.button("🗑️ Clear Chat", use_container_width=True):
+            st.session_state.ai_chat_history = []
+            st.rerun()
+    
+    # Main chat area
+    chat_container = st.container()
+    
+    with chat_container:
+        # Display chat history
+        for message in st.session_state.ai_chat_history:
+            if message['role'] == 'user':
+                st.markdown(f"""
+<div style="display: flex; justify-content: flex-end; margin: 15px 0;">
+    <div style="background: #667eea; color: white; padding: 15px 20px; 
+                border-radius: 20px 20px 5px 20px; max-width: 70%;">
+        {message['content']}
+    </div>
+</div>
+""", unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+<div style="display: flex; justify-content: flex-start; margin: 15px 0;">
+    <div style="background: #F8F9FA; color: #333; padding: 15px 20px; 
+                border-radius: 20px 20px 20px 5px; max-width: 80%;
+                border: 1px solid #E0E0E0;">
+        <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">
+            🤖 AI Assistant
+        </div>
+        {message['content']}
+    </div>
+</div>
+""", unsafe_allow_html=True)
+    
+    # Input area
+    st.markdown("---")
+    
+    input_col1, input_col2 = st.columns([5, 1])
+    
+    with input_col1:
+        user_input = st.text_input(
+            "Ask me anything about safety reports...",
+            key="ai_input",
+            placeholder="e.g., What are the main risk trends this month?"
+        )
+    
+    with input_col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        send_btn = st.button("📤 Send", use_container_width=True)
+    
+    if send_btn and user_input:
+        # Add user message
+        st.session_state.ai_chat_history.append({
+            'role': 'user',
+            'content': user_input
+        })
+        
+        # Generate AI response
+        response = generate_ai_response(user_input)
+        st.session_state.ai_chat_history.append({
+            'role': 'assistant',
+            'content': response
+        })
+        
+        st.rerun()
     
     # Suggested queries
     st.markdown("### 💡 Suggested Questions")
