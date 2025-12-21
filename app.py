@@ -6594,6 +6594,7 @@ def render_general_assistant():
         # 3. Save AI Message
         st.session_state.general_chat_history.append({"role": "assistant", "content": ai_text})
         st.rerun()
+        
 def render_ai_assistant():
     """AI Assistant for safety report analysis and insights."""
     
