@@ -3785,35 +3785,44 @@ def render_hazard_form():
             flight_number = st.text_input("Flight Number", value=ocr_data.get('flight_number', ''), key="haz_flight")
         with col2:
             aircraft_reg = st.selectbox("Aircraft Registration", options=["N/A"] + list(AIRCRAFT_FLEET.keys()), index=0, key="haz_reg")
+# ... [Previous code for Location/Flight Phase etc.] ...
         with col3:
             flight_phase = st.selectbox("Phase of Flight", options=["N/A"] + FLIGHT_PHASES, index=0, key="haz_phase")
         
-        # --- Voice Reporting ---
-# --- VOICE INPUT SECTION ---
-    st.write("🎙️ **Voice Narrative**")
-    audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
-    
-    if audio_bytes:
-        ai = st.session_state.get('ai_assistant')
-        if ai:
-            with st.spinner("Transcribing..."):
-                text = ai.transcribe_audio_narrative(audio_bytes['bytes'])
-                st.info(f"Transcribed: {text}")
-                # Save to session state so it can be used in the text area
-                st.session_state['transcribed_hazard'] = text
-    # ---------------------------
-    
-    # Update your existing text_area to look like this:
-    narrative = st.text_area("Narrative", value=st.session_state.get('transcribed_hazard', ''))
+        # --- VOICE INPUT SECTION (Corrected Indentation) ---
+        st.write("🎙️ **Voice Narrative**")
+        audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
+        
+        if audio_bytes:
+            ai = st.session_state.get('ai_assistant')
+            if ai:
+                with st.spinner("Transcribing..."):
+                    text = ai.transcribe_audio_narrative(audio_bytes['bytes'])
+                    st.info(f"Transcribed: {text}")
+                    # Save to session state so it can be used in the text area
+                    st.session_state['transcribed_hazard'] = text
+        # ---------------------------
+        
+        # Text Area (Renamed to 'hazard_description' to match validation logic)
+        hazard_description = st.text_area(
+            "Hazard Description *", 
+            value=st.session_state.get('transcribed_hazard', ocr_data.get('hazard_description', '')),
+            height=150,
+            placeholder="Describe the hazard in detail..."
+        )
 
         # --- AI Auto-Assess ---
         if st.form_submit_button("🤖 Auto-Assess Risk"):
             if hazard_description:
                 with st.spinner("AI Analyzing Hazard..."):
                     time.sleep(1) # Mock delay
+                    # In a real scenario, you would call the AI here to get likelihood/severity
                     st.info("💡 **AI Suggestion:** Based on your narrative, this appears to be a **Medium Risk** event (Likelihood: 3, Severity: C).")
             else:
-                st.warning("Please enter a narrative first.")
+                st.warning("Please enter a description first.")
+
+        # ========== SECTION C: RISK ASSESSMENT ==========
+        # ... [Rest of the code] ...
 
         # ========== SECTION C: RISK ASSESSMENT ==========
         st.markdown("""<div class="form-section">
