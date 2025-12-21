@@ -3752,7 +3752,7 @@ def render_hazard_form():
         with col3:
             flight_phase = st.selectbox("Phase of Flight", options=["N/A"] + FLIGHT_PHASES)
         
-        # --- VOICE INPUT SECTION (Correctly Indented 8 spaces) ---
+        # --- VOICE INPUT SECTION (Correctly Indented) ---
         st.write("🎙️ **Voice Narrative**")
         audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
         
@@ -3763,7 +3763,6 @@ def render_hazard_form():
                     text = ai.transcribe_audio_narrative(audio_bytes['bytes'])
                     st.session_state['transcribed_hazard'] = text
                     st.info(f"Transcribed: {text}")
-        # ---------------------------------------------------------
         
         # Text Area
         hazard_description = st.text_area(
@@ -3772,7 +3771,7 @@ def render_hazard_form():
             height=150
         )
 
-        # --- AI Auto-Assess (Correctly Indented 8 spaces) ---
+        # --- AI Auto-Assess (Correctly Indented) ---
         if st.form_submit_button("🤖 Auto-Assess Risk"):
             if hazard_description:
                 with st.spinner("AI Analyzing Hazard..."):
@@ -3782,7 +3781,6 @@ def render_hazard_form():
                         st.info(f"💡 **AI Suggestion:** {result.get('risk_level', 'Unknown')} Risk")
             else:
                 st.warning("Please enter a description first.")
-        # ----------------------------------------------------
 
         # ========== SECTION C: RISK ASSESSMENT ==========
         st.markdown("""<div class="form-section"><div class="form-section-header">Section C: Risk Assessment</div></div>""", unsafe_allow_html=True)
@@ -3802,7 +3800,7 @@ def render_hazard_form():
         st.markdown(f"**Calculated Risk:** {render_risk_badge(risk_level)} ({risk_code})", unsafe_allow_html=True)
         risk_justification = st.text_area("Risk Justification")
         
-        # ========== SECTION D/E/F/G ==========
+        # ========== SECTION D-G ==========
         st.markdown("""<div class="form-section"><div class="form-section-header">Section D-G: Analysis & Actions</div></div>""", unsafe_allow_html=True)
         
         existing_controls = st.text_area("Existing Controls")
@@ -3822,9 +3820,9 @@ def render_hazard_form():
         
         safety_comments = st.text_area("Safety Comments")
         
-        # Management Review logic
-        if risk_level in [RiskLevel.HIGH, RiskLevel.EXTREME]:
-            mgmt_review_required = "Yes - Pending"
+        # Management Review Logic
+        if risk_level in ["High", "Extreme"]:
+            mgmt_review_required = "Yes"
             srm_board_referral = st.selectbox("Refer to Safety Board?", options=["Yes", "No"])
             mgmt_comments = st.text_area("Mgmt Comments")
         else:
@@ -3862,7 +3860,7 @@ def render_hazard_form():
                     'likelihood': likelihood,       
                     'severity': severity_code,      
                     'risk_code': risk_code,
-                    'risk_level': risk_level.value if hasattr(risk_level, 'value') else str(risk_level),
+                    'risk_level': risk_level,
                     'risk_justification': risk_justification,
                     'existing_controls': existing_controls,
                     'control_effectiveness': control_effectiveness,
@@ -3886,7 +3884,6 @@ def render_hazard_form():
                 }
 
                 try:
-                    # Supabase Insert
                     response = supabase.table('hazard_reports').insert(report_data).execute()
                     st.balloons()
                     st.success(f"✅ Hazard Report Saved! Ref: {hazard_id}")
