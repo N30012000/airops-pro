@@ -10,7 +10,11 @@ python-dateutil>=2.8.0
 pytesseract>=0.3.10
 supabase>=2.3.0
 requests>=2.31.0
-apscheduler
-matplotlib
-streamlit-mic-recorder
+apscheduler>=3.10.0
+matplotlib>=3.8.0
+streamlit-mic-recorder>=0.0.28
 google-generativeai>=0.8.3
+geopy>=2.4.0
+SpeechRecognition>=3.10.0
+pydub>=0.25.1
+python-dotenv>=1.0.0
