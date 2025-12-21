@@ -800,28 +800,32 @@ def fetch_live_weather(icao_code):
     }
 
 def render_weather_widget():
-    """Render the weather dashboard widget."""
-    st.markdown("### 🌤️ Weather Operations")
+    """Render the weather dashboard widget using real data."""
+    # Import the weather module we just fixed
+    import weather 
     
-    # Use the keys from our dictionary
-    target_airports = list(AIRPORT_COORDS.keys())
+    st.markdown("### 🌤️ Weather Operations (Live)")
     
-    # Create columns
-    cols = st.columns(len(target_airports))
+    # Create columns for the widget
+    cols = st.columns(5)
     
-    for col, icao in zip(cols, target_airports):
+    # Fetch real data
+    weather_data = weather.get_all_weather()
+    
+    # Display logic
+    if not weather_data:
+        st.warning("Weather data unavailable. Check internet connection or API Key.")
+        return
+
+    for col, data in zip(cols, weather_data):
         with col:
-            data = fetch_live_weather(icao)
-            city_name = AIRPORT_COORDS[icao]['name']
-            
-            if data:
-                st.markdown(f"""
-                <div style="background: white; border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <div style="font-size: 2rem; margin-bottom: 5px;">{data['icon']}</div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1E40AF; line-height: 1;">{data['temp']}°C</div>
-                    <div style="color: #64748B; font-size: 0.85rem; font-weight: 600; margin-top: 5px;">{city_name}</div>
-                    <div style="font-size: 0.75rem; color: #94A3B8;">{data['condition']} • 💨 {data['wind']} km/h</div>
-                </div>""", unsafe_allow_html=True)
+            st.markdown(f"""
+            <div style="background: white; border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-size: 2rem; margin-bottom: 5px;">{data['icon']}</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: #1E40AF; line-height: 1;">{data['temp']}°C</div>
+                <div style="color: #64748B; font-size: 0.85rem; font-weight: 600; margin-top: 5px;">{data['name']}</div>
+                <div style="font-size: 0.75rem; color: #94A3B8;">{data['condition']} • 💨 {data['wind']} km/h</div>
+            </div>""", unsafe_allow_html=True)
 # ══════════════════════════════════════════════════════════════════════════════
 # CUSTOM CSS STYLING
 # ══════════════════════════════════════════════════════════════════════════════
