@@ -12,47 +12,57 @@ class SafetyAIAssistant:
             self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
             if self.api_key:
                 genai.configure(api_key=self.api_key)
-                # Initialize with a default, but _generate will handle fallbacks
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
-                self.active_model_name = 'gemini-1.5-flash'
+                # We start with None to force the _generate method to find a working model
+                self.model = None 
+                self.active_model_name = None
             else:
                 self.model = None
         except Exception as e:
             print(f"AI Init Error: {e}")
             self.model = None
 
-    def _generate(self, prompt, parts=None):
-        """Robust generation with auto-fallback to available models"""
-        if not self.model:
-            return None, "⚠️ AI System is offline (API Key missing)."
-            
-        # List of models to try in order of preference
-        fallback_models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.0-pro', 'gemini-pro']
+    def _get_working_model(self):
+        """Finds a model that works with your API key"""
+        # List of models to try (Flash is faster, Pro is more compatible)
+        candidates = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.0-pro', 'gemini-pro']
         
-        def attempt_gen(model_obj):
-            if parts:
-                return model_obj.generate_content(parts)
-            return model_obj.generate_content(prompt)
+        for model_name in candidates:
+            try:
+                model = genai.GenerativeModel(model_name)
+                # Test the model with a simple prompt
+                model.generate_content("Test")
+                print(f"✅ AI Connected using: {model_name}")
+                self.active_model_name = model_name
+                return model
+            except Exception:
+                continue
+        return None
 
-        # 1. Try with current model
+    def _generate(self, prompt, parts=None):
+        """Robust generation that finds a working model first"""
+        if not self.api_key:
+            return None, "⚠️ AI System is offline (API Key missing)."
+
+        # If we don't have a working model yet, find one
+        if not self.model:
+            self.model = self._get_working_model()
+            if not self.model:
+                return None, "⚠️ AI Error: Could not connect to any Gemini model. Check API Key."
+
         try:
-            return attempt_gen(self.model), None
+            if parts:
+                return self.model.generate_content(parts), None
+            return self.model.generate_content(prompt), None
         except Exception as e:
-            # 2. If 404 (Not Found) or 400 (Bad Request), try cycling models
-            error_str = str(e).lower()
-            if "404" in error_str or "not found" in error_str or "400" in error_str:
-                for model_name in fallback_models:
-                    if model_name == self.active_model_name: continue
-                    try:
-                        new_model = genai.GenerativeModel(model_name)
-                        result = attempt_gen(new_model)
-                        # If successful, save this as the new default
-                        self.model = new_model
-                        self.active_model_name = model_name
-                        return result, None
-                    except:
-                        continue
-            
+            # If the current model fails, try to find a new one
+            self.model = self._get_working_model()
+            if self.model:
+                try:
+                    if parts:
+                        return self.model.generate_content(parts), None
+                    return self.model.generate_content(prompt), None
+                except Exception as e2:
+                    return None, f"AI Error: {str(e2)}"
             return None, f"AI Error: {str(e)}"
 
     def chat(self, user_query):
@@ -100,14 +110,4 @@ class SafetyAIAssistant:
 class DataGeocoder:
     @staticmethod
     def geocode_location(location_name):
-        locations = {
-            "sialkot": (32.5353, 74.3636), "opsk": (32.5353, 74.3636),
-            "karachi": (24.9060, 67.1600), "opkc": (24.9060, 67.1600),
-            "lahore": (31.5216, 74.4036), "opla": (31.5216, 74.4036),
-            "islamabad": (33.5490, 73.0169), "opis": (33.5490, 73.0169),
-            "dubai": (25.2532, 55.3657), "omdb": (25.2532, 55.3657),
-        }
-        for key in locations:
-            if key in location_name.lower():
-                return locations[key]
         return None, None
