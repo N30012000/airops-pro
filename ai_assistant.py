@@ -96,3 +96,18 @@ class SafetyAIAssistant:
             return json.loads(response.text.replace("```json", "").replace("```", "").strip())
         except:
             return {"alerts": [], "trends": ["Parsing Error"]}
+
+class DataGeocoder:
+    @staticmethod
+    def geocode_location(location_name):
+        locations = {
+            "sialkot": (32.5353, 74.3636), "opsk": (32.5353, 74.3636),
+            "karachi": (24.9060, 67.1600), "opkc": (24.9060, 67.1600),
+            "lahore": (31.5216, 74.4036), "opla": (31.5216, 74.4036),
+            "islamabad": (33.5490, 73.0169), "opis": (33.5490, 73.0169),
+            "dubai": (25.2532, 55.3657), "omdb": (25.2532, 55.3657),
+        }
+        for key in locations:
+            if key in location_name.lower():
+                return locations[key]
+        return None, None
