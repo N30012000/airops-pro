@@ -18,10 +18,11 @@ class SafetyAIAssistant:
                 genai.configure(api_key=self.api_key)
                 # Try to use Flash, but allow fallback if not available
                 self.model_name = 'gemini-1.5-flash-latest'
-                try:
-                    self.model = genai.GenerativeModel(self.model_name)
-                except:
-                    self.model = genai.GenerativeModel('gemini-pro')
+                # snippet from ai_assistant.py
+try:
+    self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
+except:
+    self.model = genai.GenerativeModel('gemini-pro') # Fallback
             else:
                 self.model = None
         except Exception as e:
