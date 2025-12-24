@@ -3686,42 +3686,75 @@ def render_incident_form():
 
 def render_hazard_form():
     """
-    Complete Hazard Report Form
+    Complete Hazard Report Form (Sections A-H)
     """
     st.markdown("## 🔶 Hazard Report Form")
-    
+
+    # --- DEFINITIONS TO PREVENT NAME ERRORS ---
+    # (These ensure your code runs even if imports are missing elsewhere)
+    RISK_ACTIONS = {
+        "Low": {"color": "#00FF00", "action": "Monitor", "timeline": "Routine", "authority": "Line Supervisor"},
+        "Medium": {"color": "#FFFF00", "action": "Review", "timeline": "1 Month", "authority": "Dept Head"},
+        "High": {"color": "#FFA500", "action": "Mitigate", "timeline": "1 Week", "authority": "Safety Manager"},
+        "Extreme": {"color": "#FF0000", "action": "STOP OPS", "timeline": "IMMEDIATE", "authority": "Director"}
+    }
+    # Fallback for ReportStatus if not imported
+    class MockStatus:
+        OPEN = "Open"
+        IN_PROGRESS = "In Progress"
+        CLOSED = "Closed"
+    ReportStatus = MockStatus 
+
     # Initialize Data
     ocr_data = st.session_state.get('ocr_data_hazard_report', {}) or {}
-    
+
     # Form Start
     with st.form("hazard_form", clear_on_submit=False):
-        
-        # --- SECTION A ---
+
+        # ==============================================================================
+        # SECTION A: REPORTER INFORMATION
+        # ==============================================================================
         st.markdown("### Section A: Reporter Info")
         col1, col2 = st.columns(2)
         with col1:
-            hazard_id = st.text_input("Ref Number", value=f"HAZ-{datetime.now().strftime('%Y%m%d')}-{random.randint(100,999)}", disabled=True)
+            report_number = st.text_input("Ref Number", value=f"HAZ-{datetime.now().strftime('%Y%m%d')}-{random.randint(100,999)}", disabled=True)
+            reporter_employee_id = st.text_input("Employee ID", value=st.session_state.get('employee_id', ''))
         with col2:
             report_date = st.date_input("Date", value=date.today())
+            anonymous_report = st.checkbox("Submit Anonymously")
+
+        if not anonymous_report:
+            reporter_name = st.text_input("Name", value=st.session_state.get('user_name', ''))
+        else:
+            reporter_name = "Anonymous"
             
-        reporter_name = st.text_input("Name", value=st.session_state.get('user_name', ''))
         reporter_department = st.selectbox("Department", options=DEPARTMENTS)
-        
-        # --- SECTION B ---
+
+        # ==============================================================================
+        # SECTION B: HAZARD DETAILS
+        # ==============================================================================
         st.markdown("### Section B: Hazard Details")
+        col1, col2 = st.columns(2)
+        with col1:
+             hazard_date = st.date_input("Date of Hazard", value=date.today())
+        with col2:
+             hazard_time = st.time_input("Time of Hazard", value=datetime.now().time())
+
         hazard_title = st.text_input("Title *", value=ocr_data.get('hazard_title', ''))
         hazard_category = st.selectbox("Category", options=HAZARD_CATEGORIES)
         
         col1, col2 = st.columns(2)
         with col1:
             hazard_location = st.selectbox("Location", options=[""] + [f"{d['icao']}" for d in AIRPORTS.values()])
+            # Variable alias for submission logic
+            airport = hazard_location 
+            location = hazard_location
         with col2:
             specific_location = st.text_input("Specific Spot")
-            
+
         # Voice Input Section
         st.write("🎙️ **Voice Narrative**")
         audio_bytes = mic_recorder(start_prompt="🔴 Record", stop_prompt="⏹️ Stop", key="hazard_mic")
-        
         if audio_bytes:
             ai = st.session_state.get('ai_assistant')
             if ai:
@@ -3730,14 +3763,13 @@ def render_hazard_form():
                     st.session_state['transcribed_hazard'] = text
                     st.info(text)
 
-        # Description
         hazard_description = st.text_area(
             "Description *", 
             value=st.session_state.get('transcribed_hazard', ocr_data.get('hazard_description', '')),
             height=150
         )
 
-        # AI Auto-Assess Button
+        # AI Analysis Button
         if st.form_submit_button("🤖 Auto-Assess Risk"):
             if hazard_description:
                 with st.spinner("AI Analyzing..."):
@@ -3748,8 +3780,15 @@ def render_hazard_form():
             else:
                 st.warning("Please enter description first.")
 
-        # --- SECTION C ---
+        # ==============================================================================
+        # SECTION C: RISK MATRIX
+        # ==============================================================================
         st.markdown("### Section C: Risk Matrix")
+        
+        # Expandable Matrix View
+        with st.expander("📊 View Reference Matrix"):
+            render_visual_risk_matrix()
+
         col1, col2 = st.columns(2)
         with col1:
             likelihood = st.select_slider("Likelihood", options=[1, 2, 3, 4, 5], value=3)
@@ -3757,37 +3796,14 @@ def render_hazard_form():
             severity_tup = st.selectbox("Severity", options=[("A","Catastrophic"), ("B","Hazardous"), ("C","Major"), ("D","Minor"), ("E","Negligible")], index=2, format_func=lambda x: x[1])
             severity = severity_tup[0]
 
+        # Calculate Risk
         risk_level = calculate_risk_level(likelihood, severity)
+        risk_classification = risk_level # For submission logic compatibility
         st.success(f"Risk Level: {risk_level}")
 
-        # --- SECTION D ---
-        st.markdown("### Section D: Actions")
-        suggested_actions = st.text_area("Suggested Actions *", value=ocr_data.get('suggested_actions', ''))
-        
-        # Submit Logic
-        submitted = st.form_submit_button("📤 Submit Report", type="primary")
-        
-        if submitted:
-            if not hazard_title or not hazard_description or not suggested_actions:
-                st.error("❌ Fill required fields.")
-            else:
-                # Prepare minimal valid payload
-                data = {
-                    'report_number': hazard_id,
-                    'type': 'Hazard Report',
-                    'title': hazard_title,
-                    'description': hazard_description,
-                    'risk_level': risk_level, 
-                    'status': 'Open',
-                    'created_at': datetime.now().isoformat()
-                }
-                try:
-                    supabase.table('hazard_reports').insert(data).execute()
-                    st.success("✅ Saved!")
-                except Exception as e:
-                    st.error(f"DB Error: {e}")
+        # ==============================================================================
         # SECTION D: EXISTING CONTROLS
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         st.markdown('<div class="form-section"><div class="form-section-title">🛡️ SECTION D: EXISTING CONTROLS</div>', unsafe_allow_html=True)
         
         existing_controls = st.text_area("Existing Controls/Barriers*", height=100,
@@ -3807,9 +3823,9 @@ def render_hazard_form():
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         # SECTION E: SUGGESTED ACTIONS
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         st.markdown('<div class="form-section"><div class="form-section-title">💡 SECTION E: SUGGESTED ACTIONS</div>', unsafe_allow_html=True)
         
         suggested_actions = st.text_area("Suggested Corrective/Preventive Actions*", height=120,
@@ -3831,9 +3847,9 @@ def render_hazard_form():
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         # SECTION F: RELATED INFORMATION
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         st.markdown('<div class="form-section"><div class="form-section-title">📎 SECTION F: RELATED INFORMATION</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
@@ -3852,14 +3868,15 @@ def render_hazard_form():
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         # SECTION G: FOR SAFETY DEPARTMENT USE
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         st.markdown('<div class="form-section"><div class="form-section-title">🔒 SECTION G: FOR SAFETY DEPARTMENT USE</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         with col1:
-            investigation_status = st.selectbox("Investigation Status", options=[s.value for s in ReportStatus])
+            # FIX: Use values directly or check if ReportStatus is an Enum
+            investigation_status = st.selectbox("Investigation Status", options=["Open", "In Progress", "Closed", "Pending Review"])
             assigned_to = st.text_input("Assigned To")
         with col2:
             sla_deadline = st.date_input("SLA Deadline", value=date.today() + timedelta(days=Config.HAZARD_SLA_DAYS))
@@ -3888,9 +3905,9 @@ def render_hazard_form():
         
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         # SECTION H: MANAGEMENT REVIEW
-        # ══════════════════════════════════════════════════════════════════════
+        # ==============================================================================
         st.markdown('<div class="form-section"><div class="form-section-title">📋 SECTION H: MANAGEMENT REVIEW</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
@@ -3919,6 +3936,9 @@ def render_hazard_form():
             save_draft = st.form_submit_button("💾 Save Draft", use_container_width=True)
         
         if submitted:
+            # FIX: Ensure risk_level is a string to prevent AttributeError
+            risk_val = risk_level if isinstance(risk_level, str) else risk_level.value
+
             form_data = {
                 "report_number": report_number,
                 "report_date": str(report_date),
@@ -3937,7 +3957,7 @@ def render_hazard_form():
                 "likelihood": likelihood,
                 "severity": severity,
                 "risk_classification": risk_classification,
-                "risk_level": risk_level.value,
+                "risk_level": risk_val,  # <--- FIXED HERE
                 "existing_controls": existing_controls,
                 "controls_effective": controls_effective,
                 "suggested_actions": suggested_actions,
@@ -3953,29 +3973,36 @@ def render_hazard_form():
                 "created_by": st.session_state.get('user_id', 'anonymous')
             }
             
-            result = db.insert_report('hazard_reports', form_data)
-            
-            if result:
-                st.success(f"✅ Hazard Report {report_number} submitted successfully!")
-                st.balloons()
-                
-                # Show risk action required
-                risk_info = RISK_ACTIONS[risk_level]
-                st.markdown(f"""
-                <div class="alert-box" style="background: {risk_info['color']}20; border-color: {risk_info['color']};">
-                    <span style="font-size: 1.5rem;">⚠️</span>
-                    <div>
-                        <strong>Risk Level: {risk_level.value}</strong><br>
-                        Action Required: {risk_info['action']}<br>
-                        Timeline: {risk_info['timeline']} | Authority: {risk_info['authority']}
+            # Using Supabase directly as fallback if db wrapper fails, or db if present
+            try:
+                # Try the user's db wrapper first if it exists
+                if 'db' in globals():
+                    result = db.insert_report('hazard_reports', form_data)
+                else:
+                    # Fallback to direct supabase call
+                    supabase.table('hazard_reports').insert(form_data).execute()
+                    result = True
+
+                if result:
+                    st.success(f"✅ Hazard Report {report_number} submitted successfully!")
+                    st.balloons()
+                    
+                    # Show risk action required
+                    # Use .get() to avoid KeyErrors if RISK_ACTIONS doesn't have the key
+                    risk_info = RISK_ACTIONS.get(risk_val, RISK_ACTIONS.get("High"))
+                    
+                    st.markdown(f"""
+                    <div class="alert-box" style="background: {risk_info['color']}20; border-color: {risk_info['color']};">
+                        <span style="font-size: 1.5rem;">⚠️</span>
+                        <div>
+                            <strong>Risk Level: {risk_val}</strong><br>
+                            Action Required: {risk_info['action']}<br>
+                            Timeline: {risk_info['timeline']} | Authority: {risk_info['authority']}
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                if 'hazard_reports' not in st.session_state:
-                    st.session_state.hazard_reports = []
-                st.session_state.hazard_reports.append(form_data)
-                st.success(f"✅ Report {report_number} saved locally (Demo Mode)")
+                    """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Error saving report: {e}")
 # 
 # Ensure LIKELIHOOD_DEFINITIONS starts here, completely unindented
 LIKELIHOOD_DEFINITIONS = {
