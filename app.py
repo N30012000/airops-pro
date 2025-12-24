@@ -3786,7 +3786,197 @@ def render_hazard_form():
                     st.success("✅ Saved!")
                 except Exception as e:
                     st.error(f"DB Error: {e}")
-
+        # SECTION D: EXISTING CONTROLS
+        # ══════════════════════════════════════════════════════════════════════
+        st.markdown('<div class="form-section"><div class="form-section-title">🛡️ SECTION D: EXISTING CONTROLS</div>', unsafe_allow_html=True)
+        
+        existing_controls = st.text_area("Existing Controls/Barriers*", height=100,
+            placeholder="Describe any existing controls, procedures, or barriers that are in place to mitigate this hazard...")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            controls_effective = st.selectbox("Are Existing Controls Effective?", options=[
+                "Yes - Fully Effective",
+                "Partially Effective",
+                "No - Ineffective",
+                "No Controls in Place",
+                "Unknown"
+            ])
+        with col2:
+            control_failures = st.text_input("If Controls Failed, Describe How", placeholder="How did existing controls fail?")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION E: SUGGESTED ACTIONS
+        # ══════════════════════════════════════════════════════════════════════
+        st.markdown('<div class="form-section"><div class="form-section-title">💡 SECTION E: SUGGESTED ACTIONS</div>', unsafe_allow_html=True)
+        
+        suggested_actions = st.text_area("Suggested Corrective/Preventive Actions*", height=120,
+            placeholder="What actions do you suggest to eliminate or mitigate this hazard?\n- Immediate actions\n- Short-term actions\n- Long-term solutions")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            action_priority = st.selectbox("Suggested Priority", options=[
+                "Immediate - Within 24 hours",
+                "Urgent - Within 72 hours",
+                "High - Within 1 week",
+                "Medium - Within 2 weeks",
+                "Low - Within 1 month"
+            ])
+        with col2:
+            responsible_department = st.selectbox("Suggested Responsible Department", options=DEPARTMENTS)
+        
+        resources_required = st.text_input("Resources Required (if known)", placeholder="e.g., Budget, Equipment, Training")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION F: RELATED INFORMATION
+        # ══════════════════════════════════════════════════════════════════════
+        st.markdown('<div class="form-section"><div class="form-section-title">📎 SECTION F: RELATED INFORMATION</div>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            related_flight = st.text_input("Related Flight Number (if applicable)", placeholder="e.g., PF-101")
+            related_aircraft = st.selectbox("Related Aircraft (if applicable)", options=["N/A"] + list(AIRCRAFT_FLEET.keys()))
+        with col2:
+            related_reports = st.text_input("Related Report Numbers", placeholder="e.g., HZD-20240101-ABC123")
+            recurring_issue = st.selectbox("Is This a Recurring Issue?", options=["No", "Yes - First Time Reported", "Yes - Previously Reported", "Unknown"])
+        
+        witnesses = st.text_area("Witnesses (Names & Contact)", height=60, placeholder="List any witnesses...")
+        
+        evidence_available = st.checkbox("Photos/Evidence Available?")
+        if evidence_available:
+            evidence_description = st.text_input("Describe Available Evidence", placeholder="e.g., Photos uploaded to shared drive")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION G: FOR SAFETY DEPARTMENT USE
+        # ══════════════════════════════════════════════════════════════════════
+        st.markdown('<div class="form-section"><div class="form-section-title">🔒 SECTION G: FOR SAFETY DEPARTMENT USE</div>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            investigation_status = st.selectbox("Investigation Status", options=[s.value for s in ReportStatus])
+            assigned_to = st.text_input("Assigned To")
+        with col2:
+            sla_deadline = st.date_input("SLA Deadline", value=date.today() + timedelta(days=Config.HAZARD_SLA_DAYS))
+            sla_days_display = (sla_deadline - date.today()).days
+            if sla_days_display < 0:
+                st.error(f"⚠️ OVERDUE by {abs(sla_days_display)} days")
+            elif sla_days_display <= 3:
+                st.warning(f"🔴 {sla_days_display} days remaining - CRITICAL")
+            elif sla_days_display <= 7:
+                st.warning(f"🟡 {sla_days_display} days remaining")
+            else:
+                st.success(f"🟢 {sla_days_display} days remaining")
+        
+        safety_review_notes = st.text_area("Safety Department Review Notes", height=80)
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            verified = st.checkbox("Hazard Verified?")
+            verification_date = st.date_input("Verification Date", value=date.today(), key="verify_date")
+        with col2:
+            action_plan_approved = st.checkbox("Action Plan Approved?")
+            approval_date = st.date_input("Approval Date", value=date.today(), key="approve_date")
+        with col3:
+            closed = st.checkbox("Report Closed?")
+            closure_date = st.date_input("Closure Date", value=date.today(), key="close_date")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # ══════════════════════════════════════════════════════════════════════
+        # SECTION H: MANAGEMENT REVIEW
+        # ══════════════════════════════════════════════════════════════════════
+        st.markdown('<div class="form-section"><div class="form-section-title">📋 SECTION H: MANAGEMENT REVIEW</div>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            reviewed_by = st.text_input("Reviewed By (Manager)")
+            review_date = st.date_input("Review Date", value=date.today(), key="review_date")
+        with col2:
+            final_risk_accepted = st.selectbox("Final Risk Decision", options=[
+                "Pending Review",
+                "Risk Accepted - Existing Controls Adequate",
+                "Risk Accepted - After Additional Controls",
+                "Risk Not Accepted - Further Action Required",
+                "Hazard Eliminated"
+            ])
+        
+        management_comments = st.text_area("Management Comments", height=80)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # FORM SUBMISSION
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 1, 2])
+        with col1:
+            submitted = st.form_submit_button("📤 Submit Report", type="primary", use_container_width=True)
+        with col2:
+            save_draft = st.form_submit_button("💾 Save Draft", use_container_width=True)
+        
+        if submitted:
+            form_data = {
+                "report_number": report_number,
+                "report_date": str(report_date),
+                "reporter_name": reporter_name if not anonymous_report else "Anonymous",
+                "reporter_employee_id": reporter_employee_id if not anonymous_report else "Anonymous",
+                "reporter_department": reporter_department,
+                "anonymous": anonymous_report,
+                "hazard_date": str(hazard_date),
+                "hazard_time": str(hazard_time),
+                "hazard_category": hazard_category,
+                "location": location,
+                "specific_location": specific_location,
+                "airport": airport if airport != "N/A" else None,
+                "hazard_title": hazard_title,
+                "hazard_description": hazard_description,
+                "likelihood": likelihood,
+                "severity": severity,
+                "risk_classification": risk_classification,
+                "risk_level": risk_level.value,
+                "existing_controls": existing_controls,
+                "controls_effective": controls_effective,
+                "suggested_actions": suggested_actions,
+                "action_priority": action_priority,
+                "responsible_department": responsible_department,
+                "related_flight": related_flight,
+                "related_aircraft": related_aircraft if related_aircraft != "N/A" else None,
+                "recurring_issue": recurring_issue,
+                "investigation_status": investigation_status,
+                "assigned_to": assigned_to,
+                "sla_deadline": str(sla_deadline),
+                "created_at": datetime.now().isoformat(),
+                "created_by": st.session_state.get('user_id', 'anonymous')
+            }
+            
+            result = db.insert_report('hazard_reports', form_data)
+            
+            if result:
+                st.success(f"✅ Hazard Report {report_number} submitted successfully!")
+                st.balloons()
+                
+                # Show risk action required
+                risk_info = RISK_ACTIONS[risk_level]
+                st.markdown(f"""
+                <div class="alert-box" style="background: {risk_info['color']}20; border-color: {risk_info['color']};">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <div>
+                        <strong>Risk Level: {risk_level.value}</strong><br>
+                        Action Required: {risk_info['action']}<br>
+                        Timeline: {risk_info['timeline']} | Authority: {risk_info['authority']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                if 'hazard_reports' not in st.session_state:
+                    st.session_state.hazard_reports = []
+                st.session_state.hazard_reports.append(form_data)
+                st.success(f"✅ Report {report_number} saved locally (Demo Mode)")
+# 
 # Ensure LIKELIHOOD_DEFINITIONS starts here, completely unindented
 LIKELIHOOD_DEFINITIONS = {
     "1": "Extremely Improbable - Almost inconceivable that the event will occur",
