@@ -24,7 +24,10 @@ class SafetyAIAssistant:
             
             # --- AUTO-DISCOVERY: ASK GOOGLE WHAT WE HAVE ---
             try:
+                # List all models available to your specific API key
                 all_models = list(genai.list_models())
+                
+                # Filter for models that can generate content
                 valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
                 
                 # SELECTION STRATEGY: Prioritize Flash/1.5 for speed and multimodal
@@ -133,3 +136,9 @@ class SafetyAIAssistant:
             return json.loads(response.text.replace("```json", "").replace("```", "").strip())
         except:
             return {"alerts": [], "trends": ["Parsing Error"]}
+
+# --- RESTORED CLASS ---
+class DataGeocoder:
+    @staticmethod
+    def geocode_location(location_name):
+        return None, None
