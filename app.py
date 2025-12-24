@@ -3684,7 +3684,7 @@ def render_incident_form():
                 """)
 
 
-def render_hazard_form()
+def render_hazard_form():
 LIKELIHOOD_DEFINITIONS = {
     "1": "Extremely Improbable - Almost inconceivable that the event will occur",
     "2": "Improbable - Very unlikely to occur",
