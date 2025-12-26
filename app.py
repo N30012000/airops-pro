@@ -447,17 +447,16 @@ def get_aircraft_info(registration: str) -> dict:
 # --- REPLACEMENT CODE ---
 @st.cache_data(ttl=60)  # Cache for 60 seconds to save API calls
 def get_report_counts() -> dict:
-    counts = {}
-    # We list all table names that match your dictionary keys
-    tables = [
-        'bird_strikes', 
-        'laser_strikes', 
-        'tcas_reports', 
-        'hazard_reports', 
-        'aircraft_incidents', 
-        'fsr_reports', 
-        'captain_dbr'
-    ]
+    """Get counts directly from the loaded session state data"""
+    return {
+        'bird_strikes': len(st.session_state.get('bird_strikes', [])),
+        'laser_strikes': len(st.session_state.get('laser_strikes', [])),
+        'tcas_reports': len(st.session_state.get('tcas_reports', [])),
+        'hazard_reports': len(st.session_state.get('hazard_reports', [])),
+        'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
+        'fsr_reports': len(st.session_state.get('fsr_reports', [])),
+        'captain_dbr': len(st.session_state.get('captain_dbr', [])),
+    }
     
     for table in tables:
         try:
@@ -8990,13 +8989,45 @@ def get_user_role(username):
     roles = {'admin': 'Administrator', 'safety': 'Safety Officer', 'pilot': 'Flight Crew'}
     return roles.get(username.lower(), 'Viewer')
 
+def load_data_from_db():
+    """
+    Fetch all reports from Supabase and load them into Streamlit Session State.
+    This ensures the Dashboard, Charts, and Tables are populated with real DB data.
+    """
+    table_names = [
+        'bird_strikes', 
+        'laser_strikes', 
+        'tcas_reports', 
+        'aircraft_incidents', 
+        'hazard_reports', 
+        'fsr_reports', 
+        'captain_dbr'
+    ]
+    
+    # Iterate through tables and fetch data
+    for table in table_names:
+        try:
+            response = supabase.table(table).select("*").execute()
+            # Store in session state using the list format the app expects
+            st.session_state[table] = response.data
+        except Exception as e:
+            # print(f"⚠️ Could not load {table}: {e}")
+            # Initialize empty list if table doesn't exist yet to prevent errors
+            if table not in st.session_state:
+                st.session_state[table] = []
+
 def initialize_session_state():
+    """Initialize app state and load data."""
     if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
     if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
     if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
-    # Add this inside initialize_session_state():
+    
+    # Initialize AI
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
+        
+    # --- NEW: LOAD DATA FROM SUPABASE ON STARTUP ---
+    load_data_from_db()
 
 # --------------------------------------------------------------------------
 # NAVIGATION & ROUTING
