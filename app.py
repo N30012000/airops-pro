@@ -9007,12 +9007,17 @@ def load_data_from_db():
     # Iterate through tables and fetch data
     for table in table_names:
         try:
+            # Fetch all rows from the table
             response = supabase.table(table).select("*").execute()
-            # Store in session state using the list format the app expects
+            
+            # Store in session state so the dashboard can see it
             st.session_state[table] = response.data
+            
+            # Debug: Print count to terminal (optional)
+            # print(f"Loaded {len(response.data)} rows for {table}")
+            
         except Exception as e:
-            # print(f"⚠️ Could not load {table}: {e}")
-            # Initialize empty list if table doesn't exist yet to prevent errors
+            # If table is empty or error occurs, ensure session state has an empty list
             if table not in st.session_state:
                 st.session_state[table] = []
 
@@ -9026,7 +9031,7 @@ def initialize_session_state():
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
         
-    # --- NEW: LOAD DATA FROM SUPABASE ON STARTUP ---
+    # --- THIS WAS MISSING: LOAD DATA FROM SUPABASE ---
     load_data_from_db()
 
 # --------------------------------------------------------------------------
