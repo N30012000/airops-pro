@@ -445,7 +445,7 @@ def get_aircraft_info(registration: str) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # --- REPLACEMENT CODE ---
-@st.cache_data(ttl=60)  # Cache for 60 seconds to save API calls
+# REMOVED @st.cache_data - This was causing the "0 data" bug!
 def get_report_counts() -> dict:
     """Get counts directly from the loaded session state data"""
     return {
@@ -9025,10 +9025,13 @@ def load_data_from_db():
 # PASTE THIS NEAR THE BOTTOM OF app.py, REPLACING THE OLD initialize_session_state
 # ------------------------------------------------------------------
 
+# ------------------------------------------------------------------
+# DATA LOADING & INITIALIZATION
+# ------------------------------------------------------------------
+
 def load_data_from_supabase():
     """
     Force fetch all data from Supabase into Session State.
-    This makes the Charts, Maps, and Lists come alive.
     """
     tables = [
         'bird_strikes', 
@@ -9040,40 +9043,20 @@ def load_data_from_supabase():
         'captain_dbr'
     ]
     
-    print("🔄 Downloading data from Supabase...")
+    # print("🔄 Downloading data from Supabase...")
     
     for table in tables:
         try:
-            # 1. Fetch data
+            # Fetch data
             response = supabase.table(table).select("*").execute()
             data = response.data
             
-            # 2. Store in Session State
+            # Store in Session State
             st.session_state[table] = data
             
-            # Debug message in terminal
-            print(f"   ✅ {table}: {len(data)} records loaded.")
-            
-        except Exception as e:
-            print(f"   ⚠️ Error loading {table}: {e}")
-            # Ensure list exists even if empty to prevent crashes
-            if table not in st.session_state:
-                st.session_state[table] = []
-
-def load_data_from_supabase():
-    """Fetches data from Supabase and populates Session State."""
-    tables = [
-        'bird_strikes', 'laser_strikes', 'tcas_reports', 
-        'aircraft_incidents', 'hazard_reports', 'fsr_reports', 'captain_dbr'
-    ]
-    
-    # print("🔄 Loading data...")
-    for table in tables:
-        try:
-            response = supabase.table(table).select("*").execute()
-            st.session_state[table] = response.data
         except Exception as e:
             # print(f"⚠️ Error loading {table}: {e}")
+            # Ensure list exists even if empty to prevent crashes
             if table not in st.session_state:
                 st.session_state[table] = []
 
@@ -9086,9 +9069,35 @@ def initialize_session_state():
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
         
-    # --- LOAD DATA IMMEDIATELY ---
+    # --- FORCE LOAD DATA ON EVERY REFRESH ---
     load_data_from_supabase()
 
+# --------------------------------------------------------------------------
+# MAIN EXECUTION
+# --------------------------------------------------------------------------
+if __name__ == "__main__":
+    try:
+        initialize_session_state()
+        apply_custom_css()
+        
+        if not st.session_state.get('authenticated', False):
+            render_login_page()
+        else:
+            render_sidebar()
+            render_header()
+            route_to_page()
+            render_footer()
+            
+            # --- DEBUG: UNCOMMENT THIS TO SEE IF DATA IS LOADED ---
+            # with st.sidebar:
+            #     st.divider()
+            #     st.write("📊 Data Debug:")
+            #     st.write(f"Hazards: {len(st.session_state.get('hazard_reports', []))}")
+            #     st.write(f"Incidents: {len(st.session_state.get('aircraft_incidents', []))}")
+            
+    except Exception as e:
+        st.error(f"Application Error: {str(e)}")
+        
 # --------------------------------------------------------------------------
 # NAVIGATION & ROUTING
 # --------------------------------------------------------------------------
