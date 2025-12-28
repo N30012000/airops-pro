@@ -9034,6 +9034,10 @@ def load_data_from_db():
 # FINAL DATA LOADER & MAIN ENTRY POINT
 # ==============================================================================
 
+# ==============================================================================
+# FINAL INITIALIZATION & EXECUTION
+# ==============================================================================
+
 def load_data_from_supabase():
     """
     Force fetch all data from Supabase into Session State.
@@ -9044,33 +9048,16 @@ def load_data_from_supabase():
     ]
     
     # print("🔄 Downloading data from Supabase...")
-    
     for table in tables:
         try:
             # Fetch data
             response = supabase.table(table).select("*").execute()
-            data = response.data
-            
             # Store in Session State
-            st.session_state[table] = data
-            # print(f"✅ {table}: {len(data)} rows")
-            
+            st.session_state[table] = response.data
         except Exception as e:
             # print(f"⚠️ Error loading {table}: {e}")
             if table not in st.session_state:
                 st.session_state[table] = []
-
-def get_report_counts() -> dict:
-    """Get counts dynamically (NO CACHING)"""
-    return {
-        'bird_strikes': len(st.session_state.get('bird_strikes', [])),
-        'laser_strikes': len(st.session_state.get('laser_strikes', [])),
-        'tcas_reports': len(st.session_state.get('tcas_reports', [])),
-        'hazard_reports': len(st.session_state.get('hazard_reports', [])),
-        'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
-        'fsr_reports': len(st.session_state.get('fsr_reports', [])),
-        'captain_dbr': len(st.session_state.get('captain_dbr', [])),
-    }
 
 def initialize_session_state():
     """Initialize app state and load data."""
@@ -9081,7 +9068,7 @@ def initialize_session_state():
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
         
-    # --- LOAD DATA IMMEDIATELY ---
+    # --- CRITICAL: LOAD DATA ON STARTUP ---
     load_data_from_supabase()
 
 if __name__ == "__main__":
@@ -9099,6 +9086,7 @@ if __name__ == "__main__":
             
     except Exception as e:
         st.error(f"Application Error: {str(e)}")
+
 def render_sidebar():
     """Render the application sidebar with navigation."""
     with st.sidebar:
