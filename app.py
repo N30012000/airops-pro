@@ -9029,18 +9029,17 @@ def load_data_from_db():
 # DATA LOADING & INITIALIZATION
 # ------------------------------------------------------------------
 
+# ==============================================================================
+# FINAL DATA LOADER & MAIN ENTRY POINT
+# ==============================================================================
+
 def load_data_from_supabase():
     """
     Force fetch all data from Supabase into Session State.
     """
     tables = [
-        'bird_strikes', 
-        'laser_strikes', 
-        'tcas_reports', 
-        'aircraft_incidents', 
-        'hazard_reports', 
-        'fsr_reports', 
-        'captain_dbr'
+        'bird_strikes', 'laser_strikes', 'tcas_reports', 
+        'aircraft_incidents', 'hazard_reports', 'fsr_reports', 'captain_dbr'
     ]
     
     # print("🔄 Downloading data from Supabase...")
@@ -9053,12 +9052,24 @@ def load_data_from_supabase():
             
             # Store in Session State
             st.session_state[table] = data
+            # print(f"✅ {table}: {len(data)} rows")
             
         except Exception as e:
             # print(f"⚠️ Error loading {table}: {e}")
-            # Ensure list exists even if empty to prevent crashes
             if table not in st.session_state:
                 st.session_state[table] = []
+
+def get_report_counts() -> dict:
+    """Get counts dynamically (NO CACHING)"""
+    return {
+        'bird_strikes': len(st.session_state.get('bird_strikes', [])),
+        'laser_strikes': len(st.session_state.get('laser_strikes', [])),
+        'tcas_reports': len(st.session_state.get('tcas_reports', [])),
+        'hazard_reports': len(st.session_state.get('hazard_reports', [])),
+        'aircraft_incidents': len(st.session_state.get('aircraft_incidents', [])),
+        'fsr_reports': len(st.session_state.get('fsr_reports', [])),
+        'captain_dbr': len(st.session_state.get('captain_dbr', [])),
+    }
 
 def initialize_session_state():
     """Initialize app state and load data."""
@@ -9069,12 +9080,9 @@ def initialize_session_state():
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
         
-    # --- FORCE LOAD DATA ON EVERY REFRESH ---
+    # --- LOAD DATA IMMEDIATELY ---
     load_data_from_supabase()
 
-# --------------------------------------------------------------------------
-# MAIN EXECUTION
-# --------------------------------------------------------------------------
 if __name__ == "__main__":
     try:
         initialize_session_state()
@@ -9088,20 +9096,8 @@ if __name__ == "__main__":
             route_to_page()
             render_footer()
             
-            # --- DEBUG: UNCOMMENT THIS TO SEE IF DATA IS LOADED ---
-            # with st.sidebar:
-            #     st.divider()
-            #     st.write("📊 Data Debug:")
-            #     st.write(f"Hazards: {len(st.session_state.get('hazard_reports', []))}")
-            #     st.write(f"Incidents: {len(st.session_state.get('aircraft_incidents', []))}")
-            
     except Exception as e:
         st.error(f"Application Error: {str(e)}")
-        
-# --------------------------------------------------------------------------
-# NAVIGATION & ROUTING
-# --------------------------------------------------------------------------
-
 def render_sidebar():
     """Render the application sidebar with navigation."""
     with st.sidebar:
