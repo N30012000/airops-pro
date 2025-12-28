@@ -9021,8 +9021,48 @@ def load_data_from_db():
             if table not in st.session_state:
                 st.session_state[table] = []
 
+# ------------------------------------------------------------------
+# PASTE THIS NEAR THE BOTTOM OF app.py, REPLACING THE OLD initialize_session_state
+# ------------------------------------------------------------------
+
+def load_data_from_supabase():
+    """
+    Force fetch all data from Supabase into Session State.
+    This makes the Charts, Maps, and Lists come alive.
+    """
+    tables = [
+        'bird_strikes', 
+        'laser_strikes', 
+        'tcas_reports', 
+        'aircraft_incidents', 
+        'hazard_reports', 
+        'fsr_reports', 
+        'captain_dbr'
+    ]
+    
+    print("🔄 Downloading data from Supabase...")
+    
+    for table in tables:
+        try:
+            # 1. Fetch data
+            response = supabase.table(table).select("*").execute()
+            data = response.data
+            
+            # 2. Store in Session State
+            st.session_state[table] = data
+            
+            # Debug message in terminal
+            print(f"   ✅ {table}: {len(data)} records loaded.")
+            
+        except Exception as e:
+            print(f"   ⚠️ Error loading {table}: {e}")
+            # Ensure list exists even if empty to prevent crashes
+            if table not in st.session_state:
+                st.session_state[table] = []
+
 def initialize_session_state():
     """Initialize app state and load data."""
+    # Standard Auth States
     if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
     if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
     if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
@@ -9031,8 +9071,11 @@ def initialize_session_state():
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
         
-    # --- THIS WAS MISSING: LOAD DATA FROM SUPABASE ---
-    load_data_from_db()
+    # --- CRITICAL FIX: LOAD THE DATA ---
+    # Only load if we haven't loaded it yet (or force reload)
+    if 'data_loaded' not in st.session_state:
+        load_data_from_supabase()
+        st.session_state['data_loaded'] = True
 
 # --------------------------------------------------------------------------
 # NAVIGATION & ROUTING
