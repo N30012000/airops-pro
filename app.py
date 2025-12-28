@@ -9060,22 +9060,34 @@ def load_data_from_supabase():
             if table not in st.session_state:
                 st.session_state[table] = []
 
+def load_data_from_supabase():
+    """Fetches data from Supabase and populates Session State."""
+    tables = [
+        'bird_strikes', 'laser_strikes', 'tcas_reports', 
+        'aircraft_incidents', 'hazard_reports', 'fsr_reports', 'captain_dbr'
+    ]
+    
+    # print("🔄 Loading data...")
+    for table in tables:
+        try:
+            response = supabase.table(table).select("*").execute()
+            st.session_state[table] = response.data
+        except Exception as e:
+            # print(f"⚠️ Error loading {table}: {e}")
+            if table not in st.session_state:
+                st.session_state[table] = []
+
 def initialize_session_state():
     """Initialize app state and load data."""
-    # Standard Auth States
     if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
     if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
     if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
     
-    # Initialize AI
     if 'ai_assistant' not in st.session_state:
         st.session_state.ai_assistant = get_ai_assistant()
         
-    # --- CRITICAL FIX: LOAD THE DATA ---
-    # Only load if we haven't loaded it yet (or force reload)
-    if 'data_loaded' not in st.session_state:
-        load_data_from_supabase()
-        st.session_state['data_loaded'] = True
+    # --- LOAD DATA IMMEDIATELY ---
+    load_data_from_supabase()
 
 # --------------------------------------------------------------------------
 # NAVIGATION & ROUTING
