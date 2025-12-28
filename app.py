@@ -445,9 +445,11 @@ def get_aircraft_info(registration: str) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 # --- REPLACEMENT CODE ---
-# REMOVED @st.cache_data - This was causing the "0 data" bug!
+
+# REPLACE THE FUNCTION AT LINE 465 WITH THIS:
+
 def get_report_counts() -> dict:
-    """Get counts directly from the loaded session state data"""
+    """Get counts directly from session state (Dynamic - No Cache)"""
     return {
         'bird_strikes': len(st.session_state.get('bird_strikes', [])),
         'laser_strikes': len(st.session_state.get('laser_strikes', [])),
@@ -457,7 +459,6 @@ def get_report_counts() -> dict:
         'fsr_reports': len(st.session_state.get('fsr_reports', [])),
         'captain_dbr': len(st.session_state.get('captain_dbr', [])),
     }
-    
     for table in tables:
         try:
             # 'head=True' ensures we only get the count, not the actual data rows (faster)
