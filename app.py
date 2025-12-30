@@ -9022,27 +9022,13 @@ def load_data_from_db():
             if table not in st.session_state:
                 st.session_state[table] = []
 
-# ------------------------------------------------------------------
-# PASTE THIS NEAR THE BOTTOM OF app.py, REPLACING THE OLD initialize_session_state
-# ------------------------------------------------------------------
 
-# ------------------------------------------------------------------
-# DATA LOADING & INITIALIZATION
-# ------------------------------------------------------------------
 
-# ==============================================================================
-# FINAL DATA LOADER & MAIN ENTRY POINT
-# ==============================================================================
+# [ ... This goes AFTER render_login_page() ... ]
 
-# ==============================================================================
-# FINAL INITIALIZATION & EXECUTION
-# ==============================================================================
-
-# ... [Keep all your previous code from the top down to line ~2480] ...
-
-# ==============================================================================
-# FINAL INITIALIZATION & EXECUTION
-# ==============================================================================
+def get_user_role(username):
+    roles = {'admin': 'Administrator', 'safety': 'Safety Officer', 'pilot': 'Flight Crew'}
+    return roles.get(username.lower(), 'Viewer')
 
 def load_data_from_supabase():
     """
@@ -9060,6 +9046,7 @@ def load_data_from_supabase():
             # Store in Session State
             st.session_state[table] = response.data
         except Exception as e:
+            # If table is empty or error occurs, ensure session state has an empty list
             if table not in st.session_state:
                 st.session_state[table] = []
 
@@ -9200,7 +9187,7 @@ if __name__ == "__main__":
         if not st.session_state.get('authenticated', False):
             render_login_page()
         else:
-            render_sidebar()  # This works now because the function is defined above
+            render_sidebar()
             render_header()
             route_to_page()
             render_footer()
