@@ -8931,7 +8931,7 @@ def render_login_page():
         # --- SIGN IN ---
         with tab_signin:
             # Unique key is 'login_form' - this must only be rendered once per script run
-            with st.form("login_form"):
+            with st.form(key="login_form_" + str(uuid.uuid4())):
                 username = st.text_input("Username / Email", placeholder="admin or you@airsial.com")
                 password = st.text_input("Password", type="password")
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
