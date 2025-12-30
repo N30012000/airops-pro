@@ -9143,18 +9143,26 @@ def render_footer():
 # --------------------------------------------------------------------------
 # MAIN EXECUTION (Must be at the very end of the file)
 # --------------------------------------------------------------------------
+# ==============================================================================
+# MAIN EXECUTION
+# ==============================================================================
 if __name__ == "__main__":
     try:
+        # Initialize State
         initialize_session_state()
         apply_custom_css()
         
+        # Authentication Logic
         if not st.session_state.get('authenticated', False):
+            # Only render login if NOT authenticated
             render_login_page()
         else:
+            # Only render app if authenticated
             render_sidebar()
             render_header()
             route_to_page()
             render_footer()
             
     except Exception as e:
+        # Prevent app crash on UI errors
         st.error(f"Application Error: {str(e)}")
