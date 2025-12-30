@@ -9038,6 +9038,12 @@ def load_data_from_db():
 # FINAL INITIALIZATION & EXECUTION
 # ==============================================================================
 
+# ... [Keep all your previous code from the top down to line ~2480] ...
+
+# ==============================================================================
+# FINAL INITIALIZATION & EXECUTION
+# ==============================================================================
+
 def load_data_from_supabase():
     """
     Force fetch all data from Supabase into Session State.
@@ -9047,7 +9053,6 @@ def load_data_from_supabase():
         'aircraft_incidents', 'hazard_reports', 'fsr_reports', 'captain_dbr'
     ]
     
-    # print("🔄 Downloading data from Supabase...")
     for table in tables:
         try:
             # Fetch data
@@ -9055,7 +9060,6 @@ def load_data_from_supabase():
             # Store in Session State
             st.session_state[table] = response.data
         except Exception as e:
-            # print(f"⚠️ Error loading {table}: {e}")
             if table not in st.session_state:
                 st.session_state[table] = []
 
@@ -9070,22 +9074,6 @@ def initialize_session_state():
         
     # --- CRITICAL: LOAD DATA ON STARTUP ---
     load_data_from_supabase()
-
-if __name__ == "__main__":
-    try:
-        initialize_session_state()
-        apply_custom_css()
-        
-        if not st.session_state.get('authenticated', False):
-            render_login_page()
-        else:
-            render_sidebar()
-            render_header()
-            route_to_page()
-            render_footer()
-            
-    except Exception as e:
-        st.error(f"Application Error: {str(e)}")
 
 def render_sidebar():
     """Render the application sidebar with navigation."""
@@ -9193,7 +9181,7 @@ def route_to_page():
             pages[page]()
         except Exception as e:
             st.error(f"Error loading {page}: {e}")
-            st.exception(e)
+            # st.exception(e) # Uncomment to debug stack trace
     else:
         render_dashboard()
 
@@ -9202,7 +9190,7 @@ def render_footer():
     st.markdown("<center style='color:#888;'>Air Sial SMS v3.0 | © 2025</center>", unsafe_allow_html=True)
 
 # --------------------------------------------------------------------------
-# MAIN EXECUTION
+# MAIN EXECUTION (Must be at the very end of the file)
 # --------------------------------------------------------------------------
 if __name__ == "__main__":
     try:
@@ -9212,7 +9200,7 @@ if __name__ == "__main__":
         if not st.session_state.get('authenticated', False):
             render_login_page()
         else:
-            render_sidebar()
+            render_sidebar()  # This works now because the function is defined above
             render_header()
             route_to_page()
             render_footer()
