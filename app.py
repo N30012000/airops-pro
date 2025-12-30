@@ -8904,6 +8904,10 @@ def render_settings():
         st.markdown("### 👥 User Management")
         st.info("User management is handled via Supabase Auth.")
 
+# --------------------------------------------------------------------------
+# AUTHENTICATION & ENTRY POINT
+# --------------------------------------------------------------------------
+
 def render_login_page():
     """Render the login page with Hybrid Auth (Demo + Supabase)."""
     
@@ -8926,6 +8930,7 @@ def render_login_page():
         
         # --- SIGN IN ---
         with tab_signin:
+            # Unique key is 'login_form' - this must only be rendered once per script run
             with st.form("login_form"):
                 username = st.text_input("Username / Email", placeholder="admin or you@airsial.com")
                 password = st.text_input("Password", type="password")
@@ -8990,46 +8995,6 @@ def get_user_role(username):
     roles = {'admin': 'Administrator', 'safety': 'Safety Officer', 'pilot': 'Flight Crew'}
     return roles.get(username.lower(), 'Viewer')
 
-def load_data_from_db():
-    """
-    Fetch all reports from Supabase and load them into Streamlit Session State.
-    This ensures the Dashboard, Charts, and Tables are populated with real DB data.
-    """
-    table_names = [
-        'bird_strikes', 
-        'laser_strikes', 
-        'tcas_reports', 
-        'aircraft_incidents', 
-        'hazard_reports', 
-        'fsr_reports', 
-        'captain_dbr'
-    ]
-    
-    # Iterate through tables and fetch data
-    for table in table_names:
-        try:
-            # Fetch all rows from the table
-            response = supabase.table(table).select("*").execute()
-            
-            # Store in session state so the dashboard can see it
-            st.session_state[table] = response.data
-            
-            # Debug: Print count to terminal (optional)
-            # print(f"Loaded {len(response.data)} rows for {table}")
-            
-        except Exception as e:
-            # If table is empty or error occurs, ensure session state has an empty list
-            if table not in st.session_state:
-                st.session_state[table] = []
-
-
-
-# [ ... This goes AFTER render_login_page() ... ]
-
-def get_user_role(username):
-    roles = {'admin': 'Administrator', 'safety': 'Safety Officer', 'pilot': 'Flight Crew'}
-    return roles.get(username.lower(), 'Viewer')
-
 def load_data_from_supabase():
     """
     Force fetch all data from Supabase into Session State.
@@ -9046,7 +9011,6 @@ def load_data_from_supabase():
             # Store in Session State
             st.session_state[table] = response.data
         except Exception as e:
-            # If table is empty or error occurs, ensure session state has an empty list
             if table not in st.session_state:
                 st.session_state[table] = []
 
