@@ -9001,6 +9001,9 @@ def render_login_page():
 # MAIN APP ENTRY POINT
 # ==============================================================================
 
+# ==============================================================================
+# MAIN EXECUTION (Must be at the very end of the file)
+# ==============================================================================
 if __name__ == "__main__":
     # 1. Initialize State
     initialize_session_state()
@@ -9010,9 +9013,10 @@ if __name__ == "__main__":
     
     # 3. Routing Logic
     if not st.session_state.get('authenticated', False):
+        # User is NOT logged in -> Show Login
         render_login_page()
     else:
-        # User is logged in
+        # User IS logged in -> Show App
         render_sidebar()
         render_header()
         route_to_page()
