@@ -8908,13 +8908,14 @@ def render_settings():
 # AUTHENTICATION & ENTRY POINT
 # --------------------------------------------------------------------------
 
+# ==============================================================================
+# AUTHENTICATION & LOGIN PAGE
+# ==============================================================================
+
 def render_login_page():
     """Render the login page with Hybrid Auth (Demo + Supabase)."""
     
-    # Handle Email Verification Return
-    if "code" in st.query_params:
-        st.toast("✅ Email Verified! Please log in.", icon="🎉")
-
+    # Ensure login mode is set
     if 'login_mode' not in st.session_state:
         st.session_state.login_mode = 'signin'
 
@@ -8930,47 +8931,52 @@ def render_login_page():
         
         # --- SIGN IN ---
         with tab_signin:
-            # Unique key is 'login_form' - this must only be rendered once per script run
-            with st.form(key="login_form_" + str(uuid.uuid4())):
+            # We use a static key 'login_form' to avoid duplicates
+            with st.form("login_form"):
                 username = st.text_input("Username / Email", placeholder="admin or you@airsial.com")
                 password = st.text_input("Password", type="password")
                 submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
                 
                 if submitted:
                     user_input = username.strip()
-                    # 1. Demo Login (for testing)
+                    
+                    # 1. Demo Login (Hardcoded for safety/testing)
                     demo_users = {
-                        'admin': 'admin123', 'safety': 'safety123', 
-                        'pilot': 'pilot123', 'viewer': 'viewer123'
+                        'admin': 'admin123', 
+                        'safety': 'safety123', 
+                        'pilot': 'pilot123', 
+                        'viewer': 'viewer123'
                     }
+                    
                     if user_input.lower() in demo_users and demo_users[user_input.lower()] == password:
-                        st.session_state.authenticated = True
-                        st.session_state.username = user_input
-                        st.session_state.user_role = get_user_role(user_input)
-                        st.success("✅ Login successful (Demo)!")
+                        st.session_state['authenticated'] = True
+                        st.session_state['username'] = user_input
+                        st.session_state['user_role'] = get_user_role(user_input)
+                        st.success("✅ Login successful!")
                         st.rerun()
                     
-                    # 2. Supabase Login
+                    # 2. Supabase Login (Production)
                     else:
                         try:
                             auth_response = supabase.auth.sign_in_with_password({
                                 "email": user_input, "password": password
                             })
-                            st.session_state.authenticated = True
-                            st.session_state.username = auth_response.user.email
-                            st.session_state.user_email = auth_response.user.email
-                            
-                            # Get Role
-                            try:
-                                profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
-                                st.session_state.user_role = profile.data[0]['role'] if profile.data else "Viewer"
-                            except:
-                                st.session_state.user_role = "Viewer"
+                            if auth_response.user:
+                                st.session_state['authenticated'] = True
+                                st.session_state['username'] = auth_response.user.email
+                                st.session_state['user_email'] = auth_response.user.email
                                 
-                            st.success("✅ Login successful!")
-                            st.rerun()
+                                # Fetch Role
+                                try:
+                                    profile = supabase.table('profiles').select('role').eq('id', auth_response.user.id).execute()
+                                    st.session_state['user_role'] = profile.data[0]['role'] if profile.data else "Viewer"
+                                except:
+                                    st.session_state['user_role'] = "Viewer"
+                                    
+                                st.success("✅ Login successful!")
+                                st.rerun()
                         except Exception as e:
-                            st.error("❌ Login failed. Check credentials or email verification.")
+                            st.error("❌ Login failed. Check credentials.")
 
         # --- REGISTER ---
         with tab_register:
@@ -8987,10 +8993,30 @@ def render_login_page():
                             "options": {"data": {"role": new_role}}
                         })
                         if res.user:
-                            st.success("✅ Account created! Please check your email to confirm.")
+                            st.success("✅ Account created! Check email to confirm.")
                     except Exception as e:
                         st.error(f"Error: {e}")
 
+# ==============================================================================
+# MAIN APP ENTRY POINT
+# ==============================================================================
+
+if __name__ == "__main__":
+    # 1. Initialize State
+    initialize_session_state()
+    
+    # 2. Apply Styles
+    apply_custom_css()
+    
+    # 3. Routing Logic
+    if not st.session_state.get('authenticated', False):
+        render_login_page()
+    else:
+        # User is logged in
+        render_sidebar()
+        render_header()
+        route_to_page()
+        render_footer()
 def get_user_role(username):
     roles = {'admin': 'Administrator', 'safety': 'Safety Officer', 'pilot': 'Flight Crew'}
     return roles.get(username.lower(), 'Viewer')
