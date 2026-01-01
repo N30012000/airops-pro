@@ -8885,9 +8885,12 @@ This code contains the correct definitions for `render_settings`, `render_login_
 # PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
 # ==============================================================================
 
+# ==============================================================================
+# PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
+# ==============================================================================
+
 def render_settings():
     """Render the settings page."""
-    
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
                 padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
@@ -8906,7 +8909,6 @@ def render_settings():
     
     with tab_general:
         st.markdown("### 🏢 General Configuration")
-        
         col1, col2 = st.columns(2)
         with col1:
             st.text_input("Company Name", value=settings.get('company_name', 'Air Sial'))
@@ -9122,7 +9124,7 @@ def route_to_page():
     """Route to the selected page function."""
     page = st.session_state.get('current_page', 'Dashboard')
     
-    # Page Map (Ensure these functions exist higher up in your file)
+    # Page Map
     pages = {
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
@@ -9181,4 +9183,3 @@ if __name__ == "__main__":
         render_header()
         route_to_page()
         render_footer()
-
