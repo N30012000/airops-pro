@@ -6533,108 +6533,87 @@ def generate_report_pdf(report):
     except Exception as e:
         st.error(f"Error generating PDF: {str(e)}")
 
-
-# =============================================================================
-# END OF PART 7
-# =============================================================================
-# =============================================================================
 # PART 8: AI ASSISTANT & EMAIL FEATURES
 # Air Sial SMS v3.0 - Safety Management System
-# =============================================================================
-# This part includes:
-# - AI Assistant chat interface
-# - Report analysis and insights
-# - Email generation and templates
-# - SMTP email sending
-# - PDF report generation
-# - Communication management
-# =============================================================================
 
 def render_general_assistant():
-    """Render the General AI Assistant page with Suggested Questions."""
+    """Render the General AI Assistant page with Quick Questions."""
     
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
-        <h1 style="margin: 0; font-size: 2.2rem;">🧠 General Safety Assistant</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
-            Your AI companion for aviation safety queries, regulations, and procedures.
-        </p>
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); 
+                padding: 25px; border-radius: 12px; margin-bottom: 25px; color: white;">
+        <h1 style="margin: 0; font-size: 2rem;">🧠 General Safety Assistant</h1>
+        <p style="margin: 5px 0 0 0; opacity: 0.9;">Your expert companion for aviation safety queries.</p>
     </div>
     """, unsafe_allow_html=True)
     
+    # Initialize Chat History
     if 'general_chat' not in st.session_state:
         st.session_state.general_chat = []
 
-    # --- Display Chat History ---
+    # Display Chat History
     for msg in st.session_state.general_chat:
         role = "👤 You" if msg['role'] == 'user' else "🧠 AI"
-        bg = "#F0F2F6" if msg['role'] == 'user' else "#E8F0FE"
-        border = "#D1D5DB" if msg['role'] == 'user' else "#BFDBFE"
+        bg = "#F8FAFC" if msg['role'] == 'user' else "#EFF6FF"
+        border = "#E2E8F0" if msg['role'] == 'user' else "#BFDBFE"
         
-        st.markdown(f"**{role}:**")
         st.markdown(f"""
-        <div style="background:{bg}; padding:15px; border-radius:10px; margin-bottom:10px; border: 1px solid {border};">
-            {msg['content']}
+        <div style="background:{bg}; padding:12px 16px; border-radius:8px; margin-bottom:10px; border: 1px solid {border}; color: #334155;">
+            <strong>{role}:</strong><br>{msg['content']}
         </div>
         """, unsafe_allow_html=True)
 
-    # --- Suggested Questions Section ---
-    st.markdown("### 💡 Quick Suggestions")
+    # --- 💡 SUGGESTED QUESTIONS BUTTONS ---
+    st.markdown("#### 💡 Suggested Questions")
     
-    # List of predefined questions
-    suggestions = [
-        "What are the reporting timelines for a Bird Strike?",
-        "Explain the difference between 'Hazard' and 'Incident'.",
-        "What is the ICAO definition of a 'Serious Incident'?",
-        "How do I categorize a laser illumination event?",
-        "What are the immediate actions for a TCAS RA?",
-        "Summarize the fatigue risk management policy."
+    # The list of questions you wanted
+    questions = [
+        "What constitutes a 'Serious Incident' according to ICAO?",
+        "How do I report a laser strike event?",
+        "Explain the difference between Hazard and Incident.",
+        "What are the mandatory reporting timelines?",
+        "Summarize the Fatigue Risk Management policy.",
+        "What are the immediate actions for a TCAS RA?"
     ]
     
-    # Create a grid layout for buttons
-    cols = st.columns(3)
-    for i, question in enumerate(suggestions):
-        # Use columns to arrange buttons nicely
-        if cols[i % 3].button(question, key=f"gen_sugg_{i}", use_container_width=True):
-            # 1. Append User Message
-            st.session_state.general_chat.append({'role': 'user', 'content': question})
-            
-            # 2. Get AI Response immediately
+    # Create a grid of buttons
+    col1, col2 = st.columns(2)
+    
+    # Loop through questions and create buttons
+    for i, q in enumerate(questions):
+        # Alternate columns
+        with col1 if i % 2 == 0 else col2:
+            if st.button(q, key=f"q_btn_{i}", use_container_width=True):
+                # 1. Add user message
+                st.session_state.general_chat.append({'role': 'user', 'content': q})
+                
+                # 2. Get AI Response
+                ai = st.session_state.get('ai_assistant')
+                if ai:
+                    with st.spinner("🧠 Analyzing regulations..."):
+                        response = ai.chat(q)
+                        st.session_state.general_chat.append({'role': 'assistant', 'content': response})
+                else:
+                    st.error("⚠️ AI System Offline")
+                
+                # 3. Reload to show response
+                st.rerun()
+
+    st.markdown("---")
+
+    # Chat Input
+    with st.form("gen_input_form"):
+        user_input = st.text_input("Ask a custom question...", placeholder="Type your safety question here...")
+        submitted = st.form_submit_button("Submit Question", type="primary", use_container_width=True)
+        
+        if submitted and user_input:
+            st.session_state.general_chat.append({'role': 'user', 'content': user_input})
             ai = st.session_state.get('ai_assistant')
             if ai:
-                with st.spinner("🧠 Analyzing safety protocols..."):
-                    # Use the AI's chat method
-                    response = ai.chat(question)
-                    st.session_state.general_chat.append({'role': 'assistant', 'content': response})
-            else:
-                st.error("⚠️ AI System not initialized. Please check API Keys.")
-            
-            # 3. Rerun to show new messages
+                with st.spinner("🧠 Thinking..."):
+                    resp = ai.chat(user_input)
+                    st.session_state.general_chat.append({'role': 'assistant', 'content': resp})
             st.rerun()
-
-    # --- Main Chat Input ---
-    st.markdown("---")
-    with st.form("general_chat_input"):
-        input_col1, input_col2 = st.columns([5, 1])
-        with input_col1:
-            user_text = st.text_input("Ask a custom question...", placeholder="Type here and press Enter")
-        with input_col2:
-            st.markdown("<br>", unsafe_allow_html=True)
-            submitted = st.form_submit_button("📤 Send", type="primary", use_container_width=True)
-    
-    if submitted and user_text:
-        st.session_state.general_chat.append({'role': 'user', 'content': user_text})
-        
-        # Call the AI Brain
-        ai = st.session_state.get('ai_assistant')
-        if ai:
-            with st.spinner("🧠 Thinking..."):
-                response = ai.chat(user_text)
-                st.session_state.general_chat.append({'role': 'assistant', 'content': response})
-        else:
-            st.error("⚠️ AI System not initialized. Check API Keys.")
-        st.rerun()
         
 def render_ai_assistant():
     """AI Assistant for safety report analysis and insights."""
@@ -9003,11 +8982,16 @@ def route_to_page():
     """Route to the selected page function."""
     page = st.session_state.get('current_page', 'Dashboard')
     
-    # Page Map (Ensure these functions exist higher up in your file)
+    # Map Page Names to Functions
     pages = {
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
         'Action Tracker': render_action_tracker,
+        'AI Assistant': render_ai_assistant,         # The Robot Icon
+        'General Assistant': render_general_assistant, # <--- THIS IS THE ONE WITH QUESTIONS
+        'Geospatial Map': render_geospatial_map,
+        'NL Query': render_nl_query,
+        'Email Center': render_email_center,
         'Bird Strike Report': render_bird_strike_form,
         'Laser Strike Report': render_laser_strike_form,
         'TCAS Report': render_tcas_report_form,
@@ -9016,21 +9000,10 @@ def route_to_page():
         'FSR Report': render_fsr_form,
         'Captain Debrief': render_captain_dbr_form,
         'Report Detail': render_report_detail,
-        'AI Assistant': render_ai_assistant,
-        'General Assistant': render_general_assistant,
-        'Email Center': render_email_center,
-        'Geospatial Map': render_geospatial_map,
-        'IOSA Compliance': render_iosa_compliance,
-        'Ramp Inspections': render_ramp_inspection,
-        'Audit Findings': render_audit_findings,
-        'MoC Workflow': render_moc_workflow,
-        'Predictive Monitor': render_predictive_monitor,
-        'Data Management': render_data_management,
-        'NL Query': render_nl_query,
         'Settings': render_settings
     }
     
-    # Render
+    # Load the page
     if page in pages:
         try:
             pages[page]()
