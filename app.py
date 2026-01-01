@@ -9025,22 +9025,28 @@ def render_login_page():
                         st.error(f"Error: {e}")
 
 def render_sidebar():
-    """Render sidebar navigation."""
+    """Render the application sidebar with navigation."""
     with st.sidebar:
+        # Logo
         st.markdown("<h2 style='text-align: center;'>✈️ AIR SIAL</h2>", unsafe_allow_html=True)
+        
         if st.session_state.get('authenticated'):
             st.info(f"👤 {st.session_state.get('username')} ({st.session_state.get('user_role')})")
         
         st.markdown("---")
         
-        # Menu Structure
+        # --- RESTORED MAIN MENU ITEMS ---
         menu_items = {
             "📊 Dashboard": "Dashboard",
             "📋 View Reports": "View Reports",
             "⚡ Action Tracker": "Action Tracker",
             "🤖 AI Assistant": "AI Assistant",
+            "🧠 General Assistant": "General Assistant",
+            "🗺️ Geospatial Map": "Geospatial Map",
+            "🔍 NL Query": "NL Query",
         }
         
+        # Admin/Special Menus
         forms = {
             "🦅 Bird Strike": "Bird Strike Report",
             "🔴 Laser Strike": "Laser Strike Report",
@@ -9075,7 +9081,7 @@ def render_sidebar():
                 if st.button(label, key=f"nav_{page}", use_container_width=True):
                     st.session_state['current_page'] = page
                     st.rerun()
-        
+                    
         # Render Enterprise
         with st.expander("🏢 Enterprise Tools"):
             for label, page in enterprise.items():
