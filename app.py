@@ -8853,42 +8853,6 @@ def process_nl_query(query):
 # =============================================================================
 # PART 10: AUTHENTICATION, SETTINGS & MAIN ENTRY POINT
 # Air Sial SMS v3.0 - Safety Management System
-# =============================================================================
-# This part includes:
-# - Login/authentication page
-# - User management and roles
-# - Sidebar navigation
-# - Settings page with persistence
-# - System configuration
-# - Main application entry point
-# =============================================================================
-
-# =============================================================================
-# PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
-# =============================================================================
-
-The error `NameError: name 'initialize_session_state' is not defined` and the line number `9009` confirm that your file is likely very large and disordered, possibly due to multiple "Parts" being pasted incorrectly or the function definition being deleted/indented by mistake.
-
-To fix the **NameError** and the **Login Loop** (where it won't log in), we need to completely replace the bottom section of your `app.py` with a clean, correctly ordered version.
-
-### **Step-by-Step Fix**
-
-1. **Open** `app.py`.
-2. **Scroll down** to find the function: `def render_settings():` (This is usually the start of the final section).
-3. **Delete EVERYTHING** from `def render_settings():` all the way down to the **very end of the file**.
-4. **Paste** the code block below in its place.
-
-This code contains the correct definitions for `render_settings`, `render_login_page`, `initialize_session_state`, and the **Main Execution Block** (without the error catcher that stops logins).
-
-```python
-# ==============================================================================
-# PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
-# ==============================================================================
-
-# ==============================================================================
-# PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
-# ==============================================================================
-
 # ==============================================================================
 # PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
 # ==============================================================================
