@@ -6788,59 +6788,80 @@ def generate_trend_analysis():
 def generate_risk_analysis(risk_distribution, high_risk_count):
     """Generate styled risk analysis response."""
     
+    # Extract counts with safety defaults
     extreme = risk_distribution.get('Extreme', 0)
     high = risk_distribution.get('High', 0)
     medium = risk_distribution.get('Medium', 0)
     low = risk_distribution.get('Low', 0)
     
+    # Determine status color for the header
+    status_color = "#22C55E" if high_risk_count == 0 else "#EF4444"
+    header_text = "OPERATIONS NORMAL" if high_risk_count == 0 else "ATTENTION REQUIRED"
+
     return f"""
-    <div style="background-color: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-family: sans-serif;">
-        <div style="border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center;">
-            <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
-            <h3 style="margin: 0; color: #1E293B; font-size: 1.25rem;">Executive Risk Summary</h3>
+    <div style="font-family: 'Source Sans Pro', sans-serif; background-color: #ffffff; border-radius: 12px; padding: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; margin-bottom: 20px;">
+        
+        <div style="background-color: #1E293B; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">🛡️</span>
+                <div>
+                    <h3 style="margin: 0; color: white; font-size: 18px; font-weight: 600;">Risk Intelligence Summary</h3>
+                    <p style="margin: 0; color: #94A3B8; font-size: 12px;">Real-time safety assessment</p>
+                </div>
+            </div>
+            <span style="background-color: {status_color}; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">
+                {header_text}
+            </span>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px;">
-            <div style="background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
-                <div style="font-size: 1.8rem; font-weight: 800;">{extreme}</div>
-                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">EXTREME</div>
-            </div>
-            <div style="background: linear-gradient(135deg, #F97316 0%, #C2410C 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
-                <div style="font-size: 1.8rem; font-weight: 800;">{high}</div>
-                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">HIGH</div>
-            </div>
-            <div style="background: linear-gradient(135deg, #EAB308 0%, #A16207 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
-                <div style="font-size: 1.8rem; font-weight: 800;">{medium}</div>
-                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">MEDIUM</div>
-            </div>
-            <div style="background: linear-gradient(135deg, #22C55E 0%, #15803D 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
-                <div style="font-size: 1.8rem; font-weight: 800;">{low}</div>
-                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">LOW</div>
-            </div>
-        </div>
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+                
+                <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 800; color: #DC2626; line-height: 1;">{extreme}</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #991B1B; text-transform: uppercase; margin-top: 4px;">Extreme</div>
+                </div>
 
-        <div style="background-color: #F8FAFC; border-left: 4px solid #3B82F6; padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px 0; color: #1E293B; font-size: 1rem;">🔍 Key Observations</h4>
-            <p style="margin: 0; color: #475569; font-size: 0.95rem;">
-                There are currently <strong style="color: #EF4444; font-size: 1.1em;">{high_risk_count}</strong> high-priority items requiring attention.
-            </p>
-            <div style="margin-top: 10px; display: flex; gap: 10px;">
-                <span style="background: #FEF2F2; color: #991B1B; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; border: 1px solid #FCA5A5;">
-                    Extreme: 24hr SLA
-                </span>
-                <span style="background: #FFF7ED; color: #9A3412; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; border: 1px solid #FDBA74;">
-                    High: 1 Week SLA
-                </span>
-            </div>
-        </div>
+                <div style="background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 800; color: #EA580C; line-height: 1;">{high}</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #9A3412; text-transform: uppercase; margin-top: 4px;">High</div>
+                </div>
 
-        <div style="background-color: #F0FDF4; border: 1px solid #86EFAC; padding: 15px; border-radius: 8px; display: flex; align-items: start;">
-            <span style="font-size: 1.2rem; margin-right: 10px;">💡</span>
-            <div>
-                <strong style="display: block; color: #166534; margin-bottom: 4px;">Strategic Recommendation</strong>
-                <span style="color: #14532D; font-size: 0.9rem;">
-                    Ensure all Extreme/High risk items have assigned owners and documented mitigation plans. The Safety Review Board is tracking these items actively.
-                </span>
+                <div style="background: #FEFCE8; border: 1px solid #FEF08A; border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 800; color: #CA8A04; line-height: 1;">{medium}</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #854D0E; text-transform: uppercase; margin-top: 4px;">Medium</div>
+                </div>
+
+                <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 16px; text-align: center;">
+                    <div style="font-size: 28px; font-weight: 800; color: #16A34A; line-height: 1;">{low}</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #166534; text-transform: uppercase; margin-top: 4px;">Low</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 2;">
+                    <h4 style="margin: 0 0 12px 0; color: #334155; font-size: 14px; border-bottom: 2px solid #E2E8F0; padding-bottom: 8px;">
+                        🔍 Key Observations
+                    </h4>
+                    <p style="color: #475569; font-size: 14px; line-height: 1.5; margin: 0;">
+                        There are currently <strong>{high_risk_count}</strong> high-priority items requiring immediate attention. 
+                        The overall risk profile indicates { "critical gaps" if high_risk_count > 0 else "stable operations" }.
+                    </p>
+                    <ul style="margin-top: 10px; padding-left: 20px; color: #475569; font-size: 13px;">
+                        <li>Extreme Risk SLA: <strong>Immediate Action (24h)</strong></li>
+                        <li>High Risk SLA: <strong>Priority Action (7 Days)</strong></li>
+                    </ul>
+                </div>
+
+                <div style="flex: 1; background-color: #F8FAFC; padding: 16px; border-radius: 8px; border-left: 4px solid #3B82F6;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <span style="font-size: 16px;">💡</span>
+                        <strong style="color: #1E293B; font-size: 13px;">AI Recommendation</strong>
+                    </div>
+                    <p style="color: #334155; font-size: 12px; margin: 0; line-height: 1.4;">
+                        Ensure all Extreme/High risk items have assigned owners. Review mitigation effectiveness in the next SRB meeting.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
