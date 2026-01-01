@@ -6786,7 +6786,7 @@ def generate_trend_analysis():
 
 
 def generate_risk_analysis(risk_distribution, high_risk_count):
-    """Generate risk analysis response."""
+    """Generate styled risk analysis response."""
     
     extreme = risk_distribution.get('Extreme', 0)
     high = risk_distribution.get('High', 0)
@@ -6794,30 +6794,56 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
     low = risk_distribution.get('Low', 0)
     
     return f"""
-    <strong>⚠️ Current Risk Summary</strong>
-    
-    <p><strong>Risk Distribution:</strong></p>
-    <ul>
-        <li>🔴 Extreme Risk: {extreme} reports</li>
-        <li>🟠 High Risk: {high} reports</li>
-        <li>🟡 Medium Risk: {medium} reports</li>
-        <li>🟢 Low Risk: {low} reports</li>
-    </ul>
-    
-    <p><strong>Key Observations:</strong></p>
-    <p>There are currently <strong>{high_risk_count}</strong> high/extreme risk items requiring 
-    priority attention. These should be addressed within the established SLA timeframes:</p>
-    <ul>
-        <li>Extreme: Immediate action (24 hours)</li>
-        <li>High: Priority action (1 week)</li>
-    </ul>
-    
-    <p><strong>Risk Mitigation Status:</strong></p>
-    <p>Active corrective actions are in progress for identified risks. The Safety Review Board 
-    has visibility on all high-priority items.</p>
-    
-    <p><em>💡 Recommendation: Ensure all Extreme/High risk items have assigned owners and 
-    documented mitigation plans.</em></p>
+    <div style="background-color: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-family: sans-serif;">
+        <div style="border-bottom: 2px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 20px; display: flex; align-items: center;">
+            <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+            <h3 style="margin: 0; color: #1E293B; font-size: 1.25rem;">Executive Risk Summary</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px;">
+            <div style="background: linear-gradient(135deg, #EF4444 0%, #B91C1C 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
+                <div style="font-size: 1.8rem; font-weight: 800;">{extreme}</div>
+                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">EXTREME</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #F97316 0%, #C2410C 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
+                <div style="font-size: 1.8rem; font-weight: 800;">{high}</div>
+                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">HIGH</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #EAB308 0%, #A16207 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
+                <div style="font-size: 1.8rem; font-weight: 800;">{medium}</div>
+                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">MEDIUM</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #22C55E 0%, #15803D 100%); padding: 15px; border-radius: 10px; text-align: center; color: white;">
+                <div style="font-size: 1.8rem; font-weight: 800;">{low}</div>
+                <div style="font-size: 0.75rem; opacity: 0.9; font-weight: 600;">LOW</div>
+            </div>
+        </div>
+
+        <div style="background-color: #F8FAFC; border-left: 4px solid #3B82F6; padding: 15px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #1E293B; font-size: 1rem;">🔍 Key Observations</h4>
+            <p style="margin: 0; color: #475569; font-size: 0.95rem;">
+                There are currently <strong style="color: #EF4444; font-size: 1.1em;">{high_risk_count}</strong> high-priority items requiring attention.
+            </p>
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <span style="background: #FEF2F2; color: #991B1B; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; border: 1px solid #FCA5A5;">
+                    Extreme: 24hr SLA
+                </span>
+                <span style="background: #FFF7ED; color: #9A3412; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; border: 1px solid #FDBA74;">
+                    High: 1 Week SLA
+                </span>
+            </div>
+        </div>
+
+        <div style="background-color: #F0FDF4; border: 1px solid #86EFAC; padding: 15px; border-radius: 8px; display: flex; align-items: start;">
+            <span style="font-size: 1.2rem; margin-right: 10px;">💡</span>
+            <div>
+                <strong style="display: block; color: #166534; margin-bottom: 4px;">Strategic Recommendation</strong>
+                <span style="color: #14532D; font-size: 0.9rem;">
+                    Ensure all Extreme/High risk items have assigned owners and documented mitigation plans. The Safety Review Board is tracking these items actively.
+                </span>
+            </div>
+        </div>
+    </div>
     """
 
 
@@ -6928,43 +6954,59 @@ def generate_tcas_analysis():
 
 
 def generate_safety_briefing(report_counts, total_reports, high_risk_count):
-    """Generate weekly safety briefing."""
+    """Generate styled weekly safety briefing."""
     
     today = datetime.now().strftime('%B %d, %Y')
     
+    # Calculate some dynamic styles based on risk
+    status_color = "#22C55E" if high_risk_count == 0 else "#F97316"
+    status_text = "NORMAL" if high_risk_count == 0 else "ATTENTION REQUIRED"
+    
     return f"""
-    <strong>📋 Weekly Safety Briefing</strong>
-    <p style="color: #666; font-size: 0.9rem;">Generated: {today}</p>
-    
-    <p><strong>Executive Summary:</strong></p>
-    <p>This week's safety performance remains within acceptable parameters. The safety 
-    reporting system is functioning effectively with active participation across 
-    all operational areas.</p>
-    
-    <p><strong>Key Statistics:</strong></p>
-    <ul>
-        <li>Total Reports: {total_reports}</li>
-        <li>High/Extreme Risk Items: {high_risk_count}</li>
-        <li>Bird Strikes: {report_counts.get('bird_strikes', 0)}</li>
-        <li>Hazard Reports: {report_counts.get('hazard_reports', 0)}</li>
-        <li>Incidents: {report_counts.get('aircraft_incidents', 0)}</li>
-    </ul>
-    
-    <p><strong>Focus Areas This Week:</strong></p>
-    <ol>
-        <li>Continue monitoring seasonal wildlife activity</li>
-        <li>Complete pending corrective actions</li>
-        <li>Review and close aged investigation items</li>
-    </ol>
-    
-    <p><strong>Upcoming:</strong></p>
-    <ul>
-        <li>Monthly Safety Review Board meeting</li>
-        <li>Quarterly safety audit preparation</li>
-        <li>Annual SMS effectiveness review</li>
-    </ul>
-    
-    <p><em>Stay vigilant. Safety is everyone's responsibility.</em></p>
+    <div style="background-color: white; border-radius: 10px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="background: #1E3A8A; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="margin: 0; font-size: 1.4rem;">📋 Weekly Safety Briefing</h2>
+                <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px;">{today}</div>
+            </div>
+            <div style="background: {status_color}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">
+                {status_text}
+            </div>
+        </div>
+
+        <div style="padding: 20px;">
+            <div style="margin-bottom: 25px;">
+                <h4 style="color: #475569; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; margin-top: 0;">📊 System Activity</h4>
+                <div style="display: flex; gap: 20px; margin-top: 15px;">
+                    <div style="flex: 1; background: #F8FAFC; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #3B82F6;">{total_reports}</div>
+                        <div style="font-size: 0.8rem; color: #64748B;">Total Reports</div>
+                    </div>
+                    <div style="flex: 1; background: #FEF2F2; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #EF4444;">{high_risk_count}</div>
+                        <div style="font-size: 0.8rem; color: #991B1B;">High Risk</div>
+                    </div>
+                    <div style="flex: 1; background: #F0FDF4; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 2rem; font-weight: bold; color: #16A34A;">{report_counts.get('hazard_reports', 0)}</div>
+                        <div style="font-size: 0.8rem; color: #166534;">Hazards ID'd</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #FFF7ED; border-left: 4px solid #F97316; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <strong style="color: #9A3412;">🎯 Focus Areas This Week</strong>
+                <ul style="margin: 10px 0 0 20px; color: #7C2D12;">
+                    <li>Monitor seasonal wildlife activity (Migration Season)</li>
+                    <li>Complete pending corrective actions for high-risk items</li>
+                    <li>Review closed investigation effectiveness</li>
+                </ul>
+            </div>
+
+            <p style="color: #64748B; font-style: italic; font-size: 0.9rem; text-align: center; margin: 0;">
+                "Safety is everyone's responsibility. Stay vigilant."
+            </p>
+        </div>
+    </div>
     """
 
 
