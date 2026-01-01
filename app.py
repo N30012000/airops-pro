@@ -8982,16 +8982,28 @@ def route_to_page():
     """Route to the selected page function."""
     page = st.session_state.get('current_page', 'Dashboard')
     
-    # Map Page Names to Functions
+    # Page Map - Maps the sidebar name to the actual function
     pages = {
+        # Core Modules
         'Dashboard': render_dashboard,
         'View Reports': render_view_reports,
         'Action Tracker': render_action_tracker,
-        'AI Assistant': render_ai_assistant,         # The Robot Icon
-        'General Assistant': render_general_assistant, # <--- THIS IS THE ONE WITH QUESTIONS
-        'Geospatial Map': render_geospatial_map,
-        'NL Query': render_nl_query,
+        'AI Assistant': render_ai_assistant,
+        'General Assistant': render_general_assistant,
+        
+        # Enterprise Tools (These were missing)
         'Email Center': render_email_center,
+        'Geospatial Map': render_geospatial_map,
+        'IOSA Compliance': render_iosa_compliance,
+        'Ramp Inspections': render_ramp_inspection,
+        'Audit Findings': render_audit_findings,
+        'MoC Workflow': render_moc_workflow,
+        'Predictive Monitor': render_predictive_monitor,
+        'Data Management': render_data_management,
+        'NL Query': render_nl_query,
+        'Settings': render_settings,
+
+        # Reporting Forms
         'Bird Strike Report': render_bird_strike_form,
         'Laser Strike Report': render_laser_strike_form,
         'TCAS Report': render_tcas_report_form,
@@ -8999,17 +9011,19 @@ def route_to_page():
         'Hazard Report': render_hazard_form,
         'FSR Report': render_fsr_form,
         'Captain Debrief': render_captain_dbr_form,
-        'Report Detail': render_report_detail,
-        'Settings': render_settings
+        
+        # Detail Views
+        'Report Detail': render_report_detail
     }
     
-    # Load the page
+    # Render the selected page
     if page in pages:
         try:
             pages[page]()
         except Exception as e:
             st.error(f"Error loading {page}: {e}")
     else:
+        # Default to Dashboard if page not found
         render_dashboard()
 
 def render_footer():
