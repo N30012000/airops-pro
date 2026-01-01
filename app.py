@@ -6786,87 +6786,113 @@ def generate_trend_analysis():
 
 
 def generate_risk_analysis(risk_distribution, high_risk_count):
-    """Generate styled risk analysis response."""
+    """Generate a clean, modern risk analysis dashboard widget."""
     
-    # Extract counts with safety defaults
+    # Safely get counts
     extreme = risk_distribution.get('Extreme', 0)
     high = risk_distribution.get('High', 0)
     medium = risk_distribution.get('Medium', 0)
     low = risk_distribution.get('Low', 0)
     
-    # Determine status color for the header
-    status_color = "#22C55E" if high_risk_count == 0 else "#EF4444"
-    header_text = "OPERATIONS NORMAL" if high_risk_count == 0 else "ATTENTION REQUIRED"
+    # Logic for status header
+    if high_risk_count == 0:
+        status_bg = "#DCFCE7" # Light Green
+        status_text_color = "#166534" # Dark Green
+        status_text = "OPERATIONS NORMAL"
+    else:
+        status_bg = "#FEE2E2" # Light Red
+        status_text_color = "#991B1B" # Dark Red
+        status_text = "ATTENTION REQUIRED"
 
     return f"""
-    <div style="font-family: 'Source Sans Pro', sans-serif; background-color: #ffffff; border-radius: 12px; padding: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); overflow: hidden; margin-bottom: 20px;">
-        
-        <div style="background-color: #1E293B; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 24px;">🛡️</span>
-                <div>
-                    <h3 style="margin: 0; color: white; font-size: 18px; font-weight: 600;">Risk Intelligence Summary</h3>
-                    <p style="margin: 0; color: #94A3B8; font-size: 12px;">Real-time safety assessment</p>
-                </div>
+    <div style="
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: white;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-bottom: 20px;
+    ">
+        <div style="
+            padding: 16px 24px;
+            border-bottom: 1px solid #F1F5F9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #F8FAFC;
+        ">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🛡️</span>
+                <span style="font-weight: 700; color: #334155; font-size: 16px;">Risk Intelligence</span>
             </div>
-            <span style="background-color: {status_color}; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">
-                {header_text}
+            <span style="
+                background-color: {status_bg};
+                color: {status_text_color};
+                padding: 4px 12px;
+                border-radius: 999px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            ">
+                {status_text}
             </span>
         </div>
 
         <div style="padding: 24px;">
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+            <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
                 
-                <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 16px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 800; color: #DC2626; line-height: 1;">{extreme}</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #991B1B; text-transform: uppercase; margin-top: 4px;">Extreme</div>
+                <div style="flex: 1; min-width: 80px; background: #FEF2F2; border-radius: 8px; padding: 12px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #EF4444;"></div>
+                    <div style="color: #991B1B; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; padding-left: 8px;">Extreme</div>
+                    <div style="color: #7F1D1D; font-size: 24px; font-weight: 800; line-height: 1; padding-left: 8px;">{extreme}</div>
                 </div>
 
-                <div style="background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 8px; padding: 16px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 800; color: #EA580C; line-height: 1;">{high}</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #9A3412; text-transform: uppercase; margin-top: 4px;">High</div>
+                <div style="flex: 1; min-width: 80px; background: #FFF7ED; border-radius: 8px; padding: 12px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #F97316;"></div>
+                    <div style="color: #9A3412; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; padding-left: 8px;">High</div>
+                    <div style="color: #7C2D12; font-size: 24px; font-weight: 800; line-height: 1; padding-left: 8px;">{high}</div>
                 </div>
 
-                <div style="background: #FEFCE8; border: 1px solid #FEF08A; border-radius: 8px; padding: 16px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 800; color: #CA8A04; line-height: 1;">{medium}</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #854D0E; text-transform: uppercase; margin-top: 4px;">Medium</div>
+                <div style="flex: 1; min-width: 80px; background: #FEFCE8; border-radius: 8px; padding: 12px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #EAB308;"></div>
+                    <div style="color: #854D0E; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; padding-left: 8px;">Medium</div>
+                    <div style="color: #713F12; font-size: 24px; font-weight: 800; line-height: 1; padding-left: 8px;">{medium}</div>
                 </div>
 
-                <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 16px; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 800; color: #16A34A; line-height: 1;">{low}</div>
-                    <div style="font-size: 11px; font-weight: 600; color: #166534; text-transform: uppercase; margin-top: 4px;">Low</div>
+                <div style="flex: 1; min-width: 80px; background: #F0FDF4; border-radius: 8px; padding: 12px; position: relative; overflow: hidden;">
+                    <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #22C55E;"></div>
+                    <div style="color: #166534; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; padding-left: 8px;">Low</div>
+                    <div style="color: #14532D; font-size: 24px; font-weight: 800; line-height: 1; padding-left: 8px;">{low}</div>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 20px;">
-                <div style="flex: 2;">
-                    <h4 style="margin: 0 0 12px 0; color: #334155; font-size: 14px; border-bottom: 2px solid #E2E8F0; padding-bottom: 8px;">
-                        🔍 Key Observations
-                    </h4>
-                    <p style="color: #475569; font-size: 14px; line-height: 1.5; margin: 0;">
-                        There are currently <strong>{high_risk_count}</strong> high-priority items requiring immediate attention. 
-                        The overall risk profile indicates { "critical gaps" if high_risk_count > 0 else "stable operations" }.
-                    </p>
-                    <ul style="margin-top: 10px; padding-left: 20px; color: #475569; font-size: 13px;">
-                        <li>Extreme Risk SLA: <strong>Immediate Action (24h)</strong></li>
-                        <li>High Risk SLA: <strong>Priority Action (7 Days)</strong></li>
-                    </ul>
+            <div style="background: #F8FAFC; border-radius: 8px; padding: 16px; border: 1px solid #F1F5F9;">
+                <div style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
+                    <span style="font-size: 16px;">🔍</span>
+                    <strong style="color: #334155; font-size: 14px;">Key Observations</strong>
                 </div>
+                
+                <p style="color: #64748B; font-size: 13px; line-height: 1.6; margin: 0 0 12px 0;">
+                    There are currently <strong style="color: {'#EF4444' if high_risk_count > 0 else '#22C55E'};">{high_risk_count}</strong> high-priority items requiring attention. 
+                    { "Immediate mitigation required for active risks." if high_risk_count > 0 else "Risk profile is stable and within acceptable limits." }
+                </p>
 
-                <div style="flex: 1; background-color: #F8FAFC; padding: 16px; border-radius: 8px; border-left: 4px solid #3B82F6;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <span style="font-size: 16px;">💡</span>
-                        <strong style="color: #1E293B; font-size: 13px;">AI Recommendation</strong>
+                <div style="border-top: 1px solid #E2E8F0; padding-top: 12px; margin-top: 12px;">
+                    <div style="display: flex; gap: 8px; align-items: start;">
+                        <span style="font-size: 16px; margin-top: -2px;">💡</span>
+                        <div>
+                            <strong style="display: block; color: #334155; font-size: 12px; margin-bottom: 2px;">AI Recommendation</strong>
+                            <span style="color: #64748B; font-size: 12px; line-height: 1.4;">
+                                { "Assign owners to high-risk items immediately." if high_risk_count > 0 else "Continue routine monitoring. No immediate actions required." }
+                            </span>
+                        </div>
                     </div>
-                    <p style="color: #334155; font-size: 12px; margin: 0; line-height: 1.4;">
-                        Ensure all Extreme/High risk items have assigned owners. Review mitigation effectiveness in the next SRB meeting.
-                    </p>
                 </div>
             </div>
         </div>
     </div>
     """
-
 
 def generate_bird_strike_analysis():
     """Generate bird strike specific analysis."""
