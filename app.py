@@ -6622,7 +6622,7 @@ def render_ai_assistant():
             st.session_state.ai_chat_history = []
             st.rerun()
     
-    # Display chat history
+    # Display chat history - FIXED HERE
     for message in st.session_state.ai_chat_history:
         if message['role'] == 'user':
             st.markdown(f"""
@@ -6634,8 +6634,9 @@ def render_ai_assistant():
 </div>
 """, unsafe_allow_html=True)
         else:
-            # Check if this is a risk dashboard (HTML) or text response
-            if "RISK INTELLIGENCE" in message.get('content', '') or message.get('type') == 'dashboard':
+            # Check if this is an HTML response (risk dashboard) or text response
+            if message.get('type') == 'html':
+                # Render the HTML directly using unsafe_allow_html=True
                 st.markdown(message['content'], unsafe_allow_html=True)
             else:
                 st.markdown(f"""
@@ -6729,7 +6730,7 @@ def generate_ai_response(query):
         return generate_trend_analysis(), "text"
     
     elif any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary']):
-        return generate_risk_analysis(risk_distribution, high_risk_count), "dashboard"
+        return generate_risk_analysis(risk_distribution, high_risk_count), "html"  # Changed to "html"
     
     elif any(word in query_lower for word in ['bird', 'wildlife']):
         return generate_bird_strike_analysis(), "text"
@@ -7032,7 +7033,7 @@ def add_ai_response(response_type):
     if response_type == "trend_analysis":
         response, rtype = generate_trend_analysis(), "text"
     elif response_type == "risk_summary":
-        response, rtype = generate_risk_analysis(risk_distribution, high_risk_count), "dashboard"
+        response, rtype = generate_risk_analysis(risk_distribution, high_risk_count), "html"  # Changed to "html"
     elif response_type == "performance_report":
         response, rtype = generate_performance_comparison(), "text"
     elif response_type == "predictive_insights":
@@ -7041,9 +7042,6 @@ def add_ai_response(response_type):
     
     st.session_state.ai_chat_history.append({'role': 'assistant', 'content': response, 'type': rtype})
     st.rerun()
-# =============================================================================
-# EMAIL FEATURES
-# =============================================================================
 
 def render_email_center():
     """Email management center for safety communications."""
