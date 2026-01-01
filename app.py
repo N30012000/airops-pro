@@ -6725,12 +6725,33 @@ def generate_ai_response(query):
     total_reports = get_total_reports()
     high_risk_count = get_high_risk_count()
     
+    # If there's no data at all
+    if total_reports == 0 and any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary', 'analysis', 'trend']):
+        return """
+**📊 No Data Available**
+
+I don't see any safety reports in the system yet. To get meaningful risk analysis:
+
+1. **Submit your first report** using one of the report forms:
+   - Hazard Report (for proactive safety concerns)
+   - Bird Strike Report (for wildlife incidents)
+   - Incident Report (for operational events)
+
+2. **Once you have data**, I can provide:
+   - Risk level distribution
+   - Trend analysis
+   - Safety performance insights
+   - Predictive recommendations
+
+**Quick Start:** Click "Hazard Report" in the sidebar to submit your first safety observation.
+""", "text"
+    
     # Pattern matching for different query types
     if any(word in query_lower for word in ['trend', 'pattern', 'over time']):
         return generate_trend_analysis(), "text"
     
     elif any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary']):
-        return generate_risk_analysis(risk_distribution, high_risk_count), "html"  # Changed to "html"
+        return generate_risk_analysis(risk_distribution, high_risk_count)
     
     elif any(word in query_lower for word in ['bird', 'wildlife']):
         return generate_bird_strike_analysis(), "text"
@@ -6759,37 +6780,55 @@ def generate_ai_response(query):
 
 def generate_trend_analysis():
     """Generate trend analysis response."""
+    total_reports = get_total_reports()
     
+    if total_reports == 0:
+        return """
+**📈 Trend Analysis**
+
+No data available for trend analysis. Submit reports to see:
+- Monthly reporting patterns
+- Risk level trends over time
+- Seasonal variations in incidents
+- Performance improvements
+"""
+
     return """
-    <strong>📊 Safety Trend Analysis</strong>
+**📈 Safety Trend Analysis**
+
+Based on current reporting data:
+
+**1. Report Volume:** Consistent with operational tempo
+**2. Risk Distribution:** Majority in Low-Medium categories
+**3. Category Patterns:** Normal for current operations
+**4. Closure Rates:** Meeting SLA targets
+
+**Recommendation:** Continue current safety initiatives.
+"""
+
+def generate_bird_strike_analysis():
+    """Generate bird strike analysis."""
+    bird_strikes = st.session_state.get('bird_strikes', [])
+    count = len(bird_strikes)
     
-    <p>Based on the current reporting data, here are the key trends:</p>
+    if count == 0:
+        return "**🦅 Bird Strike Analysis**\n\nNo bird strike reports recorded. Submit a bird strike report if you encounter wildlife incidents during operations."
     
-    <p><strong>1. Report Volume:</strong> Report submissions have remained consistent with 
-    operational tempo. The safety reporting culture appears healthy with active participation 
-    from all departments.</p>
+    return f"**🦅 Bird Strike Analysis**\n\n**Total Bird Strikes:** {count}\n\nAll bird strikes have been reported and assessed per SMS protocols. Seasonal monitoring continues during migration periods."
+
+def generate_hazard_analysis():
+    """Generate hazard analysis."""
+    hazards = st.session_state.get('hazard_reports', [])
+    count = len(hazards)
     
-    <p><strong>2. Risk Distribution:</strong> The majority of reports fall into the Low-Medium 
-    risk categories, indicating effective proactive hazard identification. High-risk items 
-    receive immediate attention per SMS protocols.</p>
+    if count == 0:
+        return "**🔶 Hazard Report Analysis**\n\nNo hazard reports submitted yet. Use the Hazard Report form to identify and report safety concerns before they become incidents."
     
-    <p><strong>3. Category Patterns:</strong></p>
-    <ul>
-        <li>Bird strikes show seasonal variation - recommend enhanced vigilance during migration periods</li>
-        <li>Technical reports are within normal parameters</li>
-        <li>Ground handling incidents stable month-over-month</li>
-    </ul>
-    
-    <p><strong>4. Closure Rates:</strong> Investigation completion times are meeting SLA targets. 
-    Recommend continuing current resource allocation for investigations.</p>
-    
-    <p><em>💡 Recommendation: Continue current safety initiatives. Consider focused campaign 
-    on top hazard categories identified in quarterly review.</em></p>
-    """
+    return f"**🔶 Hazard Report Analysis**\n\n**Total Hazard Reports:** {count}\n\nProactive reporting indicates a healthy safety culture. All hazards are being identified before incidents occur."
 
 
 def generate_risk_analysis(risk_distribution, high_risk_count):
-    """Generate a beautiful, modern risk analysis dashboard with smart styling."""
+    """Generate human-readable risk analysis response."""
     
     # Safely get risk counts
     extreme = risk_distribution.get('Extreme', 0)
@@ -6797,6 +6836,25 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
     medium = risk_distribution.get('Medium', 0)
     low = risk_distribution.get('Low', 0)
     total_reports = extreme + high + medium + low
+    
+    if total_reports == 0:
+        return """
+**📊 Risk Analysis Report**
+
+No safety reports have been submitted yet, so there's no risk data to analyze.
+
+**Current Status:** ✅ **NO DATA**
+- No reports in the system
+- No risk items identified
+- All systems at baseline safety level
+
+**Next Steps:**
+1. Submit your first safety report to start risk monitoring
+2. Hazard reports, incident reports, or bird strike reports will populate this analysis
+3. Once reports are submitted, I can provide detailed risk insights
+
+**Recommended Action:** Start by submitting a hazard report or incident report to begin building your safety database.
+""", "text"
     
     # Calculate percentages
     extreme_pct = (extreme / total_reports * 100) if total_reports > 0 else 0
@@ -6806,153 +6864,60 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
     
     # Determine system status
     if extreme > 0:
-        status_bg = "#FEE2E2"
-        status_border = "#FCA5A5"
-        status_text = "CRITICAL"
-        status_color = "#991B1B"
-        status_icon = "🚨"
-        header_color = "#DC2626"
-        message = f"⚠️ {extreme} EXTREME risk item(s) require immediate attention"
+        status = "🚨 CRITICAL"
+        message = f"⚠️ **{extreme} EXTREME risk item(s)** require immediate attention"
+        overall_color = "#DC2626"
     elif high > 0:
-        status_bg = "#FFF7ED"
-        status_border = "#FED7AA"
-        status_text = "URGENT"
-        status_color = "#9A3412"
-        status_icon = "⚠️"
-        header_color = "#EA580C"
-        message = f"🔶 {high} HIGH risk item(s) require priority action"
+        status = "🔶 URGENT"
+        message = f"⚠️ **{high} HIGH risk item(s)** require priority action"
+        overall_color = "#EA580C"
     elif medium > 0:
-        status_bg = "#FEFCE8"
-        status_border = "#FEF08A"
-        status_text = "CAUTION"
-        status_color = "#854D0E"
-        status_icon = "⏳"
-        header_color = "#CA8A04"
-        message = f"🟡 {medium} MEDIUM risk item(s) under monitoring"
+        status = "🟡 CAUTION"
+        message = f"⚠️ **{medium} MEDIUM risk item(s)** under monitoring"
+        overall_color = "#CA8A04"
     else:
-        status_bg = "#F0FDF4"
-        status_border = "#86EFAC"
-        status_text = "NORMAL"
-        status_color = "#166534"
-        status_icon = "✅"
-        header_color = "#16A34A"
+        status = "✅ NORMAL"
         message = "✨ All systems operating within safe parameters"
+        overall_color = "#16A34A"
     
-    # SLA timeline based on highest risk
+    response = f"""
+**📊 Risk Analysis Report**
+
+**Overall Status:** {status}
+{message}
+
+**Risk Distribution:**
+- **Extreme Risk:** {extreme} item(s) ({extreme_pct:.1f}%)
+- **High Risk:** {high} item(s) ({high_pct:.1f}%)
+- **Medium Risk:** {medium} item(s) ({medium_pct:.1f}%)
+- **Low Risk:** {low} item(s) ({low_pct:.1f}%)
+
+**Total Reports Analyzed:** {total_reports}
+
+**Key Observations:**
+"""
+    
     if extreme > 0:
-        sla_action = "IMMEDIATE ACTION"
-        sla_timeline = "0-24 Hours"
-        sla_color = "#DC2626"
+        response += "- ⚠️ **Critical Alert:** Extreme risk items require immediate management attention\n"
+        response += "- 🚨 **Action Required:** Stop operations if necessary and implement emergency controls\n"
     elif high > 0:
-        sla_action = "PRIORITY ACTION"
-        sla_timeline = "1-7 Days"
-        sla_color = "#EA580C"
+        response += "- ⚠️ **Priority Alert:** High risk items need senior management review\n"
+        response += "- 📅 **Timeline:** Address within 1 week\n"
     elif medium > 0:
-        sla_action = "STANDARD REVIEW"
-        sla_timeline = "7-15 Days"
-        sla_color = "#CA8A04"
+        response += "- ⏳ **Monitor:** Medium risk items should be tracked and reviewed\n"
+        response += "- 📋 **Action:** Schedule risk assessments for these items\n"
     else:
-        sla_action = "ROUTINE MONITORING"
-        sla_timeline = "Monthly Review"
-        sla_color = "#16A34A"
-    
-    html = f"""<div style="font-family: 'Segoe UI', 'Roboto', sans-serif; background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%); border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08); border: 1px solid #E2E8F0; margin: 20px 0;">
-        
-        <!-- HEADER -->
-        <div style="background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); padding: 24px; border-bottom: 3px solid {header_color};">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
-                <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1;">
-                    <div style="font-size: 32px; line-height: 1;">🛡️</div>
-                    <div>
-                        <h2 style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">RISK INTELLIGENCE</h2>
-                        <p style="margin: 8px 0 0 0; color: #CBD5E1; font-size: 13px; line-height: 1.4;">{message}</p>
-                    </div>
-                </div>
-                <div style="background: {status_bg}; border: 2px solid {status_border}; border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 120px;">
-                    <div style="font-size: 20px; margin-bottom: 4px;">{status_icon}</div>
-                    <div style="color: {status_color}; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">{status_text}</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- MAIN CONTENT -->
-        <div style="padding: 28px;">
-            
-            <!-- RISK CARDS GRID -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; margin-bottom: 28px;">
-                
-                <!-- EXTREME RISK -->
-                <div style="background: linear-gradient(135deg, #FEF2F2 0%, #FDE5E5 100%); border: 2px solid #FECACA; border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s ease;">
-                    <div style="font-size: 32px; font-weight: 900; color: #DC2626; line-height: 1; margin-bottom: 6px;">{extreme}</div>
-                    <div style="font-size: 11px; font-weight: 700; color: #991B1B; text-transform: uppercase; letter-spacing: 0.5px;">Extreme Risk</div>
-                    <div style="font-size: 10px; color: #DC2626; margin-top: 6px; font-weight: 600;">{extreme_pct:.0f}%</div>
-                </div>
-                
-                <!-- HIGH RISK -->
-                <div style="background: linear-gradient(135deg, #FFF7ED 0%, #FFF0E6 100%); border: 2px solid #FED7AA; border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s ease;">
-                    <div style="font-size: 32px; font-weight: 900; color: #EA580C; line-height: 1; margin-bottom: 6px;">{high}</div>
-                    <div style="font-size: 11px; font-weight: 700; color: #9A3412; text-transform: uppercase; letter-spacing: 0.5px;">High Risk</div>
-                    <div style="font-size: 10px; color: #EA580C; margin-top: 6px; font-weight: 600;">{high_pct:.0f}%</div>
-                </div>
-                
-                <!-- MEDIUM RISK -->
-                <div style="background: linear-gradient(135deg, #FEFCE8 0%, #FFFACD 100%); border: 2px solid #FEF08A; border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s ease;">
-                    <div style="font-size: 32px; font-weight: 900; color: #CA8A04; line-height: 1; margin-bottom: 6px;">{medium}</div>
-                    <div style="font-size: 11px; font-weight: 700; color: #854D0E; text-transform: uppercase; letter-spacing: 0.5px;">Medium Risk</div>
-                    <div style="font-size: 10px; color: #CA8A04; margin-top: 6px; font-weight: 600;">{medium_pct:.0f}%</div>
-                </div>
-                
-                <!-- LOW RISK -->
-                <div style="background: linear-gradient(135deg, #F0FDF4 0%, #E7F5EB 100%); border: 2px solid #BBF7D0; border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s ease;">
-                    <div style="font-size: 32px; font-weight: 900; color: #16A34A; line-height: 1; margin-bottom: 6px;">{low}</div>
-                    <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Low Risk</div>
-                    <div style="font-size: 10px; color: #16A34A; margin-top: 6px; font-weight: 600;">{low_pct:.0f}%</div>
-                </div>
-            </div>
-            
-            <!-- ANALYTICS SECTION -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 28px;">
-                
-                <!-- LEFT: KEY METRICS -->
-                <div style="background: white; border: 1px solid #E2E8F0; border-radius: 10px; padding: 20px;">
-                    <h3 style="margin: 0 0 16px 0; color: #1E293B; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #E2E8F0; padding-bottom: 10px;">📊 Summary</h3>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #64748B; font-size: 13px;">Total Reports:</span>
-                            <span style="color: #1E293B; font-weight: 700; font-size: 14px;">{total_reports}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #64748B; font-size: 13px;">Critical Items:</span>
-                            <span style="color: #DC2626; font-weight: 700; font-size: 14px;">{extreme + high}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #E2E8F0;">
-                            <span style="color: #64748B; font-size: 13px; font-weight: 600;">SLA Required:</span>
-                            <span style="background: {sla_color}20; color: {sla_color}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">{sla_timeline}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- RIGHT: AI RECOMMENDATION -->
-                <div style="background: linear-gradient(135deg, #EFF6FF 0%, #F0F9FF 100%); border: 2px solid #BFDBFE; border-radius: 10px; padding: 20px; border-left: 4px solid #3B82F6;">
-                    <h3 style="margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; color: #1E40AF; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">💡 AI Recommendation</h3>
-                    <p style="margin: 0; color: #334155; font-size: 13px; line-height: 1.6;">
-                        Ensure all <strong>Extreme/High</strong> risk items have assigned owners. Document corrective actions with target completion dates. Review effectiveness in the next Safety Review Board meeting.
-                    </p>
-                </div>
-            </div>
-            
-            <!-- ACTION BANNER -->
-            <div style="background: linear-gradient(135deg, {sla_color}10 0%, {sla_color}05 100%); border: 1px solid {sla_color}30; border-radius: 10px; padding: 16px; margin-top: 20px; display: flex; align-items: center; gap: 14px;">
-                <div style="font-size: 24px;">📋</div>
-                <div>
-                    <div style="color: {sla_color}; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">{sla_action}</div>
-                    <div style="color: #475569; font-size: 13px;">Complete investigations within {sla_timeline} per SMS procedures</div>
-                </div>
-            </div>
-        </div>
-    </div>"""
-    
-    return html
+        response += "- ✅ **Stable:** Risk levels are within acceptable parameters\n"
+        response += "- 📊 **Monitor:** Continue routine safety monitoring\n"
+
+    response += f"""
+**AI Recommendation:**
+Ensure all **Extreme/High** risk items have assigned owners. Document corrective actions with target completion dates. Review effectiveness in the next Safety Review Board meeting.
+
+**SLA Required:** {'Immediate (within 24 hours)' if extreme > 0 else 'Priority (within 1 week)' if high > 0 else 'Standard review (within 15 days)' if medium > 0 else 'Routine monitoring'}
+"""
+
+    return response, "text"
 
 
 def generate_bird_strike_analysis():
