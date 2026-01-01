@@ -8932,6 +8932,10 @@ def render_settings():
 # HELPER FUNCTIONS (Must be defined before Main Execution)
 # --------------------------------------------------------------------------
 
+# ==============================================================================
+# HELPER FUNCTIONS (Paste BEFORE 'if __name__ == "__main__":')
+# ==============================================================================
+
 def get_user_role(username):
     """Determine role based on username (Demo logic) or return 'Viewer'."""
     roles = {
