@@ -6806,7 +6806,7 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
         status_text = "ATTENTION REQUIRED"
         header_sub = f"{high_risk_count} critical items require action."
 
-    # NOTE: The HTML string below is intentionally NOT indented to prevent Markdown from treating it as a code block.
+    # IMPORTANT: The HTML string below must NOT be indented.
     return f"""<div style="font-family: sans-serif; background-color: white; border: 1px solid #E2E8F0; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; margin-bottom: 20px;">
 <div style="background-color: #1E293B; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
 <div style="display: flex; align-items: center; gap: 12px;">
@@ -6841,7 +6841,7 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
 <div style="flex: 2; min-width: 200px;">
 <h4 style="margin: 0 0 10px 0; color: #334155; font-size: 13px; font-weight: 700; border-bottom: 2px solid #F1F5F9; padding-bottom: 6px;">KEY OBSERVATIONS</h4>
 <p style="color: #475569; font-size: 13px; line-height: 1.5; margin: 0;">
-There are currently <strong>{high_risk_count}</strong> high-priority items requiring attention. {"Immediate mitigation required." if high_risk_count > 0 else "Risk profile is stable."}
+There are currently <strong>{high_risk_count}</strong> high-priority items requiring attention.
 </p>
 <div style="margin-top: 8px; font-size: 12px; color: #64748B;">
 • Extreme Risk SLA: <strong>24h</strong><br>
@@ -6854,7 +6854,7 @@ There are currently <strong>{high_risk_count}</strong> high-priority items requi
 <strong style="color: #1E293B; font-size: 12px; text-transform: uppercase;">AI Recommendation</strong>
 </div>
 <p style="color: #334155; font-size: 12px; margin: 0; line-height: 1.4;">
-{"Assign owners to high-risk items immediately and document mitigation plans." if high_risk_count > 0 else "Continue routine monitoring. No immediate corrective actions required."}
+Assign owners to high-risk items immediately and document mitigation plans.
 </p>
 </div>
 </div>
