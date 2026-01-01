@@ -8867,6 +8867,24 @@ def process_nl_query(query):
 # PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
 # =============================================================================
 
+The error `NameError: name 'initialize_session_state' is not defined` and the line number `9009` confirm that your file is likely very large and disordered, possibly due to multiple "Parts" being pasted incorrectly or the function definition being deleted/indented by mistake.
+
+To fix the **NameError** and the **Login Loop** (where it won't log in), we need to completely replace the bottom section of your `app.py` with a clean, correctly ordered version.
+
+### **Step-by-Step Fix**
+
+1. **Open** `app.py`.
+2. **Scroll down** to find the function: `def render_settings():` (This is usually the start of the final section).
+3. **Delete EVERYTHING** from `def render_settings():` all the way down to the **very end of the file**.
+4. **Paste** the code block below in its place.
+
+This code contains the correct definitions for `render_settings`, `render_login_page`, `initialize_session_state`, and the **Main Execution Block** (without the error catcher that stops logins).
+
+```python
+# ==============================================================================
+# PART 10: SYSTEM, SETTINGS & MAIN ENTRY POINT
+# ==============================================================================
+
 def render_settings():
     """Render the settings page."""
     
@@ -8898,6 +8916,10 @@ def render_settings():
             st.checkbox("Enable Email Notifications", value=True)
             
         if st.button("💾 Save Settings", type="primary"):
+            st.session_state['app_settings'] = {
+                'company_name': 'Air Sial',
+                'company_code': 'PF'
+            }
             st.success("Settings saved successfully!")
 
     with tab_users:
@@ -8905,15 +8927,258 @@ def render_settings():
         st.info("User management is handled via Supabase Auth.")
 
 # --------------------------------------------------------------------------
-# AUTHENTICATION & ENTRY POINT
+# HELPER FUNCTIONS (Must be defined before Main Execution)
 # --------------------------------------------------------------------------
 
+def get_user_role(username):
+    """Determine role based on username (Demo logic) or return 'Viewer'."""
+    roles = {
+        'admin': 'Administrator',
+        'safety': 'Safety Officer', 
+        'pilot': 'Flight Crew',
+        'viewer': 'Viewer'
+    }
+    return roles.get(username.lower(), 'Viewer')
+
+def load_data_from_supabase():
+    """
+    Fetch all data from Supabase into Session State.
+    Handles empty tables gracefully.
+    """
+    tables = [
+        'bird_strikes', 'laser_strikes', 'tcas_reports', 
+        'aircraft_incidents', 'hazard_reports', 'fsr_reports', 'captain_dbr'
+    ]
+    
+    for table in tables:
+        try:
+            # Fetch data
+            response = supabase.table(table).select("*").execute()
+            # Store in Session State
+            st.session_state[table] = response.data
+        except Exception as e:
+            # Ensure key exists even if fetch fails
+            if table not in st.session_state:
+                st.session_state[table] = []
+
+def initialize_session_state():
+    """Initialize app state variables and load data."""
+    # Auth State
+    if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
+    if 'username' not in st.session_state: st.session_state['username'] = None
+    if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
+    
+    # Navigation State
+    if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
+    
+    # AI Assistant State
+    if 'ai_assistant' not in st.session_state:
+        try:
+            st.session_state.ai_assistant = get_ai_assistant()
+        except:
+            st.session_state.ai_assistant = None
+            
+    # Load Data
+    load_data_from_supabase()
+
+# --------------------------------------------------------------------------
+# AUTHENTICATION & UI RENDERERS
+# --------------------------------------------------------------------------
+
+def render_login_page():
+    """Render the login page with Hybrid Auth."""
+    
+    if "code" in st.query_params:
+        st.toast("✅ Email Verified! Please log in.", icon="🎉")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown("# ✈️ AIR SIAL")
+        st.markdown("#### Safety Management System v3.0")
+        st.divider()
+        
+        tab_signin, tab_register = st.tabs(["🔐 Sign In", "📝 Register"])
+        
+        with tab_signin:
+            # Unique key to avoid duplicate ID errors
+            with st.form("login_form_main"):
+                username = st.text_input("Username / Email", placeholder="admin")
+                password = st.text_input("Password", type="password")
+                submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+                
+                if submitted:
+                    user_input = username.strip()
+                    # Demo Login
+                    demo_users = {'admin': 'admin123', 'safety': 'safety123', 'pilot': 'pilot123', 'viewer': 'viewer123'}
+                    
+                    if user_input.lower() in demo_users and demo_users[user_input.lower()] == password:
+                        st.session_state['authenticated'] = True
+                        st.session_state['username'] = user_input
+                        st.session_state['user_role'] = get_user_role(user_input)
+                        st.success("✅ Login successful!")
+                        st.rerun()
+                    
+                    # Supabase Login
+                    else:
+                        try:
+                            auth = supabase.auth.sign_in_with_password({"email": user_input, "password": password})
+                            if auth.user:
+                                st.session_state['authenticated'] = True
+                                st.session_state['username'] = auth.user.email
+                                # Fetch Role
+                                try:
+                                    profile = supabase.table('profiles').select('role').eq('id', auth.user.id).execute()
+                                    st.session_state['user_role'] = profile.data[0]['role'] if profile.data else "Viewer"
+                                except:
+                                    st.session_state['user_role'] = "Viewer"
+                                st.success("✅ Login successful!")
+                                st.rerun()
+                        except:
+                            st.error("❌ Login failed.")
+
+        with tab_register:
+            with st.form("register_form_main"):
+                new_email = st.text_input("Email")
+                new_pass = st.text_input("Password", type="password")
+                new_role = st.selectbox("Role", ["Viewer", "Flight Crew", "Maintenance", "Safety Officer"])
+                reg_btn = st.form_submit_button("Register")
+                
+                if reg_btn:
+                    try:
+                        supabase.auth.sign_up({
+                            "email": new_email, "password": new_pass,
+                            "options": {"data": {"role": new_role}}
+                        })
+                        st.success("Check email for confirmation link!")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+
+def render_sidebar():
+    """Render sidebar navigation."""
+    with st.sidebar:
+        st.markdown("<h2 style='text-align: center;'>✈️ AIR SIAL</h2>", unsafe_allow_html=True)
+        if st.session_state.get('authenticated'):
+            st.info(f"👤 {st.session_state.get('username')} ({st.session_state.get('user_role')})")
+        
+        st.markdown("---")
+        
+        # Menu Structure
+        menu_items = {
+            "📊 Dashboard": "Dashboard",
+            "📋 View Reports": "View Reports",
+            "⚡ Action Tracker": "Action Tracker",
+            "🤖 AI Assistant": "AI Assistant",
+        }
+        
+        forms = {
+            "🦅 Bird Strike": "Bird Strike Report",
+            "🔴 Laser Strike": "Laser Strike Report",
+            "✈️ TCAS Report": "TCAS Report",
+            "⚠️ Incident Report": "Aircraft Incident Report",
+            "🔶 Hazard Report": "Hazard Report",
+            "📝 Flight Services": "FSR Report",
+            "👨‍✈️ Captain Debrief": "Captain Debrief"
+        }
+        
+        # Enterprise Menus
+        enterprise = {
+            "📧 Email Center": "Email Center",
+            "✈️ IOSA Compliance": "IOSA Compliance",
+            "🛬 Ramp Inspections": "Ramp Inspections",
+            "🔍 Audit Findings": "Audit Findings",
+            "🔄 MoC Workflow": "MoC Workflow",
+            "🔮 Predictive Monitor": "Predictive Monitor",
+            "💾 Data Management": "Data Management",
+            "⚙️ Settings": "Settings"
+        }
+
+        # Render Main Menu
+        for label, page in menu_items.items():
+            if st.button(label, key=f"nav_{page}", use_container_width=True):
+                st.session_state['current_page'] = page
+                st.rerun()
+        
+        # Render Forms
+        with st.expander("➕ Submit Reports"):
+            for label, page in forms.items():
+                if st.button(label, key=f"nav_{page}", use_container_width=True):
+                    st.session_state['current_page'] = page
+                    st.rerun()
+        
+        # Render Enterprise
+        with st.expander("🏢 Enterprise Tools"):
+            for label, page in enterprise.items():
+                if st.button(label, key=f"nav_{page}", use_container_width=True):
+                    st.session_state['current_page'] = page
+                    st.rerun()
+
+        st.markdown("---")
+        if st.button("🚪 Logout", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+
+def route_to_page():
+    """Route to the selected page function."""
+    page = st.session_state.get('current_page', 'Dashboard')
+    
+    # Page Map (Ensure these functions exist higher up in your file)
+    pages = {
+        'Dashboard': render_dashboard,
+        'View Reports': render_view_reports,
+        'Action Tracker': render_action_tracker,
+        'Bird Strike Report': render_bird_strike_form,
+        'Laser Strike Report': render_laser_strike_form,
+        'TCAS Report': render_tcas_report_form,
+        'Aircraft Incident Report': render_incident_form,
+        'Hazard Report': render_hazard_form,
+        'FSR Report': render_fsr_form,
+        'Captain Debrief': render_captain_dbr_form,
+        'Report Detail': render_report_detail,
+        'AI Assistant': render_ai_assistant,
+        'General Assistant': render_general_assistant,
+        'Email Center': render_email_center,
+        'Geospatial Map': render_geospatial_map,
+        'IOSA Compliance': render_iosa_compliance,
+        'Ramp Inspections': render_ramp_inspection,
+        'Audit Findings': render_audit_findings,
+        'MoC Workflow': render_moc_workflow,
+        'Predictive Monitor': render_predictive_monitor,
+        'Data Management': render_data_management,
+        'NL Query': render_nl_query,
+        'Settings': render_settings
+    }
+    
+    # Render
+    if page in pages:
+        try:
+            pages[page]()
+        except Exception as e:
+            st.error(f"Error loading {page}: {e}")
+    else:
+        render_dashboard()
+
+def render_footer():
+    st.markdown("---")
+    st.markdown("<center style='color:#888;'>Air Sial SMS v3.0 | © 2025</center>", unsafe_allow_html=True)
+
 # ==============================================================================
-# AUTHENTICATION & LOGIN PAGE
+# 3. MAIN EXECUTION BLOCK (MUST BE LAST)
 # ==============================================================================
 
-def render_login_page()
-            
-    except Exception as e:
-        # Prevent app crash on UI errors
-        st.error(f"Application Error: {str(e)}")
+if __name__ == "__main__":
+    # 1. Initialize State
+    initialize_session_state()
+    
+    # 2. Apply CSS
+    apply_custom_css()
+    
+    # 3. Routing Logic
+    if not st.session_state.get('authenticated', False):
+        render_login_page()
+    else:
+        render_sidebar()
+        render_header()
+        route_to_page()
+        render_footer()
+
