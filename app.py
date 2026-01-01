@@ -6551,35 +6551,89 @@ def generate_report_pdf(report):
 # =============================================================================
 
 def render_general_assistant():
-    """Render the General AI Assistant page"""
-    st.markdown("## 🧠 General Safety Assistant")
+    """Render the General AI Assistant page with Suggested Questions."""
+    
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
+        <h1 style="margin: 0; font-size: 2.2rem;">🧠 General Safety Assistant</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
+            Your AI companion for aviation safety queries, regulations, and procedures.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     if 'general_chat' not in st.session_state:
         st.session_state.general_chat = []
 
-    # Display Chat
+    # --- Display Chat History ---
     for msg in st.session_state.general_chat:
         role = "👤 You" if msg['role'] == 'user' else "🧠 AI"
         bg = "#F0F2F6" if msg['role'] == 'user' else "#E8F0FE"
+        border = "#D1D5DB" if msg['role'] == 'user' else "#BFDBFE"
+        
         st.markdown(f"**{role}:**")
-        st.markdown(f"<div style='background:{bg};padding:10px;border-radius:10px;'>{msg['content']}</div>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background:{bg}; padding:15px; border-radius:10px; margin-bottom:10px; border: 1px solid {border};">
+            {msg['content']}
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Chat Input
-    with st.form("chat_input"):
-        user_text = st.text_input("Ask a question...")
-        submitted = st.form_submit_button("Send")
+    # --- Suggested Questions Section ---
+    st.markdown("### 💡 Quick Suggestions")
+    
+    # List of predefined questions
+    suggestions = [
+        "What are the reporting timelines for a Bird Strike?",
+        "Explain the difference between 'Hazard' and 'Incident'.",
+        "What is the ICAO definition of a 'Serious Incident'?",
+        "How do I categorize a laser illumination event?",
+        "What are the immediate actions for a TCAS RA?",
+        "Summarize the fatigue risk management policy."
+    ]
+    
+    # Create a grid layout for buttons
+    cols = st.columns(3)
+    for i, question in enumerate(suggestions):
+        # Use columns to arrange buttons nicely
+        if cols[i % 3].button(question, key=f"gen_sugg_{i}", use_container_width=True):
+            # 1. Append User Message
+            st.session_state.general_chat.append({'role': 'user', 'content': question})
+            
+            # 2. Get AI Response immediately
+            ai = st.session_state.get('ai_assistant')
+            if ai:
+                with st.spinner("🧠 Analyzing safety protocols..."):
+                    # Use the AI's chat method
+                    response = ai.chat(question)
+                    st.session_state.general_chat.append({'role': 'assistant', 'content': response})
+            else:
+                st.error("⚠️ AI System not initialized. Please check API Keys.")
+            
+            # 3. Rerun to show new messages
+            st.rerun()
+
+    # --- Main Chat Input ---
+    st.markdown("---")
+    with st.form("general_chat_input"):
+        input_col1, input_col2 = st.columns([5, 1])
+        with input_col1:
+            user_text = st.text_input("Ask a custom question...", placeholder="Type here and press Enter")
+        with input_col2:
+            st.markdown("<br>", unsafe_allow_html=True)
+            submitted = st.form_submit_button("📤 Send", type="primary", use_container_width=True)
     
     if submitted and user_text:
         st.session_state.general_chat.append({'role': 'user', 'content': user_text})
         
-        # Call the new AI Brain
+        # Call the AI Brain
         ai = st.session_state.get('ai_assistant')
         if ai:
-            with st.spinner("Thinking..."):
+            with st.spinner("🧠 Thinking..."):
                 response = ai.chat(user_text)
                 st.session_state.general_chat.append({'role': 'assistant', 'content': response})
         else:
-            st.error("AI System not initialized. Check API Keys.")
+            st.error("⚠️ AI System not initialized. Check API Keys.")
         st.rerun()
         
 def render_ai_assistant():
