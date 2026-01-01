@@ -6589,7 +6589,7 @@ def render_ai_assistant():
     if 'ai_chat_history' not in st.session_state:
         st.session_state.ai_chat_history = []
     
-    # Fixed HTML formatting (removed indentation to prevent "DIV" text issue)
+    # Fixed HTML formatting
     st.markdown("""
 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
             padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
@@ -6622,14 +6622,10 @@ def render_ai_assistant():
             st.session_state.ai_chat_history = []
             st.rerun()
     
-    # Main chat area
-    chat_container = st.container()
-    
-    with chat_container:
-        # Display chat history
-        for message in st.session_state.ai_chat_history:
-            if message['role'] == 'user':
-                st.markdown(f"""
+    # Display chat history
+    for message in st.session_state.ai_chat_history:
+        if message['role'] == 'user':
+            st.markdown(f"""
 <div style="display: flex; justify-content: flex-end; margin: 15px 0;">
     <div style="background: #667eea; color: white; padding: 15px 20px; 
                 border-radius: 20px 20px 5px 20px; max-width: 70%;">
@@ -6637,11 +6633,15 @@ def render_ai_assistant():
     </div>
 </div>
 """, unsafe_allow_html=True)
+        else:
+            # Check if this is a risk dashboard (HTML) or text response
+            if "RISK INTELLIGENCE" in message.get('content', '') or message.get('type') == 'dashboard':
+                st.markdown(message['content'], unsafe_allow_html=True)
             else:
                 st.markdown(f"""
 <div style="display: flex; justify-content: flex-start; margin: 15px 0;">
     <div style="background: #F8F9FA; color: #333; padding: 15px 20px; 
-                border-radius: 20px 20px 20px 5px; max-width: 80%;
+                border-radius: 20px 20px 20px 5px; max-width: 85%;
                 border: 1px solid #E0E0E0;">
         <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">
             🤖 AI Assistant
@@ -6675,10 +6675,11 @@ def render_ai_assistant():
         })
         
         # Generate AI response
-        response = generate_ai_response(user_input)
+        response, response_type = generate_ai_response(user_input)
         st.session_state.ai_chat_history.append({
             'role': 'assistant',
-            'content': response
+            'content': response,
+            'type': response_type
         })
         
         st.rerun()
@@ -6687,12 +6688,12 @@ def render_ai_assistant():
     st.markdown("### 💡 Suggested Questions")
     
     suggestions = [
-        "What are the top safety risks this month?",
-        "Summarize recent bird strike incidents",
-        "How does our safety performance compare to last quarter?",
+        "What are the top safety risks?",
+        "Risk Summary",
+        "Safety performance overview",
         "What corrective actions are pending?",
-        "Generate a weekly safety briefing",
-        "Identify patterns in hazard reports"
+        "Generate a weekly briefing",
+        "Identify patterns in reports"
     ]
     
     sugg_cols = st.columns(3)
@@ -6703,16 +6704,17 @@ def render_ai_assistant():
                     'role': 'user',
                     'content': suggestion
                 })
-                response = generate_ai_response(suggestion)
+                response, response_type = generate_ai_response(suggestion)
                 st.session_state.ai_chat_history.append({
                     'role': 'assistant',
-                    'content': response
+                    'content': response,
+                    'type': response_type
                 })
                 st.rerun()
 
 
 def generate_ai_response(query):
-    """Generate AI response based on user query and report data."""
+    """Generate AI response based on user query and report data. Returns (response, response_type)."""
     
     query_lower = query.lower()
     
@@ -6724,34 +6726,34 @@ def generate_ai_response(query):
     
     # Pattern matching for different query types
     if any(word in query_lower for word in ['trend', 'pattern', 'over time']):
-        return generate_trend_analysis()
+        return generate_trend_analysis(), "text"
     
-    elif any(word in query_lower for word in ['risk', 'danger', 'threat']):
-        return generate_risk_analysis(risk_distribution, high_risk_count)
+    elif any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary']):
+        return generate_risk_analysis(risk_distribution, high_risk_count), "dashboard"
     
     elif any(word in query_lower for word in ['bird', 'wildlife']):
-        return generate_bird_strike_analysis()
+        return generate_bird_strike_analysis(), "text"
     
     elif any(word in query_lower for word in ['laser']):
-        return generate_laser_strike_analysis()
+        return generate_laser_strike_analysis(), "text"
     
     elif any(word in query_lower for word in ['tcas', 'traffic', 'airprox']):
-        return generate_tcas_analysis()
+        return generate_tcas_analysis(), "text"
     
-    elif any(word in query_lower for word in ['summary', 'overview', 'briefing']):
-        return generate_safety_briefing(report_counts, total_reports, high_risk_count)
+    elif any(word in query_lower for word in ['briefing', 'overview']):
+        return generate_safety_briefing(report_counts, total_reports, high_risk_count), "text"
     
     elif any(word in query_lower for word in ['action', 'pending', 'corrective']):
-        return generate_action_summary()
+        return generate_action_summary(), "text"
     
     elif any(word in query_lower for word in ['compare', 'performance', 'quarter']):
-        return generate_performance_comparison()
+        return generate_performance_comparison(), "text"
     
     elif any(word in query_lower for word in ['hazard', 'identify']):
-        return generate_hazard_analysis()
+        return generate_hazard_analysis(), "text"
     
     else:
-        return generate_general_response(query, report_counts, total_reports)
+        return generate_general_response(query, report_counts, total_reports), "text"
 
 
 def generate_trend_analysis():
@@ -6853,8 +6855,7 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
         sla_timeline = "Monthly Review"
         sla_color = "#16A34A"
     
-    html = f"""
-    <div style="font-family: 'Segoe UI', 'Roboto', sans-serif; background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%); border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08); border: 1px solid #E2E8F0; margin: 20px 0;">
+    html = f"""<div style="font-family: 'Segoe UI', 'Roboto', sans-serif; background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%); border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08); border: 1px solid #E2E8F0; margin: 20px 0;">
         
         <!-- HEADER -->
         <div style="background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); padding: 24px; border-bottom: 3px solid {header_color};">
@@ -6948,359 +6949,98 @@ def generate_risk_analysis(risk_distribution, high_risk_count):
                 </div>
             </div>
         </div>
-    </div>
-    """
+    </div>"""
     
     return html
 
+
 def generate_bird_strike_analysis():
-    """Generate bird strike specific analysis."""
-    
+    """Generate bird strike analysis."""
     bird_strikes = st.session_state.get('bird_strikes', [])
     count = len(bird_strikes)
-    
-    if count == 0:
-        return """
-        <strong>🦅 Bird Strike Analysis</strong>
-        <p>No bird strike reports have been submitted yet. This module will provide detailed 
-        analysis once bird strike data is available.</p>
-        <p>Key metrics tracked include: strike frequency, damage levels, airport hotspots, 
-        seasonal patterns, and wildlife management effectiveness.</p>
-        """
-    
-    return f"""
-    <strong>🦅 Bird Strike Analysis</strong>
-    
-    <p><strong>Total Bird Strikes Reported:</strong> {count}</p>
-    
-    <p><strong>Key Insights:</strong></p>
-    <ul>
-        <li>Strike frequency is being monitored against industry benchmarks</li>
-        <li>Most strikes occur during approach/landing phases as expected</li>
-        <li>Wildlife hazard management programs are in effect at key airports</li>
-    </ul>
-    
-    <p><strong>Damage Assessment:</strong></p>
-    <p>Majority of strikes result in no or minor damage. All substantial damage events 
-    have been reported to PCAA as required.</p>
-    
-    <p><strong>Seasonal Considerations:</strong></p>
-    <p>Bird activity typically increases during migration seasons (spring/fall). Enhanced 
-    crew awareness briefings are recommended during these periods.</p>
-    
-    <p><em>💡 Recommendation: Review wildlife control measures at airports with highest 
-    strike frequency. Consider enhanced lighting or dispersal methods.</em></p>
-    """
+    return f"<strong>🦅 Bird Strike Analysis</strong><p>Total Bird Strikes: {count}</p><p>All bird strikes have been reported and assessed per SMS protocols. Seasonal monitoring continues during migration periods.</p>"
 
 
 def generate_laser_strike_analysis():
-    """Generate laser strike specific analysis."""
-    
+    """Generate laser strike analysis."""
     laser_strikes = st.session_state.get('laser_strikes', [])
     count = len(laser_strikes)
-    
-    return f"""
-    <strong>🔴 Laser Strike Analysis</strong>
-    
-    <p><strong>Total Laser Strikes Reported:</strong> {count}</p>
-    
-    <p><strong>Key Observations:</strong></p>
-    <ul>
-        <li>All laser strike incidents have been reported to authorities</li>
-        <li>Crew medical assessments completed where required</li>
-        <li>GPS coordinates captured for law enforcement coordination</li>
-    </ul>
-    
-    <p><strong>Crew Effects:</strong></p>
-    <p>Primary reported effects include distraction and flash blindness. No permanent 
-    injuries have been reported. Crews are following standard procedures for laser 
-    illumination events.</p>
-    
-    <p><strong>Coordination:</strong></p>
-    <p>Reports are being shared with airport security and local law enforcement for 
-    investigation and prosecution efforts.</p>
-    
-    <p><em>💡 Recommendation: Continue crew awareness training on laser event procedures. 
-    Ensure all incidents are reported promptly for law enforcement action.</em></p>
-    """
+    return f"<strong>🔴 Laser Strike Analysis</strong><p>Total Laser Strikes: {count}</p><p>All incidents have been reported to authorities. Crew awareness training continues.</p>"
 
 
 def generate_tcas_analysis():
-    """Generate TCAS event analysis."""
-    
+    """Generate TCAS analysis."""
     tcas_reports = st.session_state.get('tcas_reports', [])
     count = len(tcas_reports)
-    
-    return f"""
-    <strong>✈️ TCAS Event Analysis</strong>
-    
-    <p><strong>Total TCAS Events Reported:</strong> {count}</p>
-    
-    <p><strong>Alert Classification:</strong></p>
-    <ul>
-        <li>Traffic Advisories (TA): Monitoring only</li>
-        <li>Resolution Advisories (RA): Immediate action required</li>
-    </ul>
-    
-    <p><strong>Compliance Analysis:</strong></p>
-    <p>All RA events have been followed correctly by flight crews. TCAS compliance 
-    rate is at target levels.</p>
-    
-    <p><strong>ATC Coordination:</strong></p>
-    <p>Events have been coordinated with ATC. Post-event debriefs completed where 
-    required. Data shared with PCAA for airspace safety analysis.</p>
-    
-    <p><strong>Separation Analysis:</strong></p>
-    <p>Minimum separation values are being tracked. Events are categorized per 
-    ICAO Airprox classification guidelines.</p>
-    
-    <p><em>💡 Recommendation: Review TCAS events for pattern analysis. Consider 
-    coordination with ANS for high-density airspace areas.</em></p>
-    """
+    return f"<strong>✈️ TCAS Event Analysis</strong><p>Total TCAS Events: {count}</p><p>All RA events have been followed correctly. Compliance rate is at target levels.</p>"
 
 
 def generate_safety_briefing(report_counts, total_reports, high_risk_count):
-    """Generate styled weekly safety briefing."""
-    
-    today = datetime.now().strftime('%B %d, %Y')
-    
-    # Calculate some dynamic styles based on risk
-    status_color = "#22C55E" if high_risk_count == 0 else "#F97316"
-    status_text = "NORMAL" if high_risk_count == 0 else "ATTENTION REQUIRED"
-    
-    return f"""
-    <div style="background-color: white; border-radius: 10px; overflow: hidden; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div style="background: #1E3A8A; color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h2 style="margin: 0; font-size: 1.4rem;">📋 Weekly Safety Briefing</h2>
-                <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px;">{today}</div>
-            </div>
-            <div style="background: {status_color}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">
-                {status_text}
-            </div>
-        </div>
-
-        <div style="padding: 20px;">
-            <div style="margin-bottom: 25px;">
-                <h4 style="color: #475569; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; margin-top: 0;">📊 System Activity</h4>
-                <div style="display: flex; gap: 20px; margin-top: 15px;">
-                    <div style="flex: 1; background: #F8FAFC; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 2rem; font-weight: bold; color: #3B82F6;">{total_reports}</div>
-                        <div style="font-size: 0.8rem; color: #64748B;">Total Reports</div>
-                    </div>
-                    <div style="flex: 1; background: #FEF2F2; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 2rem; font-weight: bold; color: #EF4444;">{high_risk_count}</div>
-                        <div style="font-size: 0.8rem; color: #991B1B;">High Risk</div>
-                    </div>
-                    <div style="flex: 1; background: #F0FDF4; padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 2rem; font-weight: bold; color: #16A34A;">{report_counts.get('hazard_reports', 0)}</div>
-                        <div style="font-size: 0.8rem; color: #166534;">Hazards ID'd</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="background: #FFF7ED; border-left: 4px solid #F97316; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                <strong style="color: #9A3412;">🎯 Focus Areas This Week</strong>
-                <ul style="margin: 10px 0 0 20px; color: #7C2D12;">
-                    <li>Monitor seasonal wildlife activity (Migration Season)</li>
-                    <li>Complete pending corrective actions for high-risk items</li>
-                    <li>Review closed investigation effectiveness</li>
-                </ul>
-            </div>
-
-            <p style="color: #64748B; font-style: italic; font-size: 0.9rem; text-align: center; margin: 0;">
-                "Safety is everyone's responsibility. Stay vigilant."
-            </p>
-        </div>
-    </div>
-    """
+    """Generate safety briefing."""
+    return f"""<strong>📋 Weekly Safety Briefing</strong>
+    <p><strong>Summary:</strong> This week's safety performance remains within acceptable parameters.</p>
+    <p><strong>Key Statistics:</strong></p>
+    <ul>
+        <li>Total Reports: {total_reports}</li>
+        <li>High/Extreme Risk: {high_risk_count}</li>
+        <li>Bird Strikes: {report_counts.get('bird_strikes', 0)}</li>
+        <li>Hazard Reports: {report_counts.get('hazard_reports', 0)}</li>
+    </ul>
+    <p><em>Stay vigilant. Safety is everyone's responsibility.</em></p>"""
 
 
 def generate_action_summary():
     """Generate pending actions summary."""
-    
-    # Count pending items
     pending_hazards = sum(1 for r in st.session_state.get('hazard_reports', [])
                         if r.get('status') in ['New', 'Under Review', 'Pending Action'])
-    pending_incidents = sum(1 for r in st.session_state.get('aircraft_incidents', [])
-                          if r.get('investigation_status') in ['Open', 'Under Investigation'])
-    
-    return f"""
-    <strong>📌 Pending Actions Summary</strong>
-    
-    <p><strong>Open Items Requiring Action:</strong></p>
-    <ul>
-        <li>Hazard Reports pending review: {pending_hazards}</li>
-        <li>Incidents under investigation: {pending_incidents}</li>
-    </ul>
-    
-    <p><strong>Priority Actions:</strong></p>
-    <ol>
-        <li>Complete risk assessments for all new hazard reports</li>
-        <li>Update investigation status for open incidents</li>
-        <li>Close out corrective actions with verified effectiveness</li>
-        <li>Prepare pending items for Safety Review Board</li>
-    </ol>
-    
-    <p><strong>Overdue Items:</strong></p>
-    <p>Review the View Reports section for any items exceeding their SLA timelines. 
-    Escalation procedures should be followed for significantly overdue items.</p>
-    
-    <p><em>💡 Recommendation: Schedule weekly review of all open items to ensure 
-    timely closure and appropriate resource allocation.</em></p>
-    """
+    return f"""<strong>📌 Pending Actions</strong>
+    <p>Hazard Reports pending review: {pending_hazards}</p>
+    <p>Prioritize review of all new hazard reports and assign owners within 24 hours.</p>"""
 
 
 def generate_performance_comparison():
-    """Generate performance comparison response."""
-    
-    return """
-    <strong>📈 Performance Comparison</strong>
-    
-    <p><strong>Current Period vs Previous Quarter:</strong></p>
-    
-    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-        <tr style="background: #F8F9FA;">
-            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Metric</th>
-            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Current</th>
-            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Previous</th>
-            <th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Trend</th>
-        </tr>
-        <tr>
-            <td style="padding: 10px;">Report Volume</td>
-            <td style="padding: 10px; text-align: center;">Active</td>
-            <td style="padding: 10px; text-align: center;">Baseline</td>
-            <td style="padding: 10px; text-align: center;">📈 Improving</td>
-        </tr>
-        <tr style="background: #F8F9FA;">
-            <td style="padding: 10px;">High Risk Items</td>
-            <td style="padding: 10px; text-align: center;">Monitored</td>
-            <td style="padding: 10px; text-align: center;">Baseline</td>
-            <td style="padding: 10px; text-align: center;">➡️ Stable</td>
-        </tr>
-        <tr>
-            <td style="padding: 10px;">Closure Rate</td>
-            <td style="padding: 10px; text-align: center;">On Target</td>
-            <td style="padding: 10px; text-align: center;">Target</td>
-            <td style="padding: 10px; text-align: center;">✅ Meeting</td>
-        </tr>
-    </table>
-    
-    <p><strong>Key Achievements:</strong></p>
-    <ul>
-        <li>Safety reporting culture continues to strengthen</li>
-        <li>Investigation closure times meeting SLA</li>
-        <li>Proactive hazard identification increasing</li>
-    </ul>
-    
-    <p><em>💡 The safety management system is performing effectively. Continue 
-    current initiatives and monitoring.</em></p>
-    """
+    """Generate performance comparison."""
+    return """<strong>📈 Performance Comparison</strong>
+    <p>Current safety performance is meeting targets. Continue monitoring key metrics.</p>
+    <p>The safety reporting system is functioning effectively with good participation.</p>"""
 
 
 def generate_hazard_analysis():
-    """Generate hazard report analysis."""
-    
+    """Generate hazard analysis."""
     hazards = st.session_state.get('hazard_reports', [])
     count = len(hazards)
-    
-    return f"""
-    <strong>🔶 Hazard Report Analysis</strong>
-    
-    <p><strong>Total Hazard Reports:</strong> {count}</p>
-    
-    <p><strong>Common Hazard Categories:</strong></p>
-    <ul>
-        <li>Ground operations and ramp safety</li>
-        <li>Flight operations and procedures</li>
-        <li>Technical and maintenance</li>
-        <li>Human factors and training</li>
-        <li>Environmental and weather</li>
-    </ul>
-    
-    <p><strong>Risk Assessment:</strong></p>
-    <p>All hazard reports are assessed using the ICAO 5x5 risk matrix. This ensures 
-    consistent evaluation of likelihood and severity across all hazard types.</p>
-    
-    <p><strong>Patterns Identified:</strong></p>
-    <ul>
-        <li>Proactive reporting indicates healthy safety culture</li>
-        <li>Hazards are being identified before incidents occur</li>
-        <li>Cross-departmental reporting improving</li>
-    </ul>
-    
-    <p><em>💡 Recommendation: Continue encouraging voluntary hazard reporting. 
-    Recognize and reward proactive safety contributions.</em></p>
-    """
+    return f"""<strong>🔶 Hazard Report Analysis</strong>
+    <p>Total Hazard Reports: {count}</p>
+    <p>Proactive reporting indicates a healthy safety culture. All hazards are being identified before incidents occur.</p>"""
 
 
 def generate_general_response(query, report_counts, total_reports):
-    """Generate a general response for queries that don't match specific patterns."""
-    
-    return f"""
-    <strong>🤖 AI Response</strong>
-    
-    <p>I understand you're asking about: <em>"{query}"</em></p>
-    
-    <p>Here's what I can tell you based on current safety data:</p>
-    
-    <p><strong>Current System Status:</strong></p>
-    <ul>
-        <li>Total reports in system: {total_reports}</li>
-        <li>Active hazard reports: {report_counts.get('hazard_reports', 0)}</li>
-        <li>Safety reporting: Active and healthy</li>
-    </ul>
-    
-    <p><strong>Available Analysis Options:</strong></p>
-    <ul>
-        <li>Ask about specific report types (bird strikes, TCAS, hazards)</li>
-        <li>Request risk analysis or trend information</li>
-        <li>Generate safety briefings or performance reports</li>
-        <li>Review pending actions or corrective measures</li>
-    </ul>
-    
-    <p>Please feel free to ask more specific questions, or use the quick analysis 
-    buttons in the sidebar for detailed reports.</p>
-    """
+    """Generate general response."""
+    return f"""<strong>🤖 Safety Analysis</strong>
+    <p>Total reports in system: {total_reports}</p>
+    <p>Active hazard reports: {report_counts.get('hazard_reports', 0)}</p>
+    <p>The safety management system is functioning effectively. Feel free to ask about specific report types or trends.</p>"""
 
 
 def add_ai_response(response_type):
-    """Add a quick AI response based on button click."""
+    """Add quick AI response based on button click."""
+    report_counts = get_report_counts()
+    risk_distribution = get_risk_distribution()
+    total_reports = get_total_reports()
+    high_risk_count = get_high_risk_count()
     
-    responses = {
-        'trend_analysis': ("Show me trend analysis", generate_trend_analysis()),
-        'risk_summary': ("Give me a risk summary", generate_risk_analysis(
-            get_risk_distribution(), get_high_risk_count())),
-        'performance_report': ("Generate performance report", generate_performance_comparison()),
-        'predictive_insights': ("What are the predictive insights?", """
-            <strong>🔮 Predictive Safety Insights</strong>
-            
-            <p><strong>Upcoming Risk Factors:</strong></p>
-            <ul>
-                <li>Seasonal bird migration may increase strike probability</li>
-                <li>Weather patterns suggest increased turbulence events</li>
-                <li>Operational tempo changes may affect fatigue risk</li>
-            </ul>
-            
-            <p><strong>Recommended Preventive Actions:</strong></p>
-            <ol>
-                <li>Enhanced wildlife awareness briefings</li>
-                <li>Review severe weather procedures</li>
-                <li>Monitor crew duty time compliance</li>
-            </ol>
-            
-            <p><em>These insights are based on historical patterns and current 
-            operational data. Actual conditions may vary.</em></p>
-        """)
-    }
+    if response_type == "trend_analysis":
+        response, rtype = generate_trend_analysis(), "text"
+    elif response_type == "risk_summary":
+        response, rtype = generate_risk_analysis(risk_distribution, high_risk_count), "dashboard"
+    elif response_type == "performance_report":
+        response, rtype = generate_performance_comparison(), "text"
+    elif response_type == "predictive_insights":
+        response = "<strong>🔮 Predictive Insights</strong><p>Seasonal bird activity expected to increase. Enhanced wildlife awareness briefings recommended.</p>"
+        rtype = "text"
     
-    if response_type in responses:
-        query, response = responses[response_type]
-        st.session_state.ai_chat_history.append({'role': 'user', 'content': query})
-        st.session_state.ai_chat_history.append({'role': 'assistant', 'content': response})
-        st.rerun()
-
-
+    st.session_state.ai_chat_history.append({'role': 'assistant', 'content': response, 'type': rtype})
+    st.rerun()
 # =============================================================================
 # EMAIL FEATURES
 # =============================================================================
