@@ -8870,7 +8870,7 @@ def render_settings():
     # Create tabs
     tab_general, tab_users = st.tabs(["🏢 General", "👥 Users"])
     
-    with tab_general:
+        with tab_general:
         st.markdown("### 🏢 General Configuration")
         
         col1, col2 = st.columns(2)
