@@ -6691,6 +6691,24 @@ def render_compose_email():
     
     st.markdown("### ✉️ Compose New Email")
     
+    # --- FIX: Check for transferred template data ---
+    # We pop them so they are used once, allowing the user to edit afterwards without overwriting
+    default_subject = st.session_state.pop('transfer_subject', '')
+    default_body = st.session_state.pop('transfer_body', '')
+    
+    # Initialize session state for these specific widgets if not already set
+    # This ensures the text boxes maintain their state even if you interact with other widgets
+    if 'compose_subject' not in st.session_state:
+        st.session_state.compose_subject = ""
+    if 'compose_body' not in st.session_state:
+        st.session_state.compose_body = ""
+        
+    # If we just loaded a template, override the current widget state
+    if default_subject:
+        st.session_state.compose_subject = default_subject
+    if default_body:
+        st.session_state.compose_body = default_body
+
     # Recipient selection
     recipient_type = st.radio(
         "Recipient Type",
@@ -6713,21 +6731,13 @@ def render_compose_email():
     
     cc_address = st.text_input("CC:", placeholder="Optional")
     
-    # Subject with template option
-    template_subject = st.selectbox(
-        "Subject Template (optional)",
-        ["Custom Subject", "[Safety Alert]", "[Investigation Update]", 
-         "[Corrective Action]", "[Safety Bulletin]", "[Meeting Notice]"]
-    )
-    
-    if template_subject == "Custom Subject":
-        subject = st.text_input("Subject:")
-    else:
-        subject = st.text_input("Subject:", value=template_subject + " ")
+    # --- FIX: Simplified Subject Logic ---
+    # We removed the conflicting "Subject Template" dropdown logic to prioritize the "Use Template" tab workflow
+    subject = st.text_input("Subject:", key="compose_subject")
     
     # Email body
     st.markdown("**Message:**")
-    body = st.text_area("", height=250, placeholder="Type your message here...")
+    body = st.text_area("", height=250, placeholder="Type your message here...", key="compose_body")
     
     # Attachments
     attachments = st.file_uploader(
@@ -6751,6 +6761,7 @@ def render_compose_email():
     with btn_col1:
         if st.button("📤 Send Email", use_container_width=True):
             if to_address and subject and body:
+                # Use the imported send_email function (ensure email_utils is imported)
                 success = send_email(to_address, cc_address, subject, body, 
                                    attachments, high_priority)
                 if success:
@@ -6869,11 +6880,15 @@ Safety Management Team"""
     col1, col2 = st.columns(2)
     with col1:
         if st.button("📝 Use Template", use_container_width=True):
-            st.session_state['email_template'] = template
-            st.info("Template loaded. Go to Compose tab to edit and send.")
+            # --- FIX: Save to transfer variables ---
+            st.session_state['transfer_subject'] = template['subject']
+            st.session_state['transfer_body'] = template['body']
+            st.success("Template loaded! Switch to the '✉️ Compose' tab to view it.")
+            
     with col2:
         if st.button("✏️ Edit Template", use_container_width=True):
             st.info("Template editing would open here")
+            
 def render_inbox_emails():
     """View received/logged emails."""
     st.markdown("### 📥 Inbox (Logged Replies)")
