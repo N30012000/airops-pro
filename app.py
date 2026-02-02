@@ -6660,16 +6660,14 @@ def add_ai_response(response_type):
 def render_email_status_matrix():
     """
     Renders the 30-Email Daily Conclusion Matrix.
-    Displays statuses like 'REVIEW SENT', 'NOT CARRYING', etc.
     """
     st.markdown("### 🗓️ Daily Communication Conclusion Log")
     st.caption("Tracking the final status of daily correspondence (Scroll right to see up to Email 30).")
 
-    # 1. Define Columns (Date + 30 Email Slots)
+    # 1. Define Columns
     columns = ["DATE"] + [f"EMAIL {i}" for i in range(1, 31)]
 
-    # 2. Mock Data (Replace this with DB fetch in production)
-    # Simulating the example: "99-00-0000 | REVIEW, SENT TO FLIGHT OPS | NOT CARRYING..."
+    # 2. Mock Data (Same as before)
     data = [
         {
             "DATE": "02-02-2026", 
@@ -6702,37 +6700,35 @@ def render_email_status_matrix():
         }
     ]
 
-    # Fill empty slots with "-" for a clean matrix look
+    # Fill empty slots
     processed_data = []
     for row in data:
         full_row = row.copy()
         for i in range(1, 31):
             col_name = f"EMAIL {i}"
             if col_name not in full_row:
-                full_row[col_name] = "-" # Empty placeholder
+                full_row[col_name] = "-"
         processed_data.append(full_row)
 
     # 3. Create DataFrame
     df = pd.DataFrame(processed_data, columns=columns)
+    
+    # 4. CRITICAL FIX: Set 'DATE' as Index
+    # This automatically "freezes" the Date column on the left side of the table
+    df = df.set_index("DATE")
 
-    # 4. Render Dataframe with Frozen Date Column
+    # 5. Render Dataframe
     st.dataframe(
         df,
         use_container_width=True,
-        hide_index=True,
-        height=400,
-        column_config={
-            "DATE": st.column_config.TextColumn(
-                "Date", 
-                frozen=True,  # <--- Keeps the Date visible while scrolling right
-                width="medium"
-            ),
-        }
+        height=400
+        # Note: We removed the 'frozen=True' parameter causing the crash.
+        # Streamlit freezes the Index column by default.
     )
     
     st.download_button(
         "📥 Download Matrix as CSV",
-        df.to_csv(index=False).encode('utf-8'),
+        df.to_csv().encode('utf-8'),
         "email_matrix.csv",
         "text/csv"
     )
