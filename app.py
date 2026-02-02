@@ -8588,19 +8588,11 @@ def render_sidebar():
 
 def route_to_page():
     """
-    Robust Routing: Automatically finds the correct function name in ai_assistant
+    Robust Routing: Maps Sidebar selections to Functions.
     """
     page = st.session_state.get('current_page', 'Dashboard')
     
-    # 1. Attempt to find the correct AI function dynamically
-    ai_function = None
-    if 'ai_assistant' in globals():
-        # Try finding 'render_ai_assistant', then 'app', then 'main'
-        ai_function = getattr(ai_assistant, 'render_ai_assistant', 
-                      getattr(ai_assistant, 'app', 
-                      getattr(ai_assistant, 'main', None)))
-
-    # 2. Map Pages to Functions
+    # Map Pages to Functions
     PAGES = {
         'Dashboard': render_dashboard,
         'Hazard Report': render_hazard_form,
@@ -8616,11 +8608,12 @@ def route_to_page():
         'Ramp Inspections': globals().get('render_ramp_inspection'),
         'Email Center': globals().get('render_email_center'),
         
-        # AI Assistant (Mapped to the auto-detected function)
-        'AI Assistant': ai_function
+        # AI Assistant - FIXED LINK
+        # We point to the local function 'render_ai_assistant' defined in app.py
+        'AI Assistant': render_ai_assistant 
     }
     
-    # 3. Execution Logic
+    # Execution Logic
     if page in PAGES:
         func = PAGES[page]
         if func:
@@ -8628,19 +8621,11 @@ def route_to_page():
                 func()
             except Exception as e:
                 st.error(f"⚠️ Critical Error loading '{page}': {e}")
-                st.info("Check the logs or the file structure.")
+                st.info("Check the logs for details.")
         else:
-            if page == 'AI Assistant':
-                st.warning("⚠️ AI Module Loaded, but no main function found.")
-                st.info("Ensure ai_assistant.py has a function named 'render_ai_assistant()', 'app()', or 'main()'.")
-            else:
-                st.warning(f"🚧 Page '{page}' is enabled in menu but code is missing.")
+            st.warning(f"🚧 Page '{page}' is enabled in menu but code is missing.")
     else:
-        st.error(f"❌ Routing Error: Page '{page}' is unknown.")
-        
-def render_footer():
-    st.markdown("---")
-    st.markdown("<center style='color:#888;'>Air Sial SMS v3.0 | © 2025</center>", unsafe_allow_html=True)
+        st.error(f"❌ Routing Error: Page '{page}' is unknown.")=True)
 
 # ==============================================================================
 # 3. MAIN EXECUTION BLOCK (MUST BE LAST)
