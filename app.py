@@ -3750,31 +3750,38 @@ def render_mor_form():
                 st.success("✅ MOR Submitted. Notification sent to Safety Department.")
                 st.balloons()
                 
-def render_hazard_form_workflow():
+# ══════════════════════════════════════════════════════════════════════════════
+# FIX: DEFINITIONS FOR ROUTING (Hazard, MOR, Audit)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def render_hazard_form():
     """
-    Hazard Reporting with Strict Workflow Rules:
-    1. Reporter: Submits -> Status 'New'
-    2. Safety (Gatekeeper): Adds Risk/Forwarding -> Status 'Risk Assessed'
-    3. Analyst (Dept): Adds Root Cause/CAP/Target Date -> Status 'CAP Submitted'
-    4. Safety (Gatekeeper): Reviews & Closes -> Status 'Closed'
+    (Formerly render_hazard_form_workflow)
+    Workflow: Reporter -> Safety (Risk) -> Dept (CAP) -> Safety (Close)
     """
     st.markdown("## ⚠️ Hazard Report")
     
-    # --- VIEW FOR REPORTER (SUBMISSION) ---
-    # In a real app, you'd check `if report_id is None:`
+    # 1. REPORTER VIEW (New Submission)
+    # ---------------------------------------------------------
+    # In a full app, check if we are editing an existing report. 
+    # For now, we assume 'New' if no report is selected.
     with st.form("hazard_submit"):
         st.markdown("#### New Submission")
-        h_type = st.radio("Type", ["Internal", "External"], horizontal=True)
-        dept = st.selectbox("Department", DEPARTMENTS)
-        desc = st.text_area("Description")
-        st.file_uploader("Attach Evidence")
+        h_type = st.radio("Hazard Type", ["Internal", "External"], horizontal=True)
+        col1, col2 = st.columns(2)
+        dept = col1.selectbox("Department", DEPARTMENTS)
+        date_rep = col2.date_input("Date")
         
-        if st.form_submit_button("Submit Hazard"):
-            # Save as NEW
+        desc = st.text_area("Hazard Description", height=150)
+        st.file_uploader("Attach Evidence (OCR Enabled)")
+        
+        if st.form_submit_button("Submit Hazard", type="primary"):
+            # Logic: Save to DB with Status='New'
             st.success("✅ Hazard Submitted. Forwarded to Safety for Risk Analysis.")
-            
-    # --- VIEW FOR SAFETY (RISK ANALYSIS) ---
-    # This section would only appear for Role='Safety Head' on an existing report
+
+    # 2. SAFETY GATEKEEPER VIEW (Risk Analysis)
+    # ---------------------------------------------------------
+    # Only show this if User Role is 'Safety Head'
     if st.session_state.get('user_role') == 'Safety Head':
         st.markdown("---")
         st.markdown("### 🛡️ Safety Gatekeeper: Risk Analysis")
@@ -3783,12 +3790,11 @@ def render_hazard_form_workflow():
             forward_to = st.selectbox("Forward To", DEPARTMENTS)
             
             if st.form_submit_button("Submit Analysis & Forward"):
-                # Logic: Update Status -> 'Risk Assessed'
-                # Logic: Email 'forward_to' department
                 st.success(f"Risk defined as {risk}. Forwarded to {forward_to}.")
 
-    # --- VIEW FOR ANALYST (CAP) ---
-    # Only appears for Role='Analyst' and Status='Risk Assessed'
+    # 3. ANALYST VIEW (CAP Entry)
+    # ---------------------------------------------------------
+    # Only show this if User Role is 'Analyst'
     if st.session_state.get('user_role') == 'Analyst':
         st.markdown("---")
         st.markdown("### 🔧 Analyst: CAP Entry")
@@ -3798,8 +3804,62 @@ def render_hazard_form_workflow():
             target_date = st.date_input("Target Date")
             
             if st.form_submit_button("Submit CAP"):
-                # Logic: Update Status -> 'CAP Submitted'
                 st.success("CAP Submitted. Returned to Safety for closure.")
+
+def render_mor_form():
+    """
+    Mandatory Occurrence Report (MOR) - Checkbox Style
+    """
+    st.markdown("## 🚨 Mandatory Occurrence Report (MOR)")
+    st.info("ℹ️ Notification only. No CAP/Investigation workflow applies.")
+    
+    with st.form("mor_strict_form"):
+        st.markdown("#### Occurrence Type")
+        c1, c2, c3, c4 = st.columns(4)
+        is_bird = c1.checkbox("Bird Strike")
+        is_laser = c2.checkbox("Laser Strike")
+        is_tcas = c3.checkbox("TCAS RA")
+        is_gen = c4.checkbox("MOR (General)")
+        
+        col1, col2 = st.columns(2)
+        dept = col1.selectbox("Department", DEPARTMENTS)
+        date_occ = col2.date_input("Date of Occurrence")
+        
+        desc = st.text_area("Description", height=100)
+        st.file_uploader("Attach Document/Evidence")
+        
+        if st.form_submit_button("Submit MOR", type="primary"):
+            if not any([is_bird, is_laser, is_tcas, is_gen]):
+                st.error("Please select at least one Occurrence Type.")
+            else:
+                st.success("✅ MOR Submitted. Notification sent to Safety Department.")
+
+def render_audit_form():
+    """
+    Quality / Audit Findings Tracker
+    """
+    st.markdown("## 🧪 Quality Assurance & Audit")
+    
+    tab1, tab2 = st.tabs(["Findings Tracker", "Ramp Inspection"])
+    
+    with tab1:
+        with st.form("audit_finding"):
+            st.markdown("#### New Audit Finding")
+            level = st.selectbox("Finding Level", ["Level 1", "Level 2", "Observation"])
+            dept = st.selectbox("Audited Department", DEPARTMENTS)
+            finding = st.text_area("Finding Description")
+            st.file_uploader("Attach Audit Evidence")
+            if st.form_submit_button("Log Finding"):
+                st.success("Finding Logged.")
+                
+    with tab2:
+        st.info("Ramp Inspection (No Checklist - Levels Only)")
+        with st.form("ramp_inspection"):
+            flight_no = st.text_input("Flight No")
+            level = st.selectbox("Outcome", ["Level 1-2 (Minor)", "Level 3 (Major)"])
+            comments = st.text_area("Comments")
+            if st.form_submit_button("Submit Ramp Report"):
+                st.success("Ramp Inspection Saved.")
 
 
 def calculate_risk_level(likelihood: int, severity: str) -> str:
