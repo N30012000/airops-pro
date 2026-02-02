@@ -6657,9 +6657,43 @@ def add_ai_response(response_type):
 # UPDATED EMAIL CENTER (With Status Matrix)
 # ══════════════════════════════════════════════════════════════════════════════
 
+# ══════════════════════════════════════════════════════════════════════════════
+# COMPLETE EMAIL CENTER (Compose, Inbox/Sent, Templates, Matrix)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def render_sent_received_logs():
+    """
+    Displays the standard Inbox and Sent Items lists.
+    """
+    st.markdown("### 📨 Sent & Received Logs")
+    
+    # Sub-tabs for Inbox and Sent
+    t_inbox, t_sent = st.tabs(["📥 Inbox (Received)", "📤 Sent Items"])
+    
+    with t_inbox:
+        st.markdown("#### Recent Incoming Mail")
+        # Mock Data - Connect to real email API in production
+        inbox_data = [
+            {"Date": "2026-02-02", "From": "flightops@airsial.com", "Subject": "Re: Bird Strike Incident #402", "Priority": "High"},
+            {"Date": "2026-02-01", "From": "caa.regulatory@caapakistan.com.pk", "Subject": "Safety Circular 2026-05", "Priority": "Normal"},
+            {"Date": "2026-01-30", "From": "engineering.maint@airsial.com", "Subject": "A320 Maintenance Schedule Update", "Priority": "Normal"},
+            {"Date": "2026-01-29", "From": "ground.services@airsial.com", "Subject": "Ramp Safety Audit Response", "Priority": "Low"},
+        ]
+        st.dataframe(pd.DataFrame(inbox_data), use_container_width=True)
+        
+    with t_sent:
+        st.markdown("#### Recently Sent Emails")
+        # Mock Data
+        sent_data = [
+            {"Date": "2026-02-02", "To": "safety.board@airsial.com", "Subject": "Weekly Safety Summary (Week 5)", "Status": "Delivered"},
+            {"Date": "2026-02-01", "To": "pilot.chief@airsial.com", "Subject": "Urgent: Weather Alert for Northern Sector", "Status": "Read"},
+            {"Date": "2026-01-31", "To": "all.staff@airsial.com", "Subject": "New Hazard Reporting Guidelines", "Status": "Delivered"},
+        ]
+        st.dataframe(pd.DataFrame(sent_data), use_container_width=True)
+
 def render_email_status_matrix():
     """
-    Renders the 30-Email Daily Conclusion Matrix.
+    Renders the 30-Email Daily Conclusion Matrix (Scrollable).
     """
     st.markdown("### 🗓️ Daily Communication Conclusion Log")
     st.caption("Tracking the final status of daily correspondence (Scroll right to see up to Email 30).")
@@ -6667,7 +6701,7 @@ def render_email_status_matrix():
     # 1. Define Columns
     columns = ["DATE"] + [f"EMAIL {i}" for i in range(1, 31)]
 
-    # 2. Mock Data (Same as before)
+    # 2. Mock Data
     data = [
         {
             "DATE": "02-02-2026", 
@@ -6690,13 +6724,6 @@ def render_email_status_matrix():
             "EMAIL 2": "RESOLVED", 
             "EMAIL 3": "-", 
             "EMAIL 4": "-"
-        },
-        {
-            "DATE": "30-01-2026", 
-            "EMAIL 1": "AUDIT SCHEDULED", 
-            "EMAIL 2": "REPLY TO CAA", 
-            "EMAIL 3": "DELAYED RESPONSE", 
-            "EMAIL 4": "FOLLOW UP SENT"
         }
     ]
 
@@ -6710,28 +6737,14 @@ def render_email_status_matrix():
                 full_row[col_name] = "-"
         processed_data.append(full_row)
 
-    # 3. Create DataFrame
+    # 3. Create DataFrame & Set Index
     df = pd.DataFrame(processed_data, columns=columns)
-    
-    # 4. CRITICAL FIX: Set 'DATE' as Index
-    # This automatically "freezes" the Date column on the left side of the table
     df = df.set_index("DATE")
 
-    # 5. Render Dataframe
-    st.dataframe(
-        df,
-        use_container_width=True,
-        height=400
-        # Note: We removed the 'frozen=True' parameter causing the crash.
-        # Streamlit freezes the Index column by default.
-    )
+    # 4. Render
+    st.dataframe(df, use_container_width=True, height=400)
     
-    st.download_button(
-        "📥 Download Matrix as CSV",
-        df.to_csv().encode('utf-8'),
-        "email_matrix.csv",
-        "text/csv"
-    )
+    st.download_button("📥 Download Log", df.to_csv().encode('utf-8'), "email_log.csv", "text/csv")
 
 def render_email_center():
     """
@@ -6739,26 +6752,23 @@ def render_email_center():
     """
     st.markdown("## 📧 Notification & Communication Center")
     
-    # The 3 Tabs
-    tab1, tab2, tab3 = st.tabs(["✉️ Compose", "📋 Templates", "🗓️ Status Matrix"])
+    # UPDATED: 4 Tabs now
+    tab1, tab2, tab3, tab4 = st.tabs(["✉️ Compose", "📨 Inbox & Sent", "📋 Templates", "🗓️ Status Matrix"])
     
     with tab1:
-        # Calls the existing function defined earlier in your code
-        # If this throws a NameError, ensure render_compose_email is defined above this function
+        # Calls the function defined earlier
         if 'render_compose_email' in globals():
             render_compose_email()
-        else:
-            st.warning("Compose function missing.")
             
     with tab2:
-        # Calls the existing function defined earlier in your code
+        # NEW Tab
+        render_sent_received_logs()
+        
+    with tab3:
         if 'render_email_templates' in globals():
             render_email_templates()
-        else:
-            st.warning("Template function missing.")
 
-    with tab3:
-        # The NEW Matrix you requested
+    with tab4:
         render_email_status_matrix()
 
 def render_compose_email():
