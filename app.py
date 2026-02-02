@@ -920,29 +920,35 @@ def render_risk_matrix_selector():
     return likelihood, severity, risk_level, risk_classification
 
 def render_visual_risk_matrix():
-    st.markdown("#### 🎯 ICAO Risk Matrix")
-    colors = {RiskLevel.EXTREME: "#DC3545", RiskLevel.HIGH: "#FD7E14", RiskLevel.MEDIUM: "#FFC107", RiskLevel.LOW: "#28A745"}
-    matrix_html = '<div style="overflow-x: auto;"><table style="border-collapse: collapse; margin: 1rem 0;"><tr><th style="padding: 8px; background: #1E40AF; color: white;"></th>'
-    for s in ["A", "B", "C", "D", "E"]:
-        matrix_html += f'<th style="padding: 8px; background: #1E40AF; color: white; text-align: center;">{s}<br><small>{SEVERITY_SCALE[s]["name"][:4]}</small></th>'
-    matrix_html += '</tr>'
-    for l in [5, 4, 3, 2, 1]:
-        matrix_html += f'<tr><td style="padding: 8px; background: #1E40AF; color: white; font-weight: 600;">{l}</td>'
-        for s in ["A", "B", "C", "D", "E"]:
-            risk = RISK_MATRIX.get((str(l), s), RiskLevel.LOW)
-            color = colors[risk]
-            text_color = "#000" if risk in [RiskLevel.MEDIUM, RiskLevel.LOW] else "#FFF"
-            matrix_html += f'<td style="padding: 8px; background: {color}; color: {text_color}; text-align: center; font-weight: 600;">{l}{s}</td>'
-        matrix_html += '</tr>'
-    matrix_html += '</table></div>'
-    st.markdown(matrix_html, unsafe_allow_html=True)
-    st.markdown('<div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;"><span class="risk-badge risk-extreme">EXTREME</span><span class="risk-badge risk-high">HIGH</span><span class="risk-badge risk-medium">MEDIUM</span><span class="risk-badge risk-low">LOW</span></div>', unsafe_allow_html=True)
-# ============================================================================
-# PART 4: FULL AVIATION FORMS - BIRD STRIKE, LASER STRIKE, TCAS REPORT
-# ============================================================================
-# Air Sial Corporate Safety Management System v3.0
-# Complete aviation-specific forms with all required fields
-# ============================================================================
+    """Darkened, High-Contrast ICAO Risk Matrix"""
+    st.markdown("""
+    <style>
+        .matrix-cell { padding: 15px; color: white; font-weight: bold; text-align: center; border: 1px solid #333; }
+        .risk-ext { background-color: #8B0000; } /* Dark Red */
+        .risk-high { background-color: #CC5500; } /* Dark Orange */
+        .risk-med { background-color: #B8860B; }  /* Dark Gold */
+        .risk-low { background-color: #006400; }  /* Dark Green */
+    </style>
+    <div style="display: flex; justify-content: center;">
+        <table style="width:100%; border-collapse: collapse;">
+            <tr>
+                <td class="matrix-cell risk-med">5A</td><td class="matrix-cell risk-med">5B</td><td class="matrix-cell risk-high">5C</td><td class="matrix-cell risk-ext">5D</td><td class="matrix-cell risk-ext">5E</td>
+            </tr>
+            <tr>
+                <td class="matrix-cell risk-low">4A</td><td class="matrix-cell risk-med">4B</td><td class="matrix-cell risk-high">4C</td><td class="matrix-cell risk-ext">4D</td><td class="matrix-cell risk-ext">4E</td>
+            </tr>
+            <tr>
+                <td class="matrix-cell risk-low">3A</td><td class="matrix-cell risk-low">3B</td><td class="matrix-cell risk-med">3C</td><td class="matrix-cell risk-high">3D</td><td class="matrix-cell risk-ext">3E</td>
+            </tr>
+            <tr>
+                <td class="matrix-cell risk-low">2A</td><td class="matrix-cell risk-low">2B</td><td class="matrix-cell risk-low">2C</td><td class="matrix-cell risk-med">2D</td><td class="matrix-cell risk-high">2E</td>
+            </tr>
+            <tr>
+                <td class="matrix-cell risk-low">1A</td><td class="matrix-cell risk-low">1B</td><td class="matrix-cell risk-low">1C</td><td class="matrix-cell risk-low">1D</td><td class="matrix-cell risk-med">1E</td>
+            </tr>
+        </table>
+    </div>
+    """, unsafe_allow_html=True)
 
 def render_bird_strike_form():
     """
