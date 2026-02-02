@@ -8719,12 +8719,13 @@ def render_sidebar():
             # ADDED HERE:
             if st.button("🤖 AI Assistant"): st.session_state['current_page'] = 'AI Assistant'
 
-        # 6. Logout
+if st.session_state.get('user_role') == 'Admin':
         st.markdown("---")
-        if st.button("Logout"):
-            st.session_state['authenticated'] = False
+        st.markdown("### 🛡️ Administration")
+        if st.button("👥 Manage Users", use_container_width=True):
+            st.session_state['current_page'] = 'Admin Panel'
             st.rerun()
-
+            
 def route_to_page():
     """
     Robust Routing: Maps Sidebar selections to Functions.
