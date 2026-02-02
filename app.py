@@ -8630,6 +8630,19 @@ def route_to_page():
 # 3. MAIN EXECUTION BLOCK (MUST BE LAST)
 # ==============================================================================
 
+def render_footer():
+    """Renders the application footer."""
+    st.markdown("---")
+    st.markdown(
+        "<center style='color:#888; font-size: 0.8rem;'>"
+        "Air Sial SMS v3.0 | Safety Management System | © 2026"
+        "</center>", 
+        unsafe_allow_html=True
+    )
+
+# --------------------------------------------------------------------------
+# ENSURE THIS BLOCK IS BELOW THE FUNCTION DEFINITION
+# --------------------------------------------------------------------------
 if __name__ == "__main__":
     # 1. Initialize State
     initialize_session_state()
@@ -8644,4 +8657,4 @@ if __name__ == "__main__":
         render_sidebar()
         render_header()
         route_to_page()
-        render_footer()
+        render_footer() # <--- Now this will work because the function exists above
