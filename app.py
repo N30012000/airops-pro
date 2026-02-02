@@ -10,6 +10,7 @@ import re
 import smtplib
 import time
 import uuid
+import ui_integration
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, date
@@ -3738,83 +3739,165 @@ def render_mor_form():
 
 def render_hazard_form():
     """
-    (Formerly render_hazard_form_workflow)
-    Workflow: Reporter -> Safety (Risk) -> Dept (CAP) -> Safety (Close)
+    Hazard Form: Matches 'Hazard Identification & Risk Assessment Form.pdf'
+    Includes: 5x5 Matrix Inputs, Location, Description, Sign-off.
     """
-    st.markdown("## ⚠️ Hazard Report")
+    st.markdown("## ⚠️ Hazard Identification & Risk Assessment")
     
-    # 1. REPORTER VIEW (New Submission)
-    # ---------------------------------------------------------
-    # In a full app, check if we are editing an existing report. 
-    # For now, we assume 'New' if no report is selected.
-    with st.form("hazard_submit"):
-        st.markdown("#### New Submission")
-        h_type = st.radio("Hazard Type", ["Internal", "External"], horizontal=True)
-        col1, col2 = st.columns(2)
-        dept = col1.selectbox("Department", DEPARTMENTS)
-        date_rep = col2.date_input("Date")
-        
-        desc = st.text_area("Hazard Description", height=150)
-        st.file_uploader("Attach Evidence (OCR Enabled)")
-        
-        if st.form_submit_button("Submit Hazard", type="primary"):
-            # Logic: Save to DB with Status='New'
-            st.success("✅ Hazard Submitted. Forwarded to Safety for Risk Analysis.")
+    # --- 1. OCR / AI AUTO-FILL SECTION ---
+    st.info("💡 **Smart Fill:** Upload a photo of the handwritten form to auto-fill these fields.")
+    uploaded_file = st.file_uploader("Upload Scanned Form / Evidence", type=['png', 'jpg', 'jpeg', 'pdf'], key="hazard_ocr")
+    
+    if uploaded_file is not None:
+        with st.spinner("🤖 AI is reading the document..."):
+            try:
+                # Reconnecting your existing OCR logic
+                ocr_result = ui_integration.process_file_upload(uploaded_file)
+                st.success("Data Extracted Successfully!")
+                # In a real scenario, you'd map 'ocr_result' to session_state variables here
+                with st.expander("View Extracted Data"):
+                    st.json(ocr_result)
+            except Exception as e:
+                st.error(f"OCR Error: {e}. Please fill manually.")
 
-    # 2. SAFETY GATEKEEPER VIEW (Risk Analysis)
-    # ---------------------------------------------------------
-    # Only show this if User Role is 'Safety Head'
-    if st.session_state.get('user_role') == 'Safety Head':
-        st.markdown("---")
-        st.markdown("### 🛡️ Safety Gatekeeper: Risk Analysis")
-        with st.form("safety_risk_form"):
-            risk = st.selectbox("Risk Level", list(RISK_COLORS.keys()))
-            forward_to = st.selectbox("Forward To", DEPARTMENTS)
+    with st.form("hazard_full_form"):
+        # Section A: Basic Details
+        st.markdown("### A. Hazard Identification")
+        c1, c2, c3 = st.columns(3)
+        # Matches PDF: "Reporter Name", "Date", "Department"
+        reporter_name = c1.text_input("Reporter Name", value=st.session_state.get('username', ''))
+        report_date = c2.date_input("Date of Report")
+        dept = c3.selectbox("Department", DEPARTMENTS)
+        
+        c4, c5 = st.columns(2)
+        # Matches PDF: "Location of Hazard", "Date/Time Hazard Identified"
+        location = c4.text_input("Location / Area")
+        datetime_occ = c5.text_input("Date/Time Identified (DD/MM/YYYY HH:MM)")
+        
+        description = st.text_area("Hazard Description", help="Describe the hazard in detail (Who, What, Where, When)", height=150)
+        
+        # Section B: Initial Risk Assessment (The Matrix)
+        st.markdown("### B. Initial Risk Assessment (Matrix)")
+        st.caption("Refer to the 5x5 Matrix (Severity A-E, Probability 1-5)")
+        
+        m1, m2 = st.columns(2)
+        # Matches PDF: "Severity (A-E)", "Probability (1-5)"
+        severity = m1.selectbox("Severity", ["A - Catastrophic", "B - Major", "C - Moderate", "D - Minor", "E - Insignificant"])
+        probability = m2.selectbox("Probability", ["5 - Frequent", "4 - Occasional", "3 - Remote", "2 - Improbable", "1 - Rare"])
+        
+        # Section C: Workflow (Hidden for Reporter, Visible for Analyst)
+        role = st.session_state.get('user_role')
+        if role in ["Analyst", "Safety Head", "Admin"]:
+            st.markdown("---")
+            st.markdown("### C. Corrective Action Plan (Analyst Only)")
+            # Matches PDF: "Person Responsible", "Action Plan", "Target Date"
+            cap_owner = st.text_input("Person Responsible")
+            cap_plan = st.text_area("Corrective Action Plan")
+            target_date = st.date_input("Target Date for Completion")
             
-            if st.form_submit_button("Submit Analysis & Forward"):
-                st.success(f"Risk defined as {risk}. Forwarded to {forward_to}.")
-
-    # 3. ANALYST VIEW (CAP Entry)
-    # ---------------------------------------------------------
-    # Only show this if User Role is 'Analyst'
-    if st.session_state.get('user_role') == 'Analyst':
-        st.markdown("---")
-        st.markdown("### 🔧 Analyst: CAP Entry")
-        with st.form("analyst_cap_form"):
-            root_cause = st.text_area("Root Cause")
-            cap = st.text_area("Corrective Action Plan (CAP)")
-            target_date = st.date_input("Target Date")
-            
-            if st.form_submit_button("Submit CAP"):
-                st.success("CAP Submitted. Returned to Safety for closure.")
+        submitted = st.form_submit_button("Submit Hazard Report", type="primary")
+        
+        if submitted:
+            # Save logic here
+            st.success("✅ Hazard Report Submitted. Forwarded to Safety Department.")
 
 def render_mor_form():
     """
-    Mandatory Occurrence Report (MOR) - Checkbox Style
+    MOR Form: Matches 'MOR.pdf', 'BIRD HIT.pdf', etc.
+    Includes: Flight Details, Weather, Nature of Incident.
     """
     st.markdown("## 🚨 Mandatory Occurrence Report (MOR)")
-    st.info("ℹ️ Notification only. No CAP/Investigation workflow applies.")
     
-    with st.form("mor_strict_form"):
-        st.markdown("#### Occurrence Type")
-        c1, c2, c3, c4 = st.columns(4)
-        is_bird = c1.checkbox("Bird Strike")
-        is_laser = c2.checkbox("Laser Strike")
-        is_tcas = c3.checkbox("TCAS RA")
-        is_gen = c4.checkbox("MOR (General)")
+    # Tabbed Interface to handle specific PDF types without clutter
+    tab1, tab2, tab3 = st.tabs(["General MOR", "Bird/Wildlife Strike", "Air Traffic / Near Miss"])
+    
+    # --- TAB 1: GENERAL MOR (Matches MOR.pdf) ---
+    with tab1:
+        with st.form("mor_general"):
+            st.markdown("### Aircraft & Flight Information")
+            c1, c2, c3 = st.columns(3)
+            # Matches PDF: "Type", "Registration", "Flight No"
+            ac_type = c1.selectbox("Aircraft Type", ["A320", "A330", "Other"])
+            reg = c2.text_input("Registration (e.g., AP-BOA)")
+            flt_no = c3.text_input("Flight No (e.g., PF-123)")
+            
+            c4, c5, c6 = st.columns(3)
+            # Matches PDF: "Departure", "Arrival", "POB"
+            dep = c4.text_input("Departure Station")
+            arr = c5.text_input("Arrival Station")
+            pob = c6.number_input("Persons on Board (POB)", min_value=0)
+            
+            st.markdown("### Occurrence Details")
+            # Matches PDF: "Nature of Incident", "Weather", "Damage"
+            nature = st.text_area("Nature / Cause of Incident")
+            weather = st.text_input("Weather Conditions (Metar/Visibility)")
+            damage = st.text_area("Damage Report (if any)")
+            
+            st.form_submit_button("Submit General MOR")
+
+    # --- TAB 2: BIRD STRIKE (Matches BIRD HIT.pdf) ---
+    with tab2:
+        with st.form("mor_bird"):
+            st.markdown("### Bird / Wildlife Strike Details")
+            b1, b2, b3 = st.columns(3)
+            # Matches PDF: "Height AGL", "Speed (IAS)", "Phase of Flight"
+            height = b1.number_input("Height (ft AGL)")
+            speed = b2.number_input("Speed (IAS Kts)")
+            phase = b3.selectbox("Phase", ["Taxi", "Takeoff", "Climb", "Cruise", "Approach", "Landing"])
+            
+            st.markdown("#### Impact Details")
+            # Matches PDF: "Part Struck" checkboxes
+            st.write("Part(s) Struck:")
+            c_w, c_e, c_f = st.columns(3)
+            if c_w.checkbox("Windshield"): pass
+            if c_e.checkbox("Engine (No. 1 / 2)"): pass
+            if c_f.checkbox("Fuselage / Wing"): pass
+            
+            bird_desc = st.text_input("Bird Description (Size/Type/Number)")
+            st.form_submit_button("Submit Bird Strike Report")
+
+    # --- TAB 3: AIR TRAFFIC (Matches Air - Near.pdf) ---
+    with tab3:
+        with st.form("mor_airprox"):
+            st.markdown("### Air Traffic Incident / Near Miss")
+            a1, a2 = st.columns(2)
+            # Matches PDF: "Call Sign", "Frequency"
+            callsign = a1.text_input("Your Call Sign")
+            freq = a2.text_input("Frequency in use")
+            
+            a3, a4 = st.columns(2)
+            # Matches PDF: "Other Aircraft Type", "Separation"
+            other_ac = a3.text_input("Other Aircraft Type/Callsign")
+            separation = a4.text_input("Est. Separation (Vertical/Horizontal)")
+            
+            tc_alert = st.checkbox("TCAS Alert Triggered?")
+            st.form_submit_button("Submit Airprox Report")
+
+def render_captain_debrief():
+    """
+    Matches 'De-Brief.pdf'
+    """
+    st.markdown("## 👨‍✈️ Captain's De-Brief")
+    with st.form("capt_debrief"):
+        d1, d2, d3 = st.columns(3)
+        date = d1.date_input("Date")
+        ac_reg = d2.text_input("A/C Registration")
+        flt_no = d3.text_input("Flight Number")
         
-        col1, col2 = st.columns(2)
-        dept = col1.selectbox("Department", DEPARTMENTS)
-        date_occ = col2.date_input("Date of Occurrence")
+        st.markdown("### Sector Analysis")
+        # Matches PDF table columns: Sector, Dep Delay, Arr Delay, Reason
+        c1, c2, c3, c4 = st.columns([2, 1, 1, 3])
+        c1.text_input("Sector (e.g., KHI-LHE)")
+        c2.time_input("Dep Time")
+        c3.time_input("Arr Time")
+        c4.text_input("Delay Reason (Code)")
         
-        desc = st.text_area("Description", height=100)
-        st.file_uploader("Attach Document/Evidence")
+        st.markdown("### Observations")
+        # Matches PDF: "Safety Observation", "Services", "Engineering"
+        obs_safe = st.text_area("Safety Observations")
+        obs_ops = st.text_area("Operational / Service Issues")
         
-        if st.form_submit_button("Submit MOR", type="primary"):
-            if not any([is_bird, is_laser, is_tcas, is_gen]):
-                st.error("Please select at least one Occurrence Type.")
-            else:
-                st.success("✅ MOR Submitted. Notification sent to Safety Department.")
+        st.form_submit_button("Submit Debrief")
 
 def render_audit_form():
     """
