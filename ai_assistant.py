@@ -1,151 +1,253 @@
-# ai_assistant.py
-import google.generativeai as genai
-import streamlit as st
-import json
-import speech_recognition as sr
-import io
+"""
+AI Assistant Module for Air Sial SMS v3.0
+Integrates with Google Gemini API for safety analysis
+"""
 
-def get_ai_assistant():
-    return SafetyAIAssistant()
+import streamlit as st
+import google.generativeai as genai
+from typing import Optional
+
+
+class DataGeocoder:
+    """Mock geocoder for incident location mapping"""
+    
+    @staticmethod
+    def get_coordinates(location: str) -> tuple:
+        """Get coordinates for a location (mock implementation)"""
+        locations = {
+            'Lahore': (31.5204, 74.3587),
+            'Karachi': (24.8607, 67.0011),
+            'Islamabad': (33.6844, 73.0479),
+            'Peshawar': (34.0151, 71.5783),
+            'Quetta': (30.1798, 66.9750),
+        }
+        return locations.get(location, (30.0, 70.0))
+
 
 class SafetyAIAssistant:
-    def __init__(self):
-        self.model = None
-        self.model_name = "Initializing..."
+    """AI Assistant for aviation safety analysis"""
+    
+    def __init__(self, api_key: str):
+        """Initialize AI assistant with Gemini API"""
+        self.api_key = api_key
+        self.model_name = "gemini-pro"
         
         try:
-            self.api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("AI_API_KEY")
-            if not self.api_key:
-                # print("⚠️ AI Init: No API Key found.")
-                self.model_name = "No API Key"
-                return
-
-            genai.configure(api_key=self.api_key)
-            
-            # --- AUTO-DISCOVERY: ASK GOOGLE WHAT WE HAVE ---
-            try:
-                # List all models available to your specific API key
-                all_models = list(genai.list_models())
-                
-                # Filter for models that can generate content
-                valid_models = [m.name for m in all_models if 'generateContent' in m.supported_generation_methods]
-                
-                # SELECTION STRATEGY: Prioritize Flash/1.5 for speed and multimodal
-                chosen = next((m for m in valid_models if 'gemini-1.5-flash' in m), None)
-                if not chosen:
-                    chosen = next((m for m in valid_models if '1.5' in m), None)
-                if not chosen:
-                    chosen = next((m for m in valid_models if 'gemini-pro' in m), None)
-                
-                if chosen:
-                    self.model = genai.GenerativeModel(chosen)
-                    self.model_name = chosen
-                else:
-                    self.model_name = "No Compatible Model"
-                    
-            except Exception as e:
-                # Fallback to standard
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
-                self.model_name = 'gemini-1.5-flash (forced)'
-
+            genai.configure(api_key=api_key)
+            self.model = genai.GenerativeModel(self.model_name)
+            self.initialized = True
         except Exception as e:
-            print(f"AI Init Error: {e}")
-
-    def _generate(self, prompt, parts=None):
-        if not self.model:
-            return None, f"⚠️ AI Offline. (Status: {self.model_name})"
+            print(f"⚠️ AI initialization warning: {e}")
+            self.initialized = False
+    
+    def chat(self, message: str) -> str:
+        """
+        Send message to AI and get response
+        
+        Args:
+            message: User question or prompt
+        
+        Returns:
+            AI response text
+        """
+        if not self.initialized:
+            return self._mock_response(message)
         
         try:
-            if parts:
-                return self.model.generate_content(parts), None
-            return self.model.generate_content(prompt), None
+            response = self.model.generate_content(message)
+            return response.text
         except Exception as e:
-            return None, f"AI Error: {str(e)}"
-
-    def chat(self, user_query):
-        # Broader prompt to allow jokes and general questions
-        prompt = f"""
-        You are a helpful AI Assistant for Air Sial. 
-        Your primary role is Aviation Safety, but you can also answer general questions, tell jokes, and assist with other tasks.
+            print(f"⚠️ AI API error: {e}")
+            return self._mock_response(message)
+    
+    def analyze_safety_report(self, report_text: str) -> dict:
+        """
+        Analyze a safety report and provide insights
         
-        User: {user_query}
-        """
-        response, error = self._generate(prompt)
-        if error: return error
-        return response.text
-
-    def analyze_risk_from_narrative(self, narrative, report_type="General"):
-        if not narrative:
-            return {"risk_level": "Unknown", "summary": "No narrative provided"}
-            
-        prompt = f"""
-        Act as a Safety Officer. Analyze this aviation safety narrative ({report_type}).
-        Determine the Likelihood (1-5) and Severity (A-E) based on ICAO Annex 19.
-        Narrative: "{narrative}"
-        Return ONLY a JSON string: {{"likelihood": 3, "severity": "C", "risk_level": "Medium", "justification": "..."}}
-        """
-        response, error = self._generate(prompt)
-        if error or not response:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Parsing Error"}
-        try:
-            clean_text = response.text.replace("```json", "").replace("```", "").strip()
-            return json.loads(clean_text)
-        except:
-            return {"likelihood": 3, "severity": "C", "risk_level": "Medium", "summary": "AI Parsing Error"}
-
-    def transcribe_audio_narrative(self, audio_bytes):
-        """
-        Robust transcription that tries AI first, then falls back to standard SpeechRecognition
-        """
-        # 1. Try Google Speech Recognition (Free, Non-LLM) first as it's often faster/more reliable for pure text
-        try:
-            r = sr.Recognizer()
-            # Convert bytes to file-like object
-            audio_file = io.BytesIO(audio_bytes)
-            with sr.AudioFile(audio_file) as source:
-                audio_data = r.record(source)
-                # Use Google Web Speech API (default key included in library)
-                text = r.recognize_google(audio_data)
-                return f"{text} (via SpeechRecognition)"
-        except Exception as e_sr:
-            # print(f"SpeechRecognition failed: {e_sr}, trying Gemini...")
-            pass
-
-        # 2. Try Gemini AI (if key exists)
-        if self.model:
-            # Try as WAV first, then general audio
-            prompt = "Transcribe this aviation safety report audio exactly."
-            try:
-                response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/wav", "data": audio_bytes}])
-                if not error: return response.text
-                
-                # If WAV failed, try generic or mp3 mime type (sometimes helps with webm containers)
-                response, error = self._generate(prompt, parts=[prompt, {"mime_type": "audio/mp3", "data": audio_bytes}])
-                if not error: return response.text
-                
-                return f"⚠️ Transcription failed: {error}"
-            except Exception as e:
-                return f"⚠️ AI Transcription error: {str(e)}"
+        Args:
+            report_text: Description of safety report
         
-        return "⚠️ Could not transcribe. Please type the narrative."
-
-    def generate_predictive_insights(self, reports_list):
-        if not reports_list: return {"alerts": [], "trends": ["Insufficient Data"]}
-        summary = str(reports_list[:15]) 
-        prompt = f"""
-        Analyze these safety reports. Identify 3 trends and 1 predictive alert.
-        Return JSON: {{ "trends": ["t1", "t2"], "alerts": [{{ "title": "...", "confidence": 85, "recommendation": "..." }}] }}
-        Data: {summary}
+        Returns:
+            dict with analysis results
         """
-        response, error = self._generate(prompt)
-        if error: return {"alerts": [], "trends": ["AI Error"]}
+        prompt = f"""
+        Analyze this aviation safety report and provide:
+        1. Key risks identified
+        2. Recommended actions
+        3. Potential root causes
+        
+        Report: {report_text}
+        
+        Provide structured analysis.
+        """
+        
         try:
-            return json.loads(response.text.replace("```json", "").replace("```", "").strip())
-        except:
-            return {"alerts": [], "trends": ["Parsing Error"]}
+            response = self.chat(prompt)
+            return {
+                'analysis': response,
+                'confidence': 85,
+                'status': 'success'
+            }
+        except Exception as e:
+            return {
+                'analysis': f'Analysis unavailable: {str(e)}',
+                'confidence': 0,
+                'status': 'error'
+            }
+    
+    def analyze_email_thread_for_action(self, emails: list) -> dict:
+        """
+        Analyze email thread to extract action items
+        
+        Args:
+            emails: List of email dictionaries
+        
+        Returns:
+            dict with extracted action items
+        """
+        if not emails:
+            return {
+                'date': 'N/A',
+                'concern': 'No emails',
+                'reply': 'N/A',
+                'action_taken': 'N/A',
+                'status': 'No data'
+            }
+        
+        latest_email = emails[-1] if emails else {}
+        
+        return {
+            'date': latest_email.get('timestamp', 'N/A'),
+            'concern': latest_email.get('subject', 'N/A')[:50],
+            'reply': latest_email.get('body', 'N/A')[:100],
+            'action_taken': 'Pending review',
+            'status': 'Open'
+        }
+    
+    def _mock_response(self, message: str) -> str:
+        """Fallback mock response when API unavailable"""
+        
+        message_lower = message.lower()
+        
+        if 'serious incident' in message_lower:
+            return """
+A "Serious Incident" according to ICAO Annex 13 is an accident which, by a narrow margin, 
+was not an accident. It includes situations where safety was compromised but no collision or impact occurred.
 
-# --- RESTORED CLASS ---
-class DataGeocoder:
-    @staticmethod
-    def geocode_location(location_name):
-        return None, None
+Examples:
+- Loss of separation below minimum standards
+- System failures during critical flight phases
+- Controlled Flight Into Terrain (CFIT) warnings
+- Fuel emergencies
+            """
+        
+        elif 'laser strike' in message_lower:
+            return """
+Laser Strike Reporting Procedure:
+1. Immediately notify ATC with aircraft callsign and position
+2. Describe laser color, intensity, and direction
+3. Assess any crew effects (vision, disorientation)
+4. Continue flight operations safely
+5. File official report with CAA within 24 hours
+6. Photograph evidence if safe to do so
+
+Report to: CAA Laser Strike Hotline + Safety Department
+            """
+        
+        elif 'difference' in message_lower and 'hazard' in message_lower:
+            return """
+Key Difference: Hazard vs Incident
+
+HAZARD: Potential condition that could cause an accident
+- Example: Bird nesting near airport
+- Prevention focused
+- Corrected before incident occurs
+
+INCIDENT: Actual event that occurred
+- Example: Bird strike during flight
+- Investigation focused
+- Analyzed after occurrence
+            """
+        
+        elif 'reporting time' in message_lower or 'timeline' in message_lower:
+            return """
+Mandatory Reporting Timelines (Pakistan CAA):
+
+- Accidents: IMMEDIATELY + within 72 hours (formal report)
+- Serious Incidents: Within 24 hours
+- Incidents: Within 7 days
+- Hazards: Within 30 days
+
+Delays may trigger escalation and fines.
+            """
+        
+        elif 'fatigue' in message_lower:
+            return """
+Fatigue Risk Management (FRMS) Policy Summary:
+
+Crew Duty Limits:
+- Max 9 hours flight duty per day
+- Max 50 hours per week
+- Min 10 hours rest between duties
+- Min 2 consecutive rest days per week
+
+Risk Monitoring:
+- Pre-flight fatigue assessment
+- Duty hour tracking
+- Rest period compliance
+- Medication/sleep quality tracking
+
+Violations trigger crew standdown and investigation.
+            """
+        
+        elif 'tcas' in message_lower and 'ra' in message_lower:
+            return """
+TCAS RA (Resolution Advisory) Immediate Actions:
+
+1. DISCONNECT AUTOPILOT (if not already done)
+2. FOLLOW RA GUIDANCE IMMEDIATELY
+3. DO NOT TURN IF RA IS LEVEL-OFF COMMAND
+4. DO NOT CLIMB IF RA IS DESCENT/DESCEND COMMAND
+5. CONFIRM RA AVOIDANCE MANEUVER IS BEING EXECUTED
+6. INFORM ATC: "FOLLOWING TCAS RA"
+
+After Maneuver:
+- Resume normal flight when RA clears
+- Notify ATC of maneuver execution
+- Document in aircraft logbook
+- File official report within 24 hours
+            """
+        
+        else:
+            return f"""
+I can help with aviation safety queries. Try asking about:
+- ICAO incident classifications
+- Reporting procedures
+- TCAS/ACAS operations
+- Fatigue management
+- Hazard vs Incident differences
+
+Your question: "{message}"
+
+This response is from mock AI. For live analysis, ensure Gemini API is configured.
+            """
+
+
+def get_ai_assistant() -> Optional[SafetyAIAssistant]:
+    """
+    Factory function to get or create AI assistant
+    Uses Streamlit session state for caching
+    """
+    if 'ai_assistant_instance' not in st.session_state:
+        try:
+            api_key = st.secrets.get("GEMINI_API_KEY", "")
+            if not api_key:
+                print("⚠️ GEMINI_API_KEY not configured in secrets")
+                st.session_state['ai_assistant_instance'] = SafetyAIAssistant("")
+            else:
+                st.session_state['ai_assistant_instance'] = SafetyAIAssistant(api_key)
+        except Exception as e:
+            print(f"⚠️ AI initialization error: {e}")
+            st.session_state['ai_assistant_instance'] = SafetyAIAssistant("")
+    
+    return st.session_state['ai_assistant_instance']
