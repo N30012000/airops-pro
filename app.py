@@ -8528,97 +8528,158 @@ def load_data_from_supabase():
                 st.session_state[table] = []
 
 def initialize_session_state():
-    """Initialize app state variables and load data."""
-    # Auth State
-    if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
-    if 'username' not in st.session_state: st.session_state['username'] = None
-    if 'user_role' not in st.session_state: st.session_state['user_role'] = 'Viewer'
+    """
+    Initializes session state variables and pre-seeds the required users.
+    """
+    if 'users' not in st.session_state:
+        # Pre-seed the requested users (All set to Approved = True)
+        st.session_state['users'] = {
+            "analyst@test.com": {
+                "password": "analyst123", 
+                "role": "Analyst", 
+                "name": "Test Analyst", 
+                "dept": "Flight Operations",
+                "approved": True  # Pre-approved
+            },
+            "safety@test.com": {
+                "password": "safety123", 
+                "role": "Safety Head", 
+                "name": "Safety Manager", 
+                "dept": "Safety & Security",
+                "approved": True  # Pre-approved
+            },
+            "admin@test.com": {
+                "password": "admin123", 
+                "role": "Admin", 
+                "name": "System Admin", 
+                "dept": "IT",
+                "approved": True  # Pre-approved
+            }
+        }
     
-    # Navigation State
-    if 'current_page' not in st.session_state: st.session_state['current_page'] = 'Dashboard'
-    
-    # AI Assistant State
-    if 'ai_assistant' not in st.session_state:
-        try:
-            st.session_state.ai_assistant = get_ai_assistant()
-        except:
-            st.session_state.ai_assistant = None
-            
-    # Load Data
-    load_data_from_supabase()
+    # Initialize other state variables if missing
+    if 'authenticated' not in st.session_state:
+        st.session_state['authenticated'] = False
+    if 'user_role' not in st.session_state:
+        st.session_state['user_role'] = None
+    if 'username' not in st.session_state:
+        st.session_state['username'] = None
+        
+    # Ensure database/lists exist
+    for key in ['hazard_reports', 'mor_reports', 'audit_reports']:
+        if key not in st.session_state:
+            st.session_state[key] = []
 
 # --------------------------------------------------------------------------
 # AUTHENTICATION & UI RENDERERS
 # --------------------------------------------------------------------------
 
 def render_login_page():
-    """Render the login page with Hybrid Auth."""
+    """
+    Login & Registration Page with Admin Approval Workflow.
+    """
+    st.markdown("<h1 style='text-align: center; color: #1e3c72;'>✈️ Air Sial SMS Portal</h1>", unsafe_allow_html=True)
     
-    if "code" in st.query_params:
-        st.toast("✅ Email Verified! Please log in.", icon="🎉")
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-
-    with col2:
-        st.markdown("# ✈️ AIR SIAL")
-        st.markdown("#### Safety Management System v3.0")
-        st.divider()
-        
-        tab_signin, tab_register = st.tabs(["🔐 Sign In", "📝 Register"])
-        
-        with tab_signin:
-            # Unique key to avoid duplicate ID errors
-            with st.form("login_form_main"):
-                username = st.text_input("Username / Email", placeholder="admin")
-                password = st.text_input("Password", type="password")
-                submitted = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+    tab1, tab2 = st.tabs(["🔐 Login", "📝 Register (Request Access)"])
+    
+    # --- TAB 1: LOGIN ---
+    with tab1:
+        with st.form("login_form"):
+            email = st.text_input("Email Address")
+            password = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Login", use_container_width=True)
+            
+            if submitted:
+                users = st.session_state['users']
                 
-                if submitted:
-                    user_input = username.strip()
-                    # Demo Login
-                    demo_users = {'admin': 'admin123', 'safety': 'safety123', 'pilot': 'pilot123', 'viewer': 'viewer123'}
+                if email in users and users[email]['password'] == password:
+                    user_data = users[email]
                     
-                    if user_input.lower() in demo_users and demo_users[user_input.lower()] == password:
-                        st.session_state['authenticated'] = True
-                        st.session_state['username'] = user_input
-                        st.session_state['user_role'] = get_user_role(user_input)
-                        st.success("✅ Login successful!")
-                        st.rerun()
-                    
-                    # Supabase Login
+                    # 🔴 CHECK: Is the account approved?
+                    if not user_data.get('approved', False):
+                        st.error("⏳ Account Pending Approval. Please contact the Administrator.")
                     else:
-                        try:
-                            auth = supabase.auth.sign_in_with_password({"email": user_input, "password": password})
-                            if auth.user:
-                                st.session_state['authenticated'] = True
-                                st.session_state['username'] = auth.user.email
-                                # Fetch Role
-                                try:
-                                    profile = supabase.table('profiles').select('role').eq('id', auth.user.id).execute()
-                                    st.session_state['user_role'] = profile.data[0]['role'] if profile.data else "Viewer"
-                                except:
-                                    st.session_state['user_role'] = "Viewer"
-                                st.success("✅ Login successful!")
-                                st.rerun()
-                        except:
-                            st.error("❌ Login failed.")
+                        # Login Success
+                        st.session_state['authenticated'] = True
+                        st.session_state['username'] = user_data.get('name', email)
+                        st.session_state['user_role'] = user_data['role']
+                        st.session_state['user_department'] = user_data.get('dept', 'General')
+                        st.rerun()
+                else:
+                    st.error("❌ Invalid email or password")
 
-        with tab_register:
-            with st.form("register_form_main"):
-                new_email = st.text_input("Email")
-                new_pass = st.text_input("Password", type="password")
-                new_role = st.selectbox("Role", ["Viewer", "Flight Crew", "Maintenance", "Safety Officer"])
-                reg_btn = st.form_submit_button("Register")
-                
-                if reg_btn:
-                    try:
-                        supabase.auth.sign_up({
-                            "email": new_email, "password": new_pass,
-                            "options": {"data": {"role": new_role}}
-                        })
-                        st.success("Check email for confirmation link!")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+    # --- TAB 2: REGISTER (PENDING APPROVAL) ---
+    with tab2:
+        st.warning("ℹ️ New accounts require Admin approval before access is granted.")
+        with st.form("register_form"):
+            new_email = st.text_input("Email")
+            new_name = st.text_input("Full Name")
+            new_pass = st.text_input("Password", type="password")
+            new_dept = st.selectbox("Department", DEPARTMENTS)
+            # Users can request a role, but Admin must approve it
+            req_role = st.selectbox("Requested Role", ["Reporter", "Analyst", "Safety Head"])
+            
+            reg_submit = st.form_submit_button("Request Access")
+            
+            if reg_submit:
+                if new_email in st.session_state['users']:
+                    st.error("User already exists.")
+                elif new_email and new_pass:
+                    # Create User with Approved = False
+                    st.session_state['users'][new_email] = {
+                        "password": new_pass,
+                        "name": new_name,
+                        "dept": new_dept,
+                        "role": req_role,
+                        "approved": False  # <--- DEFAULT IS FALSE
+                    }
+                    st.success("✅ Registration Submitted! Your account is pending Admin approval.")
+                else:
+                    st.error("Please fill all fields.")
+
+def render_admin_panel():
+    """
+    Admin-only panel to manage user approvals.
+    """
+    st.markdown("## 🛡️ Admin User Management")
+    st.info("Approve or Reject new registration requests.")
+    
+    users = st.session_state.get('users', {})
+    
+    # Filter for PENDING users
+    pending_users = [email for email, data in users.items() if not data.get('approved', False)]
+    
+    if not pending_users:
+        st.success("✅ No pending approvals.")
+    else:
+        for email in pending_users:
+            user = users[email]
+            with st.expander(f"⏳ Request: {user['name']} ({user['role']})", expanded=True):
+                c1, c2, c3 = st.columns([2, 1, 1])
+                with c1:
+                    st.write(f"**Email:** {email}")
+                    st.write(f"**Dept:** {user['dept']}")
+                with c2:
+                    if st.button("✅ Approve", key=f"app_{email}"):
+                        st.session_state['users'][email]['approved'] = True
+                        st.success(f"Approved {user['name']}")
+                        st.rerun()
+                with c3:
+                    if st.button("❌ Reject", key=f"rej_{email}"):
+                        del st.session_state['users'][email]
+                        st.warning(f"Rejected {user['name']}")
+                        st.rerun()
+                        
+    st.markdown("---")
+    st.markdown("### 👥 Active Users")
+    # Show list of active approved users
+    active_users = [
+        {"Name": data['name'], "Role": data['role'], "Email": email} 
+        for email, data in users.items() if data.get('approved', False)
+    ]
+    st.dataframe(pd.DataFrame(active_users), use_container_width=True)
+
+
 
 def render_sidebar():
     with st.sidebar:
@@ -8676,6 +8737,7 @@ def route_to_page():
         'Hazard Report': render_hazard_form,
         'MOR': render_mor_form,
         'Audit': render_audit_form,
+        'Admin Panel': render_admin_panel, 
         
         # Legacy / Operational
         'FSR Report': globals().get('render_fsr_form'),
