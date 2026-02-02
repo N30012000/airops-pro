@@ -6653,38 +6653,117 @@ def add_ai_response(response_type):
     st.session_state.ai_chat_history.append({'role': 'assistant', 'content': response, 'type': rtype})
     st.rerun()
 
+# ══════════════════════════════════════════════════════════════════════════════
+# UPDATED EMAIL CENTER (With Status Matrix)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def render_email_status_matrix():
+    """
+    Renders the 30-Email Daily Conclusion Matrix.
+    Displays statuses like 'REVIEW SENT', 'NOT CARRYING', etc.
+    """
+    st.markdown("### 🗓️ Daily Communication Conclusion Log")
+    st.caption("Tracking the final status of daily correspondence (Scroll right to see up to Email 30).")
+
+    # 1. Define Columns (Date + 30 Email Slots)
+    columns = ["DATE"] + [f"EMAIL {i}" for i in range(1, 31)]
+
+    # 2. Mock Data (Replace this with DB fetch in production)
+    # Simulating the example: "99-00-0000 | REVIEW, SENT TO FLIGHT OPS | NOT CARRYING..."
+    data = [
+        {
+            "DATE": "02-02-2026", 
+            "EMAIL 1": "SENT TO FLIGHT OPS", 
+            "EMAIL 2": "NOT CARRYING ANYMORE", 
+            "EMAIL 3": "PENDING GM APPROVAL", 
+            "EMAIL 4": "CLOSED",
+            "EMAIL 5": "VENDOR REPLY RCVD"
+        },
+        {
+            "DATE": "01-02-2026", 
+            "EMAIL 1": "URGENT ALERT SENT", 
+            "EMAIL 2": "ACKNOWLEDGED BY ENG", 
+            "EMAIL 3": "NO ACTION REQ", 
+            "EMAIL 4": "FWD: SAFETY BOARD"
+        },
+        {
+            "DATE": "31-01-2026", 
+            "EMAIL 1": "BIRD STRIKE REPORT", 
+            "EMAIL 2": "RESOLVED", 
+            "EMAIL 3": "-", 
+            "EMAIL 4": "-"
+        },
+        {
+            "DATE": "30-01-2026", 
+            "EMAIL 1": "AUDIT SCHEDULED", 
+            "EMAIL 2": "REPLY TO CAA", 
+            "EMAIL 3": "DELAYED RESPONSE", 
+            "EMAIL 4": "FOLLOW UP SENT"
+        }
+    ]
+
+    # Fill empty slots with "-" for a clean matrix look
+    processed_data = []
+    for row in data:
+        full_row = row.copy()
+        for i in range(1, 31):
+            col_name = f"EMAIL {i}"
+            if col_name not in full_row:
+                full_row[col_name] = "-" # Empty placeholder
+        processed_data.append(full_row)
+
+    # 3. Create DataFrame
+    df = pd.DataFrame(processed_data, columns=columns)
+
+    # 4. Render Dataframe with Frozen Date Column
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True,
+        height=400,
+        column_config={
+            "DATE": st.column_config.TextColumn(
+                "Date", 
+                frozen=True,  # <--- Keeps the Date visible while scrolling right
+                width="medium"
+            ),
+        }
+    )
+    
+    st.download_button(
+        "📥 Download Matrix as CSV",
+        df.to_csv(index=False).encode('utf-8'),
+        "email_matrix.csv",
+        "text/csv"
+    )
+
 def render_email_center():
-    """Email management center for safety communications."""
+    """
+    Main Container for Email Features
+    """
+    st.markdown("## 📧 Notification & Communication Center")
     
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
-                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
-        <h1 style="margin: 0; font-size: 2.2rem;">📧 Email Center</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
-            Manage safety communications and notifications
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    # The 3 Tabs
+    tab1, tab2, tab3 = st.tabs(["✉️ Compose", "📋 Templates", "🗓️ Status Matrix"])
     
-    tab_compose, tab_inbox, tab_templates, tab_sent, tab_settings = st.tabs([
-        "✉️ Compose", "📥 Inbox (Logged)", "📋 Templates", "📤 Sent", "⚙️ Settings"
-    ])
-    
-    with tab_compose:
-        render_compose_email()
+    with tab1:
+        # Calls the existing function defined earlier in your code
+        # If this throws a NameError, ensure render_compose_email is defined above this function
+        if 'render_compose_email' in globals():
+            render_compose_email()
+        else:
+            st.warning("Compose function missing.")
+            
+    with tab2:
+        # Calls the existing function defined earlier in your code
+        if 'render_email_templates' in globals():
+            render_email_templates()
+        else:
+            st.warning("Template function missing.")
 
-    with tab_inbox:
-        render_inbox_emails()
-    
-    with tab_templates:
-        render_email_templates()
-    
-    with tab_sent:
-        render_sent_emails()
-    
-    with tab_settings:
-        render_email_settings()
-
+    with tab3:
+        # The NEW Matrix you requested
+        render_email_status_matrix()
 
 def render_compose_email():
     """Compose new email interface."""
