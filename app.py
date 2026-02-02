@@ -8608,8 +8608,7 @@ def route_to_page():
         'Ramp Inspections': globals().get('render_ramp_inspection'),
         'Email Center': globals().get('render_email_center'),
         
-        # AI Assistant - FIXED LINK
-        # We point to the local function 'render_ai_assistant' defined in app.py
+        # AI Assistant - Points to the local function defined in app.py
         'AI Assistant': render_ai_assistant 
     }
     
@@ -8625,7 +8624,7 @@ def route_to_page():
         else:
             st.warning(f"🚧 Page '{page}' is enabled in menu but code is missing.")
     else:
-        st.error(f"❌ Routing Error: Page '{page}' is unknown.")=True)
+        st.error(f"❌ Routing Error: Page '{page}' is unknown.")
 
 # ==============================================================================
 # 3. MAIN EXECUTION BLOCK (MUST BE LAST)
