@@ -153,14 +153,12 @@ class ReportType(Enum):
 # ══════════════════════════════════════════════════════════════════════════════
 
 DEPARTMENTS = [
-    "Flight Operations", "Engineering & Maintenance", "Cabin Services",
-    "Ground Operations", "Cargo Operations", "Flight Training",
-    "Quality Assurance", "Safety Department", "Security Department",
-    "Commercial", "Airport Operations - SKT", "Airport Operations - KHI",
-    "Airport Operations - LHE", "Airport Operations - ISB",
-    "Airport Operations - DXB", "Human Resources", "Finance",
-    "IT Department", "Corporate Office", "Crew Scheduling",
-    "Flight Dispatch", "Ramp Operations", "Catering Services"
+    "Flight Operations",
+    "Safety & Security",
+    "Airport Services",
+    "Engineering",
+    "Quality Assurance",
+    "Flight Services"
 ]
 
 AIRCRAFT_FLEET = {
@@ -176,7 +174,14 @@ AIRCRAFT_FLEET = {
     "AP-BMJ": {"type": "A320neo", "msn": "8000", "config": "186Y", "engines": "PW1100G", "mtow": "79000"},
 }
 
-AIRCRAFT_TYPES = ["ATR 72-600", "ATR 72-500", "ATR 42-500", "A320-200", "A320neo", "A321-200", "A321neo", "B737-800", "B737 MAX 8"]
+AIRCRAFT_TYPES_STRICT = ["A320", "A330"]
+
+ROLES = {
+    "REPORTER": "Reporter",        # Submit only, View own confirmation
+    "ANALYST": "Analyst",          # Dept view, Add CAP/Root Cause
+    "GATEKEEPER": "Safety Head",   # Risk Analysis, Close, Full View
+    "ADMIN": "Admin"               # Manage Users
+}
 
 AIRPORTS = {
     "OPSK": {"name": "Sialkot International Airport", "city": "Sialkot", "country": "Pakistan", "base": True, "icao": "OPSK", "iata": "SKT", "elevation": "837ft"},
@@ -197,6 +202,13 @@ AIRPORTS = {
     "OBBI": {"name": "Bahrain International Airport", "city": "Bahrain", "country": "Bahrain", "base": False, "icao": "OBBI", "iata": "BAH", "elevation": "6ft"},
     "OOMS": {"name": "Muscat International Airport", "city": "Muscat", "country": "Oman", "base": False, "icao": "OOMS", "iata": "MCT", "elevation": "48ft"},
     "OKBK": {"name": "Kuwait International Airport", "city": "Kuwait City", "country": "Kuwait", "base": False, "icao": "OKBK", "iata": "KWI", "elevation": "206ft"},
+}
+
+RISK_COLORS = {
+    "Extreme": "#8B0000", # Dark Red
+    "High": "#CC5500",    # Dark Orange
+    "Medium": "#B8860B",  # Dark Goldenrod
+    "Low": "#006400"      # Dark Green
 }
 
 FLIGHT_PHASES = [
@@ -5099,68 +5111,64 @@ def render_captain_dbr_form():
 # =============================================================================
 
 def render_dashboard():
-    """Updated Dashboard: Minimal, High Contrast, 4 Key Blocks"""
+    """
+    Modified Dashboard: 4 Key Blocks + Existing Weather Widget
+    1. Voluntary | 2. MOR | 3. Quality | 4. AI
+    """
+    # 1. Weather Widget (Retained from your original code)
+    try:
+        render_weather_widget()
+    except:
+        pass # Fail gracefully if weather service is down
     
-    # Header with Logo
-    st.markdown(f"""
-    <div style="display: flex; align-items: center; background: #F8FAFC; padding: 20px; border-bottom: 2px solid #1e3c72;">
-        <h1 style="color: #1e3c72; margin: 0;">✈️ AIR SIAL SMS DASHBOARD</h1>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Filter data based on Role Permissions
-    user_role = st.session_state.get('user_role', 'Reporter')
-    user_dept = st.session_state.get('user_department', '')
-
-    # Fetch Data (Mock logic - replace with DB fetch)
-    hazards = st.session_state.get('hazard_reports', [])
-    mors = st.session_state.get('mor_reports', [])
-    audits = st.session_state.get('audit_reports', [])
+    st.markdown("---")
     
-    # 4-Block Layout
-    st.markdown("### 📡 System Overview")
+    # 2. Main Dashboard Layout (Master Prompt Requirement)
+    st.markdown("### 📡 Safety Overview")
+    
+    # Filter logic based on Role (Gatekeeper sees all, Analyst sees Dept, Reporter sees Public stats)
+    # (Mocking counts for display - connect these to your st.session_state lists)
+    vol_count = len(st.session_state.get('hazard_reports', []))
+    mor_count = len(st.session_state.get('mor_reports', [])) 
+    audit_count = len(st.session_state.get('audit_reports', []))
+    
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
         st.markdown(f"""
-        <div style="background: #ffffff; padding: 20px; border-left: 5px solid #006400; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #333; margin:0;">Voluntary</h3>
-            <p style="font-size: 0.9rem; color: #666;">Hazards & Safety Concerns</p>
-            <h1 style="color: #006400; font-size: 3rem; margin:0;">{len(hazards)}</h1>
-            <small>Pending Actions: {sum(1 for h in hazards if h.get('status') != 'Closed')}</small>
+        <div style="background-color: #F8F9FA; padding: 20px; border-top: 5px solid #006400; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h4 style="color: #333; margin:0;">Voluntary</h4>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Hazards & Observations</p>
+            <h1 style="color: #006400; font-size: 2.5rem; margin:0;">{vol_count}</h1>
         </div>
         """, unsafe_allow_html=True)
 
     with c2:
         st.markdown(f"""
-        <div style="background: #ffffff; padding: 20px; border-left: 5px solid #8B0000; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #333; margin:0;">MOR</h3>
-            <p style="font-size: 0.9rem; color: #666;">Mandatory Occurrences</p>
-            <h1 style="color: #8B0000; font-size: 3rem; margin:0;">{len(mors)}</h1>
-            <small>Reporting Only (No CAP)</small>
+        <div style="background-color: #F8F9FA; padding: 20px; border-top: 5px solid #8B0000; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h4 style="color: #333; margin:0;">MOR</h4>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Mandatory Occurrence</p>
+            <h1 style="color: #8B0000; font-size: 2.5rem; margin:0;">{mor_count}</h1>
         </div>
         """, unsafe_allow_html=True)
 
     with c3:
         st.markdown(f"""
-        <div style="background: #ffffff; padding: 20px; border-left: 5px solid #1e3c72; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #333; margin:0;">Quality</h3>
-            <p style="font-size: 0.9rem; color: #666;">Audits & Inspections</p>
-            <h1 style="color: #1e3c72; font-size: 3rem; margin:0;">{len(audits)}</h1>
-            <small>Open Findings: {sum(1 for a in audits if a.get('status') == 'Open')}</small>
+        <div style="background-color: #F8F9FA; padding: 20px; border-top: 5px solid #1e3c72; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h4 style="color: #333; margin:0;">Quality</h4>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Audits & Inspections</p>
+            <h1 style="color: #1e3c72; font-size: 2.5rem; margin:0;">{audit_count}</h1>
         </div>
         """, unsafe_allow_html=True)
 
     with c4:
         st.markdown(f"""
-        <div style="background: #e0e7ff; padding: 20px; border: 1px dashed #666;">
-            <h3 style="color: #555; margin:0;">AI Analytics</h3>
-            <p style="font-size: 0.9rem; color: #666;">Predictive Insights</p>
-            <h1 style="color: #555; font-size: 3rem; margin:0;">--</h1>
-            <small>Future Placeholder</small>
+        <div style="background-color: #E8F0FE; padding: 20px; border-top: 5px solid #666; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h4 style="color: #333; margin:0;">AI Insights</h4>
+            <p style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Predictive Analytics</p>
+            <h1 style="color: #555; font-size: 2.5rem; margin:0;">--</h1>
         </div>
         """, unsafe_allow_html=True)
-
 
 def generate_trend_data():
     """Generate monthly trend data from actual reports."""
