@@ -1,186 +1,209 @@
 """
-Email Management Utilities for Aviation Safety SMS
-Handles SMTP sending, receiving, and logging to Supabase
+Email Utilities Module for Air Sial SMS v3.0
+Handles SMTP email sending and logging
 """
 
 import smtplib
+import streamlit as st
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
 from datetime import datetime
-from typing import List, Dict, Optional, Tuple
-import streamlit as st
-from supabase import Client
+import json
 
 class SMTPClient:
-    """SMTP Email Client with Supabase logging"""
+    """SMTP Email Client for sending safety notifications"""
     
-    def __init__(self, smtp_server: str, smtp_port: int, username: str, password: str):
-        self.smtp_server = smtp_server
-        self.smtp_port = smtp_port
+    def __init__(self, server, port, username, password, use_tls=True):
+        self.server = server
+        self.port = port
         self.username = username
         self.password = password
-        self.use_tls = True
+        self.use_tls = use_tls
+        self.connection = None
+        self.email_logs = []
     
-    def send_email(self, report_id: Optional[str], subject: str, body: str, 
-                   recipients: List[str], attachments: List = None) -> Dict:
+    def connect(self):
+        """Establish SMTP connection"""
+        try:
+            if self.use_tls:
+                self.connection = smtplib.SMTP(self.server, self.port)
+                self.connection.starttls()
+            else:
+                self.connection = smtplib.SMTP_SSL(self.server, self.port)
+            
+            self.connection.login(self.username, self.password)
+            return True
+        except Exception as e:
+            print(f"❌ SMTP Connection Failed: {e}")
+            return False
+    
+    def send_email(self, report_id, subject, body, recipients, attachments=None, high_priority=False):
         """
-        Send email and log to Supabase
+        Send email via SMTP
         
-        Returns: {'status': 'sent'|'failed', 'message_id': str, 'error': str}
+        Args:
+            report_id: Safety report ID for logging
+            subject: Email subject
+            body: Email body (plain text)
+            recipients: List of recipient emails
+            attachments: List of file paths to attach
+            high_priority: Mark as high priority
+        
+        Returns:
+            dict: {status: "sent"|"failed", message: str}
         """
         try:
+            # Ensure recipients is a list
+            if isinstance(recipients, str):
+                recipients = [recipients]
+            
             # Create message
-            msg = MIMEMultipart()
-            msg['From'] = self.username
-            msg['To'] = ', '.join(recipients)
+            msg = MIMEMultipart('alternative')
             msg['Subject'] = subject
+            msg['From'] = st.secrets.get("SMTP_USERNAME", "noreply@airsial.com")
+            msg['To'] = ", ".join(recipients)
             
-            msg.attach(MIMEText(body, 'html'))
+            if high_priority:
+                msg['X-Priority'] = '1'
+                msg['Importance'] = 'high'
             
-            # Add attachments if provided
-            if attachments:
-                for attachment in attachments:
-                    try:
-                        part = MIMEBase('application', 'octet-stream')
-                        part.set_payload(attachment.read())
-                        encoders.encode_base64(part)
-                        part.add_header('Content-Disposition', f'attachment; filename= {attachment.name}')
-                        msg.attach(part)
-                    except Exception as e:
-                        st.warning(f"Could not attach {attachment.name}: {e}")
+            # Add body
+            msg.attach(MIMEText(body, 'plain'))
             
-            # Send via SMTP
-            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
-                if self.use_tls:
-                    server.starttls()
-                server.login(self.username, self.password)
-                server.send_message(msg)
+            # Connect if not already connected
+            if not self.connection:
+                if not self.connect():
+                    return {"status": "failed", "message": "Could not connect to SMTP server"}
             
-            # Log to Supabase
-            self._log_email_to_db(report_id, subject, body, recipients, 'sent')
+            # Send email
+            self.connection.sendmail(
+                msg['From'],
+                recipients,
+                msg.as_string()
+            )
             
-            return {
-                'status': 'sent',
-                'message_id': msg['Message-ID'],
-                'error': None
-            }
+            # Log email
+            self.log_email('outbound', report_id, subject, body, recipients, 'sent')
             
-        except smtplib.SMTPAuthenticationError as e:
-            error_msg = "SMTP Authentication Failed. Check username/password."
-            self._log_email_to_db(report_id, subject, body, recipients, 'failed', error_msg)
-            return {'status': 'failed', 'message_id': None, 'error': error_msg}
-        
-        except smtplib.SMTPException as e:
-            error_msg = f"SMTP Error: {str(e)}"
-            self._log_email_to_db(report_id, subject, body, recipients, 'failed', error_msg)
-            return {'status': 'failed', 'message_id': None, 'error': error_msg}
-        
+            return {"status": "sent", "message": f"Email sent to {len(recipients)} recipient(s)"}
+            
         except Exception as e:
-            error_msg = f"Unexpected error: {str(e)}"
-            return {'status': 'failed', 'message_id': None, 'error': error_msg}
+            error_msg = f"Email send failed: {str(e)}"
+            print(f"❌ {error_msg}")
+            self.log_email('outbound', report_id, subject, body, recipients, 'failed', str(e))
+            return {"status": "failed", "message": error_msg}
     
-    def _log_email_to_db(self, report_id: Optional[str], subject: str, body: str,
-                        recipients: List[str], status: str, error: Optional[str] = None):
-        """Log email to Supabase"""
-        try:
-            supabase: Client = st.session_state.get('supabase')
-            if not supabase:
-                return
-            
-            email_record = {
-                'report_id': report_id,
-                'subject': subject,
-                'body': body[:1000],  # Truncate long bodies
-                'recipients': ', '.join(recipients),
-                'status': status,
-                'direction': 'outbound',
-                'timestamp': datetime.now().isoformat(),
-                'error_message': error
-            }
-            
-            supabase.table('email_logs').insert(email_record).execute()
-            
-        except Exception as e:
-            st.warning(f"Could not log email to database: {e}")
+    def disconnect(self):
+        """Close SMTP connection"""
+        if self.connection:
+            self.connection.quit()
+            self.connection = None
     
-    def log_reply(self, report_id: str, sender: str, message_body: str):
-        """Log an incoming reply"""
-        try:
-            supabase: Client = st.session_state.get('supabase')
-            if not supabase:
-                return
-            
-            reply_record = {
-                'report_id': report_id,
-                'subject': f'RE: Report {report_id}',
-                'body': message_body,
-                'sender': sender,
-                'direction': 'inbound',
-                'status': 'received',
-                'timestamp': datetime.now().isoformat()
-            }
-            
-            supabase.table('email_logs').insert(reply_record).execute()
-            
-        except Exception as e:
-            st.error(f"Failed to log reply: {e}")
-
-
-def get_email_logs(report_id: Optional[str] = None) -> List[Dict]:
-    """Retrieve email logs from Supabase"""
-    try:
-        supabase: Client = st.session_state.get('supabase')
-        if not supabase:
-            return []
-        
+    def log_email(self, direction, report_id, subject, body, recipients, status, error=None):
+        """Log email for audit trail"""
+        log_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'direction': direction,  # 'outbound' or 'inbound'
+            'report_id': report_id,
+            'subject': subject,
+            'body': body[:500],  # First 500 chars
+            'recipients': recipients if isinstance(recipients, list) else [recipients],
+            'status': status,
+            'error': error
+        }
+        self.email_logs.append(log_entry)
+        return log_entry
+    
+    def log_reply(self, report_id, sender, message):
+        """Log incoming reply"""
+        return self.log_email('inbound', report_id, f"Reply: {message[:50]}", message, sender, 'received')
+    
+    def get_email_logs(self, report_id=None):
+        """Retrieve email logs (optionally filtered by report_id)"""
         if report_id:
-            response = supabase.table('email_logs').select('*').eq('report_id', report_id).execute()
-        else:
-            response = supabase.table('email_logs').select('*').order('timestamp', desc=True).limit(100).execute()
-        
-        return response.data if response.data else []
-        
-    except Exception as e:
-        st.warning(f"Could not fetch email logs: {e}")
-        return []
+            return [e for e in self.email_logs if e['report_id'] == report_id]
+        return self.email_logs
 
 
-def get_unique_report_ids_with_emails() -> List[str]:
-    """Get list of report IDs that have email communications"""
-    try:
-        supabase: Client = st.session_state.get('supabase')
-        if not supabase:
-            return []
-        
-        response = supabase.table('email_logs').select('DISTINCT report_id').execute()
-        return [r['report_id'] for r in response.data if r.get('report_id')]
-        
-    except Exception as e:
-        st.warning(f"Could not fetch report IDs: {e}")
-        return []
-
-
-def send_notification_email(recipient: str, subject: str, body: str, 
-                           smtp_config: Optional[Dict] = None) -> bool:
+# Global email functions for convenience
+def send_email(to_address, cc_address, subject, body, attachments=None, high_priority=False, report_id=None):
     """
-    Convenience function to send a notification email
+    Convenience function to send email
+    Uses credentials from Streamlit secrets
     """
-    if not smtp_config:
-        smtp_config = st.session_state.get('email_settings', {})
-    
     try:
-        client = SMTPClient(
-            smtp_config.get('smtp_server', 'smtp.gmail.com'),
-            smtp_config.get('smtp_port', 587),
-            smtp_config.get('smtp_user'),
-            smtp_config.get('smtp_password')
+        smtp_server = st.secrets.get("SMTP_SERVER", "smtp.gmail.com")
+        smtp_port = int(st.secrets.get("SMTP_PORT", 587))
+        smtp_user = st.secrets.get("SMTP_USERNAME", "")
+        smtp_pass = st.secrets.get("SMTP_PASSWORD", "")
+        
+        if not smtp_user or not smtp_pass:
+            print("⚠️ SMTP credentials not configured in secrets")
+            return False
+        
+        client = SMTPClient(smtp_server, smtp_port, smtp_user, smtp_pass)
+        
+        recipients = [to_address]
+        if cc_address:
+            recipients.append(cc_address)
+        
+        result = client.send_email(
+            report_id or "SYSTEM",
+            subject,
+            body,
+            recipients,
+            attachments,
+            high_priority
         )
         
-        result = client.send_email(None, subject, body, [recipient])
+        client.disconnect()
         return result['status'] == 'sent'
         
     except Exception as e:
-        st.error(f"Failed to send notification: {e}")
+        print(f"❌ Email error: {e}")
         return False
+
+
+def get_email_logs(report_id=None):
+    """
+    Retrieve email logs from session state or return mock data
+    """
+    if 'email_logs' not in st.session_state:
+        st.session_state['email_logs'] = []
+    
+    logs = st.session_state['email_logs']
+    
+    if report_id:
+        return [e for e in logs if e.get('report_id') == report_id]
+    
+    return logs
+
+
+def log_email_to_session(direction, report_id, subject, body, sender, status='sent'):
+    """Log email to session state"""
+    if 'email_logs' not in st.session_state:
+        st.session_state['email_logs'] = []
+    
+    log_entry = {
+        'timestamp': datetime.now().isoformat(),
+        'direction': direction,
+        'report_id': report_id,
+        'subject': subject,
+        'body': body[:200],
+        'sender': sender,
+        'status': status
+    }
+    
+    st.session_state['email_logs'].append(log_entry)
+    return log_entry
+
+
+def get_unique_report_ids_with_emails():
+    """Get list of unique report IDs that have email communications"""
+    if 'email_logs' not in st.session_state:
+        return []
+    
+    logs = st.session_state['email_logs']
+    report_ids = set(e.get('report_id') for e in logs if e.get('report_id'))
+    
+    return list(report_ids)
