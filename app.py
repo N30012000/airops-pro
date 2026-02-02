@@ -21,6 +21,7 @@ from typing import Optional, Dict, List, Any, Tuple
 from streamlit_mic_recorder import mic_recorder
 # Third-party imports
 import pandas as pd
+from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
@@ -58,7 +59,17 @@ try:
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
+try:
+    import ai_assistant  # <--- THIS IS THE MISSING LINK
+except ImportError as e:
+    st.error(f"❌ Failed to import 'ai_assistant.py': {e}")
+    st.info("Ensure the file 'ai_assistant.py' is in the same folder as 'app.py'.")
 
+try:
+    import ui_integration # Required for OCR
+except ImportError:
+    pass # Handle gracefully if missing
+    
 # Air Sial SMS v3.0 - Configuration
 
 
@@ -6238,6 +6249,7 @@ def render_general_assistant():
             st.rerun()
         
 def render_ai_assistant():
+    st.title("🤖 AI Assistant")
     """AI Assistant for safety report analysis and insights."""
     
     # Initialize chat history
@@ -8600,7 +8612,8 @@ def route_to_page():
         'Email Center': globals().get('render_email_center'),
         
         # --- AI Assistant ---
-        'AI Assistant': ai_assistant.render_ai_assistant if 'ai_assistant' in globals() else None
+        # In app.py route_to_page():
+'AI Assistant': ai_assistant.app, # If the function is named 'app'
     }
     
     # Execute the requested page
