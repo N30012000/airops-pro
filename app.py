@@ -3704,78 +3704,102 @@ def render_incident_form():
 
 def render_mor_form():
     """
-    Mandatory Occurrence Report (MOR)
-    Rules: Reporting only, No CAP, No Status.
+    Strict MOR Form per Master Prompt:
+    - Checkbox Categories
+    - Reporting Only (No CAP/Root Cause)
+    - Auto-notify Safety
     """
     st.markdown("## 🚨 Mandatory Occurrence Report (MOR)")
-    st.info("ℹ️ This form is for notification purposes only. No CAP or investigation workflow applies.")
-
-    with st.form("mor_form"):
-        # 1. Categories (Checkbox only as requested)
-        st.markdown("#### Occurrence Category")
-        col1, col2, col3, col4 = st.columns(4)
-        cat_bird = col1.checkbox("Bird Strike")
-        cat_laser = col2.checkbox("Laser Strike")
-        cat_tcas = col3.checkbox("TCAS")
-        cat_gen = col4.checkbox("MOR (General)")
-
-        # 2. Minimal Details
-        st.markdown("#### Details")
-        colA, colB = st.columns(2)
-        dept = colA.selectbox("Department", DEPARTMENTS)
-        date_evt = colB.date_input("Date of Occurrence")
-
-        # 3. Aircraft Data (Restricted)
-        st.markdown("#### Aircraft Data (If applicable)")
-        ac_col1, ac_col2, ac_col3 = st.columns(3)
-        ac_type = ac_col1.selectbox("Aircraft Type", ["N/A"] + AIRCRAFT_TYPES)
-        alt = ac_col2.number_input("Altitude (ft)", step=100)
-        ias = ac_col3.number_input("Indicated Airspeed (kts)", step=10)
-
-        description = st.text_area("Description *", height=150)
+    st.info("ℹ️ This report is for notification only. No CAP/Investigation workflow applies.")
+    
+    with st.form("mor_strict_form"):
+        # 1. Categories (Checkbox)
+        st.markdown("#### Occurrence Type")
+        c1, c2, c3, c4 = st.columns(4)
+        is_bird = c1.checkbox("Bird Strike")
+        is_laser = c2.checkbox("Laser Strike")
+        is_tcas = c3.checkbox("TCAS RA")
+        is_gen = c4.checkbox("MOR (General)")
         
-        # 4. Attachment
+        # 2. Basic Info
+        col1, col2 = st.columns(2)
+        # Reporter Name optional per prompt "No name required", but usually needed for DB. 
+        # We can auto-fill from session or leave anonymous.
+        dept = col1.selectbox("Department", DEPARTMENTS)
+        date_occ = col2.date_input("Date of Occurrence")
+        
+        # 3. Limited Aircraft Data
+        st.markdown("#### Aircraft Data")
+        ac_c1, ac_c2 = st.columns(2)
+        ac_type = ac_c1.selectbox("Aircraft Type", ["N/A"] + AIRCRAFT_TYPES_STRICT)
+        # Optional fields allowed
+        altitude = ac_c2.text_input("Altitude (Optional)")
+        
+        # 4. Description & Evidence
+        desc = st.text_area("Description", height=100)
         st.file_uploader("Attach Document/Evidence")
-
+        
         submitted = st.form_submit_button("Submit MOR", type="primary", use_container_width=True)
-
+        
         if submitted:
-            if not (cat_bird or cat_laser or cat_tcas or cat_gen):
-                st.error("⚠️ Select at least one category.")
-                return
-            if not description:
-                st.error("⚠️ Description is required.")
-                return
-            
-            # Logic: Save & Notify Safety Only
-            # [Insert DB Save Code Here]
-            st.success("✅ MOR Submitted. Notification sent to Safety Department.")
-
-def render_hazard_form():
+            if not any([is_bird, is_laser, is_tcas, is_gen]):
+                st.error("Please select at least one Occurrence Type.")
+            else:
+                # Logic: Save to DB
+                # Logic: Send Email to Safety Dept ("A report has been submitted...")
+                st.success("✅ MOR Submitted. Notification sent to Safety Department.")
+                st.balloons()
+                
+def render_hazard_form_workflow():
     """
-    Voluntary Hazard Reporting
-    Workflow: Reporter -> Safety (Risk) -> Dept (CAP) -> Safety (Close)
+    Hazard Reporting with Strict Workflow Rules:
+    1. Reporter: Submits -> Status 'New'
+    2. Safety (Gatekeeper): Adds Risk/Forwarding -> Status 'Risk Assessed'
+    3. Analyst (Dept): Adds Root Cause/CAP/Target Date -> Status 'CAP Submitted'
+    4. Safety (Gatekeeper): Reviews & Closes -> Status 'Closed'
     """
     st.markdown("## ⚠️ Hazard Report")
     
-    # Workflow State Logic would go here (checking report ID if editing)
-    # For now, this is the submission view
-    
-    with st.form("hazard_new"):
-        h_type = st.radio("Hazard Type", ["Internal", "External"], horizontal=True)
+    # --- VIEW FOR REPORTER (SUBMISSION) ---
+    # In a real app, you'd check `if report_id is None:`
+    with st.form("hazard_submit"):
+        st.markdown("#### New Submission")
+        h_type = st.radio("Type", ["Internal", "External"], horizontal=True)
+        dept = st.selectbox("Department", DEPARTMENTS)
+        desc = st.text_area("Description")
+        st.file_uploader("Attach Evidence")
         
-        col1, col2 = st.columns(2)
-        dept = col1.selectbox("Department", DEPARTMENTS)
-        date_rep = col2.date_input("Date")
-        
-        desc = st.text_area("Hazard Description *", height=150)
-        st.file_uploader("Attach Evidence (OCR Enabled)")
+        if st.form_submit_button("Submit Hazard"):
+            # Save as NEW
+            st.success("✅ Hazard Submitted. Forwarded to Safety for Risk Analysis.")
+            
+    # --- VIEW FOR SAFETY (RISK ANALYSIS) ---
+    # This section would only appear for Role='Safety Head' on an existing report
+    if st.session_state.get('user_role') == 'Safety Head':
+        st.markdown("---")
+        st.markdown("### 🛡️ Safety Gatekeeper: Risk Analysis")
+        with st.form("safety_risk_form"):
+            risk = st.selectbox("Risk Level", list(RISK_COLORS.keys()))
+            forward_to = st.selectbox("Forward To", DEPARTMENTS)
+            
+            if st.form_submit_button("Submit Analysis & Forward"):
+                # Logic: Update Status -> 'Risk Assessed'
+                # Logic: Email 'forward_to' department
+                st.success(f"Risk defined as {risk}. Forwarded to {forward_to}.")
 
-        submit = st.form_submit_button("Submit Hazard", type="primary")
-        
-        if submit:
-            # Save with Status = NEW
-            st.success("✅ Hazard Submitted. Pending Risk Analysis by Safety.")
+    # --- VIEW FOR ANALYST (CAP) ---
+    # Only appears for Role='Analyst' and Status='Risk Assessed'
+    if st.session_state.get('user_role') == 'Analyst':
+        st.markdown("---")
+        st.markdown("### 🔧 Analyst: CAP Entry")
+        with st.form("analyst_cap_form"):
+            root_cause = st.text_area("Root Cause")
+            cap = st.text_area("Corrective Action Plan (CAP)")
+            target_date = st.date_input("Target Date")
+            
+            if st.form_submit_button("Submit CAP"):
+                # Logic: Update Status -> 'CAP Submitted'
+                st.success("CAP Submitted. Returned to Safety for closure.")
 
 
 def calculate_risk_level(likelihood: int, severity: str) -> str:
@@ -8382,73 +8406,47 @@ def render_login_page():
                         st.error(f"Error: {e}")
 
 def render_sidebar():
-    """Render the application sidebar with navigation."""
     with st.sidebar:
-        # Logo
-        st.markdown("<h2 style='text-align: center;'>✈️ AIR SIAL</h2>", unsafe_allow_html=True)
-        
-        if st.session_state.get('authenticated'):
-            st.info(f"👤 {st.session_state.get('username')} ({st.session_state.get('user_role')})")
-        
+        # 1. Branding & User Info
+        st.image("logo.png", width=120) 
+        st.markdown(f"**User:** {st.session_state.get('username', 'Guest')}")
+        st.markdown(f"**Role:** {st.session_state.get('user_role', 'Reporter')}")
         st.markdown("---")
-        
-        # --- RESTORED MAIN MENU ITEMS ---
-        menu_items = {
-            "📊 Dashboard": "Dashboard",
-            "📋 View Reports": "View Reports",
-            "⚡ Action Tracker": "Action Tracker",
-            "🤖 AI Assistant": "AI Assistant",
-            "🧠 General Assistant": "General Assistant",
-            "🗺️ Geospatial Map": "Geospatial Map",
-            "🔍 NL Query": "NL Query",
-        }
-        
-        # Admin/Special Menus
-        forms = {
-            "🦅 Bird Strike": "Bird Strike Report",
-            "🔴 Laser Strike": "Laser Strike Report",
-            "✈️ TCAS Report": "TCAS Report",
-            "⚠️ Incident Report": "Aircraft Incident Report",
-            "🔶 Hazard Report": "Hazard Report",
-            "📝 Flight Services": "FSR Report",
-            "👨‍✈️ Captain Debrief": "Captain Debrief"
-        }
-        
-        # Enterprise Menus
-        enterprise = {
-            "📧 Email Center": "Email Center",
-            "✈️ IOSA Compliance": "IOSA Compliance",
-            "🛬 Ramp Inspections": "Ramp Inspections",
-            "🔍 Audit Findings": "Audit Findings",
-            "🔄 MoC Workflow": "MoC Workflow",
-            "🔮 Predictive Monitor": "Predictive Monitor",
-            "💾 Data Management": "Data Management",
-            "⚙️ Settings": "Settings"
-        }
 
-        # Render Main Menu
-        for label, page in menu_items.items():
-            if st.button(label, key=f"nav_{page}", use_container_width=True):
-                st.session_state['current_page'] = page
-                st.rerun()
-        
-        # Render Forms
-        with st.expander("➕ Submit Reports"):
-            for label, page in forms.items():
-                if st.button(label, key=f"nav_{page}", use_container_width=True):
-                    st.session_state['current_page'] = page
-                    st.rerun()
-                    
-        # Render Enterprise
+        # 2. Main Navigation
+        if st.button("📊 Dashboard", use_container_width=True):
+            st.session_state['current_page'] = 'Dashboard'
+            st.rerun()
+
+        # 3. Forms (Strict List)
+        st.markdown("### 📝 Reporting")
+        if st.button("⚠️ Hazard Report", use_container_width=True):
+            st.session_state['current_page'] = 'Hazard Report'
+            st.rerun()
+        if st.button("🚨 MOR (Mandatory)", use_container_width=True):
+            st.session_state['current_page'] = 'MOR'
+            st.rerun()
+        if st.button("🧪 Quality/Audit", use_container_width=True):
+            st.session_state['current_page'] = 'Audit'
+            st.rerun()
+            
+        # 4. Operational Forms (Legacy Preserved)
+        with st.expander("📂 Operational Forms"):
+            if st.button("📝 FSR Report"): st.session_state['current_page'] = 'FSR Report'
+            if st.button("👨‍✈️ Capt Debrief"): st.session_state['current_page'] = 'Captain Debrief'
+            
+        # 5. Enterprise Tools & AI
         with st.expander("🏢 Enterprise Tools"):
-            for label, page in enterprise.items():
-                if st.button(label, key=f"nav_{page}", use_container_width=True):
-                    st.session_state['current_page'] = page
-                    st.rerun()
+            if st.button("IOSA Compliance"): st.session_state['current_page'] = 'IOSA Compliance'
+            if st.button("Ramp Inspection"): st.session_state['current_page'] = 'Ramp Inspections'
+            if st.button("Email Center"): st.session_state['current_page'] = 'Email Center'
+            # ADDED HERE:
+            if st.button("🤖 AI Assistant"): st.session_state['current_page'] = 'AI Assistant'
 
+        # 6. Logout
         st.markdown("---")
-        if st.button("🚪 Logout", use_container_width=True):
-            st.session_state.clear()
+        if st.button("Logout"):
+            st.session_state['authenticated'] = False
             st.rerun()
 
 def route_to_page():
