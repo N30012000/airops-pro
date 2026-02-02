@@ -8576,28 +8576,47 @@ def render_sidebar():
 
 def route_to_page():
     """
-    Maps Sidebar selections to Functions
+    Central Router: Maps Sidebar 'current_page' states to Functions.
+    Now includes Safety Checks to prevent crashing if a function is missing.
     """
     page = st.session_state.get('current_page', 'Dashboard')
     
-    # Map the string from st.session_state to the actual function
+    # Dictionary mapping Page Names -> Function Objects
+    # We use globals().get() to safely find functions even if they were pasted out of order
     PAGES = {
+        # --- Main Dashboard & Reporting ---
         'Dashboard': render_dashboard,
-        'Hazard Report': render_hazard_form,    # This caused your error!
-        'MOR': render_mor_form,                 # Ensure this is mapped
-        'Audit': render_audit_form,             # Ensure this is mapped
-        'AI Assistant': ai_assistant.render_ai_assistant if 'ai_assistant' in globals() else None,
+        'Hazard Report': render_hazard_form,
+        'MOR': render_mor_form,
+        'Audit': render_audit_form,  # The simplified Audit/Ramp tab I provided earlier
         
-        # Legacy/Existing Pages (Keep these if you have them)
-        'FSR Report': render_fsr_form if 'render_fsr_form' in globals() else None,
-        'Captain Debrief': render_captain_debrief if 'render_captain_debrief' in globals() else None,
+        # --- Operational Forms (Legacy) ---
+        'FSR Report': globals().get('render_fsr_form'), 
+        'Captain Debrief': globals().get('render_captain_debrief'),
+        
+        # --- Enterprise Tools (Fixes your "Not Found" error) ---
+        'IOSA Compliance': globals().get('render_iosa_compliance'),
+        'Ramp Inspections': globals().get('render_ramp_inspection'),
+        'Email Center': globals().get('render_email_center'),
+        
+        # --- AI Assistant ---
+        'AI Assistant': ai_assistant.render_ai_assistant if 'ai_assistant' in globals() else None
     }
     
-    # Execute the function
-    if page in PAGES and PAGES[page]:
-        PAGES[page]()
+    # Execute the requested page
+    if page in PAGES:
+        func = PAGES[page]
+        if func:
+            try:
+                func()  # Run the page
+            except Exception as e:
+                st.error(f"⚠️ Error loading module '{page}': {e}")
+        else:
+            # Fallback if the function (e.g., render_iosa_compliance) is effectively missing
+            st.warning(f"🚧 The module **'{page}'** is currently disabled or missing from the code.")
+            st.info("Check if the function definition exists in your app.py file.")
     else:
-        st.error(f"Page '{page}' not found. Please check routing logic.")
+        st.error(f"❌ Routing Error: Page **'{page}'** is not registered in the `route_to_page` dictionary.")
         
 def render_footer():
     st.markdown("---")
