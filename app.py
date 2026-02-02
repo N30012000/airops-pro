@@ -8588,48 +8588,55 @@ def render_sidebar():
 
 def route_to_page():
     """
-    Central Router: Maps Sidebar 'current_page' states to Functions.
-    Now includes Safety Checks to prevent crashing if a function is missing.
+    Robust Routing: Automatically finds the correct function name in ai_assistant
     """
     page = st.session_state.get('current_page', 'Dashboard')
     
-    # Dictionary mapping Page Names -> Function Objects
-    # We use globals().get() to safely find functions even if they were pasted out of order
+    # 1. Attempt to find the correct AI function dynamically
+    ai_function = None
+    if 'ai_assistant' in globals():
+        # Try finding 'render_ai_assistant', then 'app', then 'main'
+        ai_function = getattr(ai_assistant, 'render_ai_assistant', 
+                      getattr(ai_assistant, 'app', 
+                      getattr(ai_assistant, 'main', None)))
+
+    # 2. Map Pages to Functions
     PAGES = {
-        # --- Main Dashboard & Reporting ---
         'Dashboard': render_dashboard,
         'Hazard Report': render_hazard_form,
         'MOR': render_mor_form,
-        'Audit': render_audit_form,  # The simplified Audit/Ramp tab I provided earlier
+        'Audit': render_audit_form,
         
-        # --- Operational Forms (Legacy) ---
-        'FSR Report': globals().get('render_fsr_form'), 
+        # Legacy / Operational
+        'FSR Report': globals().get('render_fsr_form'),
         'Captain Debrief': globals().get('render_captain_debrief'),
         
-        # --- Enterprise Tools (Fixes your "Not Found" error) ---
+        # Enterprise
         'IOSA Compliance': globals().get('render_iosa_compliance'),
         'Ramp Inspections': globals().get('render_ramp_inspection'),
         'Email Center': globals().get('render_email_center'),
         
-        # --- AI Assistant ---
-        # In app.py route_to_page():
-'AI Assistant': ai_assistant.app, # If the function is named 'app'
+        # AI Assistant (Mapped to the auto-detected function)
+        'AI Assistant': ai_function
     }
     
-    # Execute the requested page
+    # 3. Execution Logic
     if page in PAGES:
         func = PAGES[page]
         if func:
             try:
-                func()  # Run the page
+                func()
             except Exception as e:
-                st.error(f"⚠️ Error loading module '{page}': {e}")
+                st.error(f"⚠️ Critical Error loading '{page}': {e}")
+                st.info("Check the logs or the file structure.")
         else:
-            # Fallback if the function (e.g., render_iosa_compliance) is effectively missing
-            st.warning(f"🚧 The module **'{page}'** is currently disabled or missing from the code.")
-            st.info("Check if the function definition exists in your app.py file.")
+            if page == 'AI Assistant':
+                st.warning("⚠️ AI Module Loaded, but no main function found.")
+                st.info("Ensure ai_assistant.py has a function named 'render_ai_assistant()', 'app()', or 'main()'.")
+            else:
+                st.warning(f"🚧 Page '{page}' is enabled in menu but code is missing.")
     else:
-        st.error(f"❌ Routing Error: Page **'{page}'** is not registered in the `route_to_page` dictionary.")
+        st.error(f"❌ Routing Error: Page '{page}' is unknown.")
         
 def render_footer():
     st.markdown("---")
