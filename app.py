@@ -6372,7 +6372,7 @@ def render_ai_assistant():
                     'role': 'user',
                     'content': suggestion
                 })
-                response, response_type = generate_ai_response(suggestion)
+                response, response_type = (suggestion)
                 st.session_state.ai_chat_history.append({
                     'role': 'assistant',
                     'content': response,
@@ -6382,67 +6382,45 @@ def render_ai_assistant():
 
 
 def generate_ai_response(query):
-    """Generate AI response based on user query and report data. Returns (response, response_type)."""
+    """
+    Generate AI response based on user query.
+    1. Checks for specific data visualization requests.
+    2. If no pattern matches, sends query to the Real LLM (Gemini).
+    """
     
     query_lower = query.lower()
     
-    # Get current statistics
+    # Get current statistics for context
     report_counts = get_report_counts()
     risk_distribution = get_risk_distribution()
     total_reports = get_total_reports()
     high_risk_count = get_high_risk_count()
     
-    # If there's no data at all
-    if total_reports == 0 and any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary', 'analysis', 'trend']):
-        return """
-**📊 No Data Available**
-
-I don't see any safety reports in the system yet. To get meaningful risk analysis:
-
-1. **Submit your first report** using one of the report forms:
-   - Hazard Report (for proactive safety concerns)
-   - Bird Strike Report (for wildlife incidents)
-   - Incident Report (for operational events)
-
-2. **Once you have data**, I can provide:
-   - Risk level distribution
-   - Trend analysis
-   - Safety performance insights
-   - Predictive recommendations
-
-**Quick Start:** Click "Hazard Report" in the sidebar to submit your first safety observation.
-""", "text"
+    # --- 1. HARDCODED DATA VIZ PATTERNS ---
     
-    # Pattern matching for different query types
-    if any(word in query_lower for word in ['trend', 'pattern', 'over time']):
+    if any(word in query_lower for word in ['trend', 'pattern', 'over time']) and 'joke' not in query_lower:
         return generate_trend_analysis(), "text"
     
-    elif any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary']):
+    elif any(word in query_lower for word in ['risk', 'danger', 'threat', 'summary']) and 'joke' not in query_lower:
         return generate_risk_analysis(risk_distribution, high_risk_count)
     
-    elif any(word in query_lower for word in ['bird', 'wildlife']):
-        return generate_bird_strike_analysis(), "text"
-    
-    elif any(word in query_lower for word in ['laser']):
-        return generate_laser_strike_analysis(), "text"
-    
-    elif any(word in query_lower for word in ['tcas', 'traffic', 'airprox']):
-        return generate_tcas_analysis(), "text"
-    
-    elif any(word in query_lower for word in ['briefing', 'overview']):
+    elif any(word in query_lower for word in ['briefing', 'overview']) and 'joke' not in query_lower:
         return generate_safety_briefing(report_counts, total_reports, high_risk_count), "text"
-    
-    elif any(word in query_lower for word in ['action', 'pending', 'corrective']):
+        
+    elif any(word in query_lower for word in ['action', 'pending']) and 'joke' not in query_lower:
         return generate_action_summary(), "text"
-    
-    elif any(word in query_lower for word in ['compare', 'performance', 'quarter']):
-        return generate_performance_comparison(), "text"
-    
-    elif any(word in query_lower for word in ['hazard', 'identify']):
-        return generate_hazard_analysis(), "text"
+
+    # --- 2. FALLBACK TO REAL AI (THE BRAIN) ---
+    # This connects to ai_assistant.py for jokes, general questions, and deep analysis
     
     else:
-        return generate_general_response(query, report_counts, total_reports), "text"
+        if st.session_state.ai_assistant:
+            with st.spinner("🧠 AI is thinking..."):
+                # Call the actual Gemini API
+                response_text = st.session_state.ai_assistant.chat(query)
+                return response_text, "text"
+        else:
+            return "⚠️ AI System is offline. Please check your API Key in secrets.", "text"
 
 
 def generate_trend_analysis():
