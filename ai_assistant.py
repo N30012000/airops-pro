@@ -63,7 +63,14 @@ class SafetyAIAssistant:
             return None, f"AI Error: {str(e)}"
 
     def chat(self, user_query):
-        response, error = self._generate(f"You are an Aviation Safety Expert. Answer briefly.\n\nUser: {user_query}")
+        # Broader prompt to allow jokes and general questions
+        prompt = f"""
+        You are a helpful AI Assistant for Air Sial. 
+        Your primary role is Aviation Safety, but you can also answer general questions, tell jokes, and assist with other tasks.
+        
+        User: {user_query}
+        """
+        response, error = self._generate(prompt)
         if error: return error
         return response.text
 
