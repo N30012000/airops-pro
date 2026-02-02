@@ -5379,322 +5379,67 @@ def render_captain_dbr_form():
 # =============================================================================
 
 def render_dashboard():
-    """Main dashboard with KPIs, charts, and recent activity."""
+    """Updated Dashboard: Minimal, High Contrast, 4 Key Blocks"""
     
-    # Get dynamic statistics
-    report_counts = get_report_counts()
-    risk_distribution = get_risk_distribution()
-    total_reports = get_total_reports()
-    high_risk_count = get_high_risk_count()
-    recent_reports = get_recent_reports(10)
-    
-    # Dashboard Header
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
-                padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white;">
-        <h1 style="margin: 0; font-size: 2.2rem;">📊 Safety Dashboard</h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1rem;">
-            Real-time safety metrics and performance indicators
-        </p>
+    # Header with Logo
+    st.markdown(f"""
+    <div style="display: flex; align-items: center; background: #F8FAFC; padding: 20px; border-bottom: 2px solid #1e3c72;">
+        <h1 style="color: #1e3c72; margin: 0;">✈️ AIR SIAL SMS DASHBOARD</h1>
     </div>
-    """, unsafe_allow_html=True)  # <--- Make sure quotes end here!
+    """, unsafe_allow_html=True)
 
-    render_weather_widget()       # <--- This must be on its own line, outside quotes
+    # Filter data based on Role Permissions
+    user_role = st.session_state.get('user_role', 'Reporter')
+    user_dept = st.session_state.get('user_department', '')
+
+    # Fetch Data (Mock logic - replace with DB fetch)
+    hazards = st.session_state.get('hazard_reports', [])
+    mors = st.session_state.get('mor_reports', [])
+    audits = st.session_state.get('audit_reports', [])
     
-    # ==========================================================================
-    # ROW 1: PRIMARY KPI CARDS
-    # ==========================================================================
-    st.markdown("### 📈 Key Performance Indicators")
-    
-    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-    
-    with kpi_col1:
+    # 4-Block Layout
+    st.markdown("### 📡 System Overview")
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    padding: 25px; border-radius: 15px; text-align: center; color: white;
-                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-            <div style="font-size: 3rem; font-weight: bold;">{total_reports}</div>
-            <div style="font-size: 1rem; opacity: 0.9; margin-top: 5px;">Total Reports</div>
-            <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
-                📅 All Time
-            </div>
+        <div style="background: #ffffff; padding: 20px; border-left: 5px solid #006400; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #333; margin:0;">Voluntary</h3>
+            <p style="font-size: 0.9rem; color: #666;">Hazards & Safety Concerns</p>
+            <h1 style="color: #006400; font-size: 3rem; margin:0;">{len(hazards)}</h1>
+            <small>Pending Actions: {sum(1 for h in hazards if h.get('status') != 'Closed')}</small>
         </div>
         """, unsafe_allow_html=True)
-    
-    with kpi_col2:
-        # Calculate open reports (pending/under investigation)
-        open_count = sum(1 for r in st.session_state.get('hazard_reports', []) 
-                        if r.get('status') in ['New', 'Under Review', 'Investigation'])
-        open_count += sum(1 for r in st.session_state.get('aircraft_incidents', [])
-                         if r.get('investigation_status') in ['Open', 'Under Investigation', 'Preliminary'])
-        
+
+    with c2:
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                    padding: 25px; border-radius: 15px; text-align: center; color: white;
-                    box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);">
-            <div style="font-size: 3rem; font-weight: bold;">{open_count}</div>
-            <div style="font-size: 1rem; opacity: 0.9; margin-top: 5px;">Open Cases</div>
-            <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
-                🔍 Pending Action
-            </div>
+        <div style="background: #ffffff; padding: 20px; border-left: 5px solid #8B0000; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #333; margin:0;">MOR</h3>
+            <p style="font-size: 0.9rem; color: #666;">Mandatory Occurrences</p>
+            <h1 style="color: #8B0000; font-size: 3rem; margin:0;">{len(mors)}</h1>
+            <small>Reporting Only (No CAP)</small>
         </div>
         """, unsafe_allow_html=True)
-    
-    with kpi_col3:
+
+    with c3:
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-                    padding: 25px; border-radius: 15px; text-align: center; color: white;
-                    box-shadow: 0 4px 15px rgba(250, 112, 154, 0.4);">
-            <div style="font-size: 3rem; font-weight: bold;">{high_risk_count}</div>
-            <div style="font-size: 1rem; opacity: 0.9; margin-top: 5px;">High/Extreme Risk</div>
-            <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
-                ⚠️ Requires Attention
-            </div>
+        <div style="background: #ffffff; padding: 20px; border-left: 5px solid #1e3c72; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #333; margin:0;">Quality</h3>
+            <p style="font-size: 0.9rem; color: #666;">Audits & Inspections</p>
+            <h1 style="color: #1e3c72; font-size: 3rem; margin:0;">{len(audits)}</h1>
+            <small>Open Findings: {sum(1 for a in audits if a.get('status') == 'Open')}</small>
         </div>
         """, unsafe_allow_html=True)
-    
-    with kpi_col4:
-        # Calculate closure rate
-        closed_count = sum(1 for r in st.session_state.get('hazard_reports', [])
-                         if r.get('status') in ['Closed', 'Resolved'])
-        closed_count += sum(1 for r in st.session_state.get('aircraft_incidents', [])
-                          if r.get('investigation_status') in ['Closed', 'Final Report Issued'])
-        closure_rate = (closed_count / total_reports * 100) if total_reports > 0 else 0
-        
+
+    with c4:
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-                    padding: 25px; border-radius: 15px; text-align: center; color: white;
-                    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);">
-            <div style="font-size: 3rem; font-weight: bold;">{closure_rate:.0f}%</div>
-            <div style="font-size: 1rem; opacity: 0.9; margin-top: 5px;">Closure Rate</div>
-            <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
-                ✅ Resolved Cases
-            </div>
+        <div style="background: #e0e7ff; padding: 20px; border: 1px dashed #666;">
+            <h3 style="color: #555; margin:0;">AI Analytics</h3>
+            <p style="font-size: 0.9rem; color: #666;">Predictive Insights</p>
+            <h1 style="color: #555; font-size: 3rem; margin:0;">--</h1>
+            <small>Future Placeholder</small>
         </div>
         """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # ==========================================================================
-    # ROW 2: REPORT TYPE BREAKDOWN
-    # ==========================================================================
-    st.markdown("### 📋 Reports by Category")
-    
-    cat_cols = st.columns(7)
-    
-    report_types = [
-        ("🦅", "Bird Strikes", report_counts.get('bird_strikes', 0), "#FF6B6B"),
-        ("🔴", "Laser Strikes", report_counts.get('laser_strikes', 0), "#4ECDC4"),
-        ("✈️", "TCAS Events", report_counts.get('tcas_reports', 0), "#45B7D1"),
-        ("⚠️", "Incidents", report_counts.get('aircraft_incidents', 0), "#96CEB4"),
-        ("🔶", "Hazards", report_counts.get('hazard_reports', 0), "#FFEAA7"),
-        ("📝", "FSR Reports", report_counts.get('fsr_reports', 0), "#DDA0DD"),
-        ("👨‍✈️", "Capt Debrief", report_counts.get('captain_dbr', 0), "#98D8C8"),
-    ]
-    
-    for col, (icon, label, count, color) in zip(cat_cols, report_types):
-        with col:
-            st.markdown(f"""
-            <div style="background: white; padding: 20px; border-radius: 12px; 
-                        text-align: center; border-left: 4px solid {color};
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <div style="font-size: 2rem;">{icon}</div>
-                <div style="font-size: 1.8rem; font-weight: bold; color: #333;">{count}</div>
-                <div style="font-size: 0.8rem; color: #666;">{label}</div>
-            </div>
-            """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # ==========================================================================
-    # ROW 3: CHARTS
-    # ==========================================================================
-    chart_col1, chart_col2 = st.columns(2)
-    
-    with chart_col1:
-        st.markdown("### 📊 Risk Distribution")
-        
-        if any(risk_distribution.values()):
-            risk_df = pd.DataFrame({
-                'Risk Level': list(risk_distribution.keys()),
-                'Count': list(risk_distribution.values())
-            })
-            
-            colors = {
-                'Extreme': '#DC3545',
-                'High': '#FD7E14',
-                'Medium': '#FFC107',
-                'Low': '#28A745'
-            }
-            
-            fig = px.pie(
-                risk_df,
-                values='Count',
-                names='Risk Level',
-                color='Risk Level',
-                color_discrete_map=colors,
-                hole=0.4
-            )
-            fig.update_layout(
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.2),
-                margin=dict(t=20, b=20, l=20, r=20),
-                height=300
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("No risk data available yet. Submit reports to see risk distribution.")
-    
-    with chart_col2:
-        st.markdown("### 📈 Monthly Trend")
-        
-        # Generate trend data from actual reports
-        trend_data = generate_trend_data()
-        
-        if trend_data:
-            trend_df = pd.DataFrame(trend_data)
-            
-            fig = px.line(
-                trend_df,
-                x='Month',
-                y='Reports',
-                markers=True,
-                color_discrete_sequence=['#667eea']
-            )
-            fig.update_layout(
-                showlegend=False,
-                margin=dict(t=20, b=20, l=20, r=20),
-                height=300,
-                xaxis_title="",
-                yaxis_title="Report Count"
-            )
-            fig.update_traces(line=dict(width=3), marker=dict(size=10))
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("No trend data available yet.")
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # ==========================================================================
-    # ROW 4: RECENT ACTIVITY & ALERTS
-    # ==========================================================================
-    activity_col, alerts_col = st.columns([3, 2])
-    
-    with activity_col:
-        st.markdown("### 🕐 Recent Activity")
-        
-        if recent_reports:
-            for report in recent_reports[:7]:
-                risk_color = {
-                    'Extreme': '#DC3545',
-                    'High': '#FD7E14',
-                    'Medium': '#FFC107',
-                    'Low': '#28A745'
-                }.get(report.get('risk_level', 'Low'), '#6C757D')
-                
-                st.markdown(f"""
-                <div style="background: white; padding: 15px; border-radius: 10px; 
-                            margin-bottom: 10px; border-left: 4px solid {risk_color};
-                            box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <span style="font-size: 1.2rem;">{report.get('icon', '📄')}</span>
-                            <strong style="margin-left: 10px;">{report.get('id', 'N/A')}</strong>
-                            <span style="color: #666; margin-left: 10px;">{report.get('type', 'Report')}</span>
-                        </div>
-                        <div>
-                            <span style="background: {risk_color}; color: white; padding: 3px 10px; 
-                                        border-radius: 15px; font-size: 0.8rem;">
-                                {report.get('risk_level', 'Low')}
-                            </span>
-                        </div>
-                    </div>
-                    <div style="color: #888; font-size: 0.85rem; margin-top: 8px;">
-                        📅 {report.get('date', 'N/A')} | 👤 {report.get('reporter', 'Anonymous')}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            st.info("No recent reports. Submit a report to see activity here.")
-    
-    with alerts_col:
-        st.markdown("### 🔔 Alerts & Notifications")
-        
-        # Generate alerts based on data
-        alerts = []
-        
-        # Check for high-risk items
-        if high_risk_count > 0:
-            alerts.append({
-                'type': 'danger',
-                'icon': '🚨',
-                'message': f'{high_risk_count} high/extreme risk items require immediate attention'
-            })
-        
-        # Check for overdue items (simulated)
-        overdue_count = sum(1 for r in st.session_state.get('hazard_reports', [])
-                          if r.get('status') == 'Under Review')
-        if overdue_count > 0:
-            alerts.append({
-                'type': 'warning',
-                'icon': '⏰',
-                'message': f'{overdue_count} reports pending review'
-            })
-        
-        # Check for recent submissions
-        today_count = sum(1 for r in recent_reports 
-                        if r.get('date') == datetime.now().strftime('%Y-%m-%d'))
-        if today_count > 0:
-            alerts.append({
-                'type': 'info',
-                'icon': '📥',
-                'message': f'{today_count} new reports submitted today'
-            })
-        
-        # Default alert if no issues
-        if not alerts:
-            alerts.append({
-                'type': 'success',
-                'icon': '✅',
-                'message': 'All systems operational. No critical alerts.'
-            })
-        
-        for alert in alerts:
-            color_map = {
-                'danger': '#DC3545',
-                'warning': '#FFC107',
-                'info': '#17A2B8',
-                'success': '#28A745'
-            }
-            bg_map = {
-                'danger': '#FFF5F5',
-                'warning': '#FFFBEB',
-                'info': '#F0F9FF',
-                'success': '#F0FFF4'
-            }
-            
-            st.markdown(f"""
-            <div style="background: {bg_map[alert['type']]}; padding: 15px; 
-                        border-radius: 10px; margin-bottom: 10px;
-                        border-left: 4px solid {color_map[alert['type']]};">
-                <span style="font-size: 1.2rem;">{alert['icon']}</span>
-                <span style="margin-left: 10px; color: #333;">{alert['message']}</span>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Quick Actions
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("#### ⚡ Quick Actions")
-        
-        qa_col1, qa_col2 = st.columns(2)
-        with qa_col1:
-            if st.button("📝 New Report", use_container_width=True):
-                st.session_state['current_page'] = 'Hazard Report'
-                st.rerun()
-        with qa_col2:
-            if st.button("📊 View All", use_container_width=True):
-                st.session_state['current_page'] = 'View Reports'
-                st.rerun()
 
 
 def generate_trend_data():
