@@ -8791,11 +8791,14 @@ if __name__ == "__main__":
     # 2. Apply CSS
     apply_custom_css()
     
-    # 3. Routing Logic
-    if not st.session_state.get('authenticated', False):
-        render_login_page()
-    else:
-        render_sidebar()
-        render_header()
-        route_to_page()
-        render_footer() # <--- Now this will work because the function exists above
+    # Automatically set authentication state and user details to bypass login
+    st.session_state['authenticated'] = True
+    st.session_state['username'] = "Administrator"
+    st.session_state['user_role'] = "Admin"
+    st.session_state['user_department'] = "IT"
+
+    # 3. Routing Logic (Bypassing render_login_page)
+    render_sidebar()
+    render_header()
+    route_to_page()
+    render_footer()
